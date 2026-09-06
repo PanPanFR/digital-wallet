@@ -10,7 +10,7 @@ export const load: ServerLoad = async ({ locals }: RequestEvent) => {
 const BulkSchema = z.array(
 	z.object({
 		description: z.string().trim().min(1),
-		amount: z.number().positive(),
+		amount: z.number().int().positive().max(999_999_999),
 		category: z.string().trim().min(1).default('Lainnya'),
 		type: z.enum(['income', 'expense'])
 	})

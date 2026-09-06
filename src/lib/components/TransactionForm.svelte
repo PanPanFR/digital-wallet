@@ -141,7 +141,7 @@
 						name="amount"
 						type="number"
 						min="1"
-						step="any"
+						step="1"
 						required
 						placeholder="0"
 						bind:value={amount}

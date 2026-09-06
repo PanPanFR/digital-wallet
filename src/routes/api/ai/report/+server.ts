@@ -8,9 +8,9 @@ const ReportSchema = z.object({
 });
 
 export const POST: RequestHandler = async ({ request, platform, url }) => {
-	// CSRF: browsers always send Origin on cross-site fetches; reject mismatches.
+	// CSRF: browser fetches always send Origin; reject when missing or mismatched.
 	const origin = request.headers.get('origin');
-	if (origin && origin !== url.origin) {
+	if (origin !== url.origin) {
 		error(403, { message: 'Origin tidak valid' });
 	}
 

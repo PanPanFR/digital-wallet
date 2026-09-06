@@ -3,7 +3,11 @@ import { z } from 'zod';
 /** Shared transaction create/update validation (money path — single source of truth). */
 export const TxSchema = z.object({
 	description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
-	amount: z.coerce.number().positive('Jumlah harus lebih dari 0'),
+	amount: z.coerce
+		.number()
+		.int('Jumlah harus bilangan bulat')
+		.positive('Jumlah harus lebih dari 0')
+		.max(999_999_999, 'Jumlah terlalu besar'),
 	category: z.string().trim().min(1).default('Lainnya'),
 	type: z.enum(['income', 'expense'], { message: 'Tipe tidak valid' })
 });
