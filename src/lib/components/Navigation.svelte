@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Home, ArrowLeftRight, BarChart3, Sparkles, Settings, LogOut, Wallet } from '@lucide/svelte';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	const items = [
 		{ href: '/', label: 'Beranda', icon: Home },
@@ -39,14 +40,17 @@
 		{/each}
 	</nav>
 
-	<form method="POST" action="/?/logout" class="border-t border-gray-200 p-3 dark:border-gray-800">
-		<button
-			type="submit"
-			class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950 dark:hover:text-red-400"
-		>
-			<LogOut size={17} /> Keluar
-		</button>
-	</form>
+	<div class="flex items-center justify-between border-t border-gray-200 p-3 dark:border-gray-800">
+		<ThemeToggle />
+		<form method="POST" action="/?/logout" class="flex-1">
+			<button
+				type="submit"
+				class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950 dark:hover:text-red-400"
+			>
+				<LogOut size={17} /> Keluar
+			</button>
+		</form>
+	</div>
 </aside>
 
 <!-- Mobile bottom nav -->
