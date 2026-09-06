@@ -1,5 +1,4 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { z } from 'zod';
 import type { Actions, ServerLoad, RequestEvent } from '@sveltejs/kit';
 import {
 	createTransaction,
@@ -7,22 +6,7 @@ import {
 	listTransactions,
 	updateTransaction
 } from '$lib/server/db';
-
-const TxSchema = z.object({
-	description: z.string().trim().min(1, 'Deskripsi wajib diisi'),
-	amount: z.coerce.number().positive('Jumlah harus lebih dari 0'),
-	category: z.string().trim().min(1).default('Lainnya'),
-	type: z.enum(['income', 'expense'], { message: 'Tipe tidak valid' })
-});
-
-function fieldErrors(error: z.ZodError): Record<string, string> {
-	const out: Record<string, string> = {};
-	for (const issue of error.issues) {
-		const key = String(issue.path[0] ?? 'form');
-		if (!out[key]) out[key] = issue.message;
-	}
-	return out;
-}
+import { TxSchema, fieldErrors } from '$lib/server/validation';
 
 export const load: ServerLoad = async ({ locals, platform, url }: RequestEvent) => {
 	if (!locals.session) redirect(303, '/login');

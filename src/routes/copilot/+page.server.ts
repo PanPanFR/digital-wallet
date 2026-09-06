@@ -1,0 +1,35 @@
+import { fail, redirect, type Actions, type ServerLoad, type RequestEvent } from '@sveltejs/kit';
+import { z } from 'zod';
+import { createTransactions } from '$lib/server/db';
+
+export const load: ServerLoad = async ({ locals }: RequestEvent) => {
+	if (!locals.session) redirect(303, '/login');
+	return {};
+};
+
+const BulkSchema = z.array(
+	z.object({
+		description: z.string().trim().min(1),
+		amount: z.number().positive(),
+		category: z.string().trim().min(1).default('Lainnya'),
+		type: z.enum(['income', 'expense'])
+	})
+);
+
+export const actions: Actions = {
+	'create-bulk': async ({ request, platform }: RequestEvent) => {
+		const itemsRaw = String((await request.formData()).get('items') ?? '[]');
+		let json: unknown;
+		try {
+			json = JSON.parse(itemsRaw);
+		} catch {
+			return fail(400, { error: 'Data transaksi tidak valid' });
+		}
+		const parsed = BulkSchema.safeParse(json);
+		if (!parsed.success) return fail(400, { error: 'Data transaksi tidak valid' });
+		if (parsed.data.length === 0) return fail(400, { error: 'Tidak ada transaksi dipilih' });
+
+		const count = await createTransactions(platform!.env.DB, parsed.data);
+		return { success: true, count };
+	}
+};

@@ -1,1 +1,126 @@
-<h1 class="p-8 text-2xl font-bold">Finance Tracker v2</h1>
+<script lang="ts">
+	import { navigating } from '$app/state';
+	import { Plus, ArrowUpRight, TrendingDown, TrendingUp, Wallet } from '@lucide/svelte';
+	import TransactionForm from '$lib/components/TransactionForm.svelte';
+	import Skeleton from '$lib/components/Skeleton.svelte';
+	import { formatIDR, formatDate } from '$lib/format';
+
+	let { data } = $props();
+
+	let showForm = $state(false);
+</script>
+
+<svelte:head>
+	<title>Beranda · Finance Tracker</title>
+</svelte:head>
+
+<main class="mx-auto max-w-3xl px-4 py-6">
+	<div class="mb-4 flex items-center justify-between gap-3">
+		<div>
+			<h1 class="text-xl font-semibold text-gray-900 dark:text-white">Beranda</h1>
+			<p class="text-xs text-gray-500 dark:text-gray-400">
+				{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
+					new Date(`${data.month}-01T00:00:00`)
+				)}
+			</p>
+		</div>
+		<button
+			onclick={() => (showForm = true)}
+			class="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 text-sm font-medium"
+		>
+			<Plus size={16} /> Catat
+		</button>
+	</div>
+
+	<section class="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan bulan ini">
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+		>
+			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+				<span class="text-emerald-500"><TrendingUp size={14} /></span>
+				Pemasukan
+			</div>
+			<p class="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
+				{formatIDR(data.summary.income)}
+			</p>
+		</div>
+
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+		>
+			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+				<span class="text-red-500"><TrendingDown size={14} /></span>
+				Pengeluaran
+			</div>
+			<p class="mt-1 font-mono text-lg font-bold text-red-600 dark:text-red-400">
+				{formatIDR(data.summary.expense)}
+			</p>
+		</div>
+
+		<div
+			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+		>
+			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+				<span class="text-sky-500"><Wallet size={14} /></span>
+				Saldo Bersih
+			</div>
+			<p
+				class="mt-1 font-mono text-lg font-bold
+				{data.summary.net < 0
+					? 'text-red-600 dark:text-red-400'
+					: 'text-gray-900 dark:text-white'}"
+			>
+				{formatIDR(data.summary.net)}
+			</p>
+		</div>
+	</section>
+
+	<section class="mt-6" aria-label="Transaksi terakhir">
+		<div class="mb-2 flex items-center justify-between">
+			<h2 class="font-semibold text-gray-900 dark:text-white">Transaksi Terakhir</h2>
+			<a
+				href="/transactions"
+				class="flex items-center gap-0.5 text-sm text-sky-600 hover:underline dark:text-sky-400"
+			>
+				Lihat semua <ArrowUpRight size={14} />
+			</a>
+		</div>
+
+		{#if navigating.to?.url.pathname === '/'}
+			<Skeleton rows={4} />
+		{:else if data.transactions.length === 0}
+			<p
+				class="rounded-xl border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+			>
+				Belum ada transaksi.
+			</p>
+		{:else}
+			<ul
+				class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+			>
+				{#each data.transactions as tx (tx.id)}
+					<li class="flex items-center gap-3 px-4 py-3">
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-medium text-gray-900 dark:text-white">
+								{tx.description}
+							</p>
+							<p class="text-xs text-gray-500 dark:text-gray-400">
+								{tx.category} · {formatDate(tx.created_at)}
+							</p>
+						</div>
+						<span
+							class="whitespace-nowrap font-mono text-sm font-bold
+							{tx.type === 'income'
+								? 'text-emerald-600 dark:text-emerald-400'
+								: 'text-red-600 dark:text-red-400'}"
+						>
+							{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+</main>
+
+<TransactionForm open={showForm} onclose={() => (showForm = false)} />
