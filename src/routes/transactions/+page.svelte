@@ -6,6 +6,7 @@
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR, formatDate } from '$lib/format';
+	import { CATEGORIES } from '$lib/constants';
 	import type { TxRow, WalletRow } from '$lib/server/db';
 
 	let { data } = $props();
@@ -41,10 +42,13 @@
 		(e.currentTarget as HTMLFormElement).requestSubmit();
 	}
 
-	function filterHref(wallet: string | null) {
+	function filterHref(wallet: string | null, offset = 0) {
 		const p = new URLSearchParams();
 		if (data.month) p.set('month', data.month);
 		if (wallet) p.set('wallet', wallet);
+		if (data.q) p.set('q', data.q);
+		if (data.category) p.set('category', data.category);
+		if (offset > 0) p.set('offset', String(offset));
 		const q = p.toString();
 		return q ? `/transactions?${q}` : '/transactions';
 	}
@@ -56,6 +60,14 @@
 	// ?wallet= holds a kind ('digital'|'cash') or a wallet id; select only preselects ids.
 	const selectedWalletId = $derived(
 		data.wallet && data.wallet !== 'digital' && data.wallet !== 'cash' ? data.wallet : ''
+	);
+
+	const monthLabel = $derived(
+		data.month
+			? new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
+					new Date(data.month + '-01')
+				)
+			: ''
 	);
 </script>
 
@@ -70,7 +82,7 @@
 			onclick={openAdd}
 			class="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 text-sm font-medium"
 		>
-			<Plus size={16} /> Tambah
+			<Plus size={16} /> Catat
 		</button>
 	</div>
 
@@ -136,13 +148,32 @@
 				{/if}
 			{/each}
 		</select>
+		<input
+			type="search"
+			name="q"
+			placeholder="Cari deskripsi…"
+			value={data.q}
+			aria-label="Cari deskripsi"
+			class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+		/>
+		<select
+			name="category"
+			aria-label="Kategori"
+			value={data.category}
+			class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+		>
+			<option value="">Semua kategori</option>
+			{#each CATEGORIES as c (c)}
+				<option value={c}>{c}</option>
+			{/each}
+		</select>
 		<button
 			type="submit"
 			class="rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-white"
 		>
 			Terapkan
 		</button>
-		{#if data.month || data.wallet}
+		{#if data.month || data.wallet || data.q || data.category}
 			<a href="/transactions" class="text-sm text-sky-600 hover:underline dark:text-sky-400">
 				Reset
 			</a>
@@ -153,7 +184,7 @@
 		<p
 			class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
 		>
-			Belum ada transaksi{data.month ? ` untuk ${data.month}` : ''}.
+			Belum ada transaksi{data.month ? ` untuk ${monthLabel}` : ''}.
 		</p>
 	{:else}
 		<ul
@@ -164,9 +195,16 @@
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-gray-900 dark:text-white">{tx.description}</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						{tx.category} · {formatDate(tx.created_at)}
+						{tx.category} · {formatDate(tx.date)}
 					</p>
 				</div>
+				{#if tx.type === 'transfer' && tx.dest_wallet_name}
+					<span
+						class="rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400"
+					>
+						→ {tx.dest_wallet_name}
+					</span>
+				{/if}
 				<span
 					class="rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap
 					{tx.wallet_kind === 'digital'
@@ -200,6 +238,16 @@
 				</li>
 			{/each}
 		</ul>
+		{#if data.hasMore}
+			<div class="mt-3 text-center">
+				<a
+					href={filterHref(data.wallet ?? null, data.offset + 50)}
+					class="inline-block rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-white"
+				>
+					Muat lebih
+				</a>
+			</div>
+		{/if}
 	{/if}
 </main>
 

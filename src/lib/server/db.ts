@@ -24,18 +24,21 @@ export interface KindTotals {
 export interface TxRow {
 	id: string;
 	wallet_id: string;
+	to_wallet_id: string | null;
 	wallet_name: string;
 	wallet_kind: 'digital' | 'cash';
+	dest_wallet_name: string | null;
 	description: string;
 	amount: number;
 	category: string;
-	type: 'income' | 'expense';
+	type: 'income' | 'expense' | 'transfer';
+	date: string;
 	created_at: string;
 	updated_at: string;
 }
 
 export type TxInput = Pick<TxRow, 'wallet_id' | 'description' | 'amount' | 'category' | 'type'> &
-	Partial<Pick<TxRow, 'created_at'>>;
+	Partial<Pick<TxRow, 'created_at' | 'date' | 'to_wallet_id'>>;
 
 export interface MonthlySummary {
 	month: string;
@@ -54,6 +57,13 @@ export interface MonthlyTotal {
 	month: string;
 	income: number;
 	expense: number;
+}
+
+export interface WalletTotal {
+	id: string;
+	name: string;
+	kind: 'digital' | 'cash';
+	total: number;
 }
 
 /** List wallets, grouped by kind then name. */
@@ -103,18 +113,27 @@ export async function deleteWallet(
 	id: string
 ): Promise<'deleted' | 'has-transactions' | 'not-found'> {
 	const usage = await db
-		.prepare('SELECT COUNT(*) AS n FROM transactions WHERE wallet_id = ?')
-		.bind(id)
+		.prepare('SELECT COUNT(*) AS n FROM transactions WHERE wallet_id = ? OR to_wallet_id = ?')
+		.bind(id, id)
 		.first<{ n: number }>();
 	if ((usage?.n ?? 0) > 0) return 'has-transactions';
 	const r = await db.prepare('DELETE FROM wallets WHERE id = ?').bind(id).run();
 	return (r.meta?.changes ?? 0) > 0 ? 'deleted' : 'not-found';
 }
 
+// Transfer moves money between wallets: source -, destination +. A transfer row
+// joins both wallets, so the CASE must key off which side this row is on.
+const BALANCE_CASE = `COALESCE(SUM(CASE
+	 WHEN t.type = 'income' THEN t.amount
+	 WHEN t.type = 'expense' THEN -t.amount
+	 WHEN t.type = 'transfer' AND t.wallet_id = w.id THEN -t.amount
+	 WHEN t.type = 'transfer' AND t.to_wallet_id = w.id THEN t.amount
+	 ELSE 0 END), 0)`;
+
 const BALANCE_SQL =
 	`SELECT w.id, w.name, w.kind, w.created_at,
-	        COALESCE(SUM(CASE t.type WHEN 'income' THEN t.amount ELSE -t.amount END), 0) AS balance
-	 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id
+	        ${BALANCE_CASE} AS balance
+	 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id OR t.to_wallet_id = w.id
 	 GROUP BY w.id ORDER BY w.kind, w.name`;
 
 /** Per-wallet balances, always computed from transactions (never stored). */
@@ -127,8 +146,8 @@ export async function getWalletBalances(db: D1Database): Promise<WalletWithBalan
 export async function getKindTotals(db: D1Database): Promise<KindTotals> {
 	const { results } = await db
 		.prepare(
-			`SELECT w.kind, COALESCE(SUM(CASE t.type WHEN 'income' THEN t.amount ELSE -t.amount END), 0) AS balance
-			 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id
+			`SELECT w.kind, ${BALANCE_CASE} AS balance
+			 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id OR t.to_wallet_id = w.id
 			 GROUP BY w.kind`
 		)
 		.all<{ kind: 'digital' | 'cash'; balance: number }>();
@@ -145,29 +164,42 @@ export async function getKindTotals(db: D1Database): Promise<KindTotals> {
 /** List transactions, newest first, joined with wallet info. Optional filters. */
 export async function listTransactions(
 	db: D1Database,
-	opts: { limit?: number; offset?: number; month?: string; walletId?: string } = {}
+	opts: {
+		limit?: number;
+		offset?: number;
+		month?: string;
+		walletId?: string;
+		search?: string;
+		category?: string;
+	} = {}
 ): Promise<TxRow[]> {
-	const { limit = 100, offset = 0, month, walletId } = opts;
+	const { limit = 100, offset = 0, month, walletId, search, category } = opts;
 	const where: string[] = [];
 	const binds: unknown[] = [];
 
 	if (month) {
-		// Schema stores created_at as ISO 'YYYY-MM-DDTHH:mm:ss.sssZ' or
-		// 'YYYY-MM-DD HH:MM:SS' depending on how the row was inserted.
-		// Both start with the YYYY-MM- prefix, so LIKE is safe.
-		where.push("t.created_at LIKE ?");
+		where.push('t.date LIKE ?');
 		binds.push(`${month}%`);
 	}
 	if (walletId) {
 		where.push('t.wallet_id = ?');
 		binds.push(walletId);
 	}
+	if (search) {
+		where.push('t.description LIKE ?');
+		binds.push(`%${search}%`);
+	}
+	if (category) {
+		where.push('t.category = ?');
+		binds.push(category);
+	}
 
 	const sql =
-		`SELECT t.*, w.name AS wallet_name, w.kind AS wallet_kind
-		 FROM transactions t JOIN wallets w ON w.id = t.wallet_id` +
+		`SELECT t.*, w.name AS wallet_name, w.kind AS wallet_kind, w2.name AS dest_wallet_name
+		 FROM transactions t JOIN wallets w ON w.id = t.wallet_id
+		 LEFT JOIN wallets w2 ON w2.id = t.to_wallet_id` +
 		(where.length ? ` WHERE ${where.join(' AND ')}` : '') +
-		` ORDER BY t.created_at DESC LIMIT ? OFFSET ?`;
+		` ORDER BY t.date DESC, t.created_at DESC LIMIT ? OFFSET ?`;
 	binds.push(limit, offset);
 
 	const { results } = await db.prepare(sql).bind(...binds).all<TxRow>();
@@ -178,8 +210,9 @@ export async function listTransactions(
 export async function getTransaction(db: D1Database, id: string): Promise<TxRow | null> {
 	const row = await db
 		.prepare(
-			`SELECT t.*, w.name AS wallet_name, w.kind AS wallet_kind
+			`SELECT t.*, w.name AS wallet_name, w.kind AS wallet_kind, w2.name AS dest_wallet_name
 			 FROM transactions t JOIN wallets w ON w.id = t.wallet_id
+			 LEFT JOIN wallets w2 ON w2.id = t.to_wallet_id
 			 WHERE t.id = ?`
 		)
 		.bind(id)
@@ -191,12 +224,14 @@ export async function getTransaction(db: D1Database, id: string): Promise<TxRow 
 export async function createTransaction(db: D1Database, tx: TxInput): Promise<string> {
 	const id = crypto.randomUUID().replace(/-/g, '');
 	const createdAt = tx.created_at || new Date().toISOString();
+	const date = tx.date || new Date().toISOString().slice(0, 10);
+	const toWalletId = tx.type === 'transfer' ? (tx.to_wallet_id ?? null) : null;
 	await db
 		.prepare(
-			`INSERT INTO transactions (id, wallet_id, description, amount, category, type, created_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?)`
+			`INSERT INTO transactions (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		)
-		.bind(id, tx.wallet_id, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, createdAt)
+		.bind(id, tx.wallet_id, toWalletId, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, date, createdAt)
 		.run();
 	return id;
 }
@@ -207,12 +242,14 @@ export async function createTransactions(db: D1Database, items: TxInput[]): Prom
 	const stmts = items.map((tx) => {
 		const id = crypto.randomUUID().replace(/-/g, '');
 		const createdAt = tx.created_at || new Date().toISOString();
+		const date = tx.date || new Date().toISOString().slice(0, 10);
+		const toWalletId = tx.type === 'transfer' ? (tx.to_wallet_id ?? null) : null;
 		return db
 			.prepare(
-				`INSERT INTO transactions (id, wallet_id, description, amount, category, type, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO transactions (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
-			.bind(id, tx.wallet_id, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, createdAt);
+			.bind(id, tx.wallet_id, toWalletId, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, date, createdAt);
 	});
 	await db.batch(stmts);
 	return items.length;
@@ -222,7 +259,7 @@ export async function createTransactions(db: D1Database, items: TxInput[]): Prom
 export async function updateTransaction(
 	db: D1Database,
 	id: string,
-	tx: Partial<Pick<TxRow, 'description' | 'amount' | 'category' | 'type' | 'wallet_id'>>
+	tx: Partial<Pick<TxRow, 'description' | 'amount' | 'category' | 'type' | 'wallet_id' | 'date' | 'to_wallet_id'>>
 ): Promise<boolean> {
 	const fields: string[] = [];
 	const values: unknown[] = [];
@@ -230,6 +267,10 @@ export async function updateTransaction(
 	if (tx.wallet_id !== undefined) {
 		fields.push('wallet_id = ?');
 		values.push(tx.wallet_id);
+	}
+	if (tx.to_wallet_id !== undefined) {
+		fields.push('to_wallet_id = ?');
+		values.push(tx.to_wallet_id);
 	}
 	if (tx.description !== undefined) {
 		fields.push('description = ?');
@@ -246,6 +287,10 @@ export async function updateTransaction(
 	if (tx.type !== undefined) {
 		fields.push('type = ?');
 		values.push(tx.type);
+	}
+	if (tx.date !== undefined) {
+		fields.push('date = ?');
+		values.push(tx.date);
 	}
 
 	if (fields.length === 0) return false;
@@ -268,13 +313,13 @@ export async function deleteTransaction(db: D1Database, id: string): Promise<boo
 	return (result.meta?.changes ?? 0) > 0;
 }
 
-/** Aggregate income/expense/net for a single month (YYYY-MM). */
+/** Aggregate income/expense/net for a single month (YYYY-MM). Transfers excluded. */
 export async function getMonthlySummary(db: D1Database, month: string): Promise<MonthlySummary> {
 	const { results } = await db
 		.prepare(
 			`SELECT type, COALESCE(SUM(amount), 0) AS total
 			 FROM transactions
-			 WHERE created_at LIKE ?
+			 WHERE date LIKE ? AND type != 'transfer'
 			 GROUP BY type`
 		)
 		.bind(`${month}%`)
@@ -289,13 +334,13 @@ export async function getMonthlySummary(db: D1Database, month: string): Promise<
 	return { month, income, expense, net: income - expense };
 }
 
-/** Per-category totals for a single month (YYYY-MM). */
+/** Per-category totals for a single month (YYYY-MM). Transfers excluded. */
 export async function getCategoryTotals(db: D1Database, month: string): Promise<CategoryTotal[]> {
 	const { results } = await db
 		.prepare(
 			`SELECT category, type, COALESCE(SUM(amount), 0) AS total
 			 FROM transactions
-			 WHERE created_at LIKE ?
+			 WHERE date LIKE ? AND type != 'transfer'
 			 GROUP BY category, type
 			 ORDER BY total DESC`
 		)
@@ -321,9 +366,9 @@ export async function getMonthlyTotals(db: D1Database, months: number): Promise<
 
 	const { results } = await db
 		.prepare(
-			`SELECT substr(created_at, 1, 7) AS month, type, COALESCE(SUM(amount), 0) AS total
+			`SELECT substr(date, 1, 7) AS month, type, COALESCE(SUM(amount), 0) AS total
 			 FROM transactions
-			 WHERE created_at >= ?
+			 WHERE date >= ? AND type != 'transfer'
 			 GROUP BY month, type
 			 ORDER BY month ASC`
 		)
@@ -347,6 +392,25 @@ export async function getMonthlyTotals(db: D1Database, months: number): Promise<
 		out.push(byMonth.get(key) ?? { month: key, income: 0, expense: 0 });
 	}
 	return out;
+}
+
+/** Expense totals per wallet for a month (YYYY-MM). Transfers excluded (not spending). */
+export async function getWalletTotals(db: D1Database, month: string): Promise<WalletTotal[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT w.id, w.name, w.kind,
+			        COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS total
+			 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id AND t.date LIKE ?
+			 GROUP BY w.id ORDER BY total DESC`
+		)
+		.bind(`${month}%`)
+		.all<WalletTotal>();
+	return (results ?? []).map((r) => ({
+		id: r.id,
+		name: r.name,
+		kind: r.kind,
+		total: Number(r.total) || 0
+	}));
 }
 
 /** Get an app setting by key. */

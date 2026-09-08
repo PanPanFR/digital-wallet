@@ -96,7 +96,8 @@ describe('parseTransactions', () => {
 					description: 'Gaji',
 					amount: 5_000_000,
 					category: 'Gaji',
-					type: 'income'
+					type: 'income',
+					date: '2026-09-01'
 				}
 			]
 		});
@@ -110,14 +111,16 @@ describe('parseTransactions', () => {
 				description: 'Kopi',
 				amount: 25000,
 				category: 'Makanan',
-				type: 'expense'
+				type: 'expense',
+				date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/)
 			},
 			{
 				walletId: 'seed-cash',
 				description: 'Gaji',
 				amount: 5_000_000,
 				category: 'Gaji',
-				type: 'income'
+				type: 'income',
+				date: '2026-09-01'
 			}
 		]);
 	});
@@ -159,8 +162,8 @@ describe('parseTransactions', () => {
 
 		const out = await parseTransactions('k', 'mixed input', testWallets);
 		expect(out).toEqual([
-			{ walletId: 'seed-cash', description: 'OK 1', amount: 100, category: 'A', type: 'expense' },
-			{ walletId: 'seed-cash', description: 'OK 2', amount: 200, category: 'D', type: 'income' }
+			{ walletId: 'seed-cash', description: 'OK 1', amount: 100, category: 'A', type: 'expense', date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) },
+			{ walletId: 'seed-cash', description: 'OK 2', amount: 200, category: 'D', type: 'income', date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }
 		]);
 	});
 
@@ -207,8 +210,32 @@ describe('parseTransactions', () => {
 
 		const out = await parseTransactions('k', 'whatever', testWallets);
 		expect(out).toEqual([
-			{ walletId: 'seed-cash', description: 'X', amount: 10, category: 'C', type: 'expense' }
+			{ walletId: 'seed-cash', description: 'X', amount: 10, category: 'C', type: 'expense', date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }
 		]);
+	});
+
+	it('keeps an AI-provided concrete date', async () => {
+		const json = JSON.stringify({
+			transactions: [
+				{ walletId: 'seed-cash', description: 'Kopi kemarin', amount: 25000, type: 'expense', date: '2026-09-07' }
+			]
+		});
+		nextResponder = () => geminiTextResponse(json);
+		const out = await parseTransactions('k', 'beli kopi kemarin', testWallets);
+		expect(out[0].date).toBe('2026-09-07');
+	});
+
+	it('falls back to today when AI returns a malformed date', async () => {
+		const json = JSON.stringify({
+			transactions: [
+				{ walletId: 'seed-cash', description: 'X', amount: 10, type: 'expense', date: 'kemarin' }
+			]
+		});
+		nextResponder = () => geminiTextResponse(json);
+		const out = await parseTransactions('k', 'x', testWallets);
+		expect(out).toHaveLength(1);
+		expect(out[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+		expect(out[0].date).not.toBe('kemarin');
 	});
 });
 
@@ -222,6 +249,12 @@ describe('buildParsePrompt', () => {
 	it('requires walletId in the JSON format instruction', () => {
 		const prompt = buildParsePrompt(testWallets);
 		expect(prompt).toContain('walletId');
+	});
+	it('instructs the model to emit a date and resolve relative words', () => {
+		const prompt = buildParsePrompt(testWallets);
+		expect(prompt).toContain('"date"');
+		expect(prompt).toContain('YYYY-MM-DD');
+		expect(prompt).toContain('kemarin');
 	});
 });
 

@@ -17,6 +17,10 @@
 
 	let showForm = $state(false);
 
+	function onMonthChange(e: Event) {
+		(e.currentTarget as HTMLFormElement).requestSubmit();
+	}
+
 	const groups = $derived([
 		{ label: 'Digital', wallets: data.wallets.filter((w: { kind: string }) => w.kind === 'digital') },
 		{ label: 'Tunai', wallets: data.wallets.filter((w: { kind: string }) => w.kind === 'cash') }
@@ -37,6 +41,17 @@
 				)}
 			</p>
 		</div>
+		<form method="GET" action="/" class="flex items-center gap-2">
+			<label for="month" class="sr-only">Bulan</label>
+			<input
+				id="month"
+				name="month"
+				type="month"
+				value={data.month}
+				onchange={onMonthChange}
+				class="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+			/>
+		</form>
 		<button
 			onclick={() => (showForm = true)}
 			class="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 text-sm font-medium"
@@ -89,7 +104,7 @@
 		</div>
 	</section>
 
-	<section class="mt-6 grid gap-3 sm:grid-cols-3" aria-label="Ringkasan bulan ini">
+	<section class="mt-6 grid gap-3 sm:grid-cols-3" aria-label="Ringkasan">
 		<div
 			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
 		>
@@ -150,18 +165,23 @@
 							class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
 						>
 							{#each group.wallets as w (w.id)}
-								<li class="flex items-center justify-between gap-3 px-4 py-3">
-									<span class="truncate text-sm font-medium text-gray-900 dark:text-white">
-										{w.name}
-									</span>
-									<span
-										class="whitespace-nowrap font-mono text-sm font-bold
-										{w.balance < 0
-											? 'text-red-600 dark:text-red-400'
-											: 'text-gray-900 dark:text-white'}"
+								<li class="flex items-center">
+									<a
+										href="/transactions?wallet={w.id}"
+										class="flex flex-1 items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800"
 									>
-										{formatIDR(w.balance)}
-									</span>
+										<span class="truncate text-sm font-medium text-gray-900 dark:text-white">
+											{w.name}
+										</span>
+										<span
+											class="whitespace-nowrap font-mono text-sm font-bold
+											{w.balance < 0
+												? 'text-red-600 dark:text-red-400'
+												: 'text-gray-900 dark:text-white'}"
+										>
+											{formatIDR(w.balance)}
+										</span>
+									</a>
 								</li>
 							{/each}
 						</ul>
@@ -201,7 +221,15 @@
 								{tx.description}
 							</p>
 							<p class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-								<span>{tx.category} · {formatDate(tx.created_at)}</span>
+								<span>{tx.category} · {formatDate(tx.date)}</span>
+							{#if tx.type === 'transfer'}
+								<span
+									class="rounded-full px-1.5 py-0.5 font-medium
+									bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400"
+								>
+									→ {tx.dest_wallet_name}
+								</span>
+							{/if}
 								<span
 									class="rounded-full px-1.5 py-0.5 font-medium
 									{tx.wallet_kind === 'digital'

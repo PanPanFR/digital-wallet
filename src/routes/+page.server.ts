@@ -9,10 +9,12 @@ import {
 } from '$lib/server/db';
 import { TxSchema, fieldErrors } from '$lib/server/validation';
 
-export const load: ServerLoad = async ({ locals, platform }: RequestEvent) => {
+export const load: ServerLoad = async ({ locals, platform, url }: RequestEvent) => {
 	if (!locals.session) redirect(303, '/login');
 	const db = platform!.env.DB;
-	const month = new Date().toISOString().slice(0, 7);
+	const monthParam = url.searchParams.get('month');
+	const month =
+		monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : new Date().toISOString().slice(0, 7);
 	const [totals, wallets, recent, summary] = await Promise.all([
 		getKindTotals(db),
 		getWalletBalances(db),
@@ -28,7 +30,12 @@ export const actions: Actions = {
 	create: async ({ request, platform }: RequestEvent) => {
 		const parsed = TxSchema.safeParse(Object.fromEntries(await request.formData()));
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-		await createTransaction(platform!.env.DB, { ...parsed.data, wallet_id: parsed.data.walletId });
+		const { walletId, toWalletId, ...rest } = parsed.data;
+		await createTransaction(platform!.env.DB, {
+			...rest,
+			wallet_id: walletId,
+			to_wallet_id: rest.type === 'transfer' ? toWalletId : null
+		});
 		return { success: true };
 	},
 

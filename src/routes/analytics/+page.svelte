@@ -3,8 +3,13 @@
 
 	let { data } = $props();
 
-	// Horizontal bars: category totals for the selected month.
-	const maxCategory = $derived(Math.max(...data.categoryTotals.map((c) => c.total), 1));
+	// Horizontal bars: category totals for the selected month, as share of total expense / income.
+	const sumByType = $derived({
+		expense: data.categoryTotals.filter((c) => c.type === 'expense').reduce((s, c) => s + c.total, 0),
+		income: data.categoryTotals.filter((c) => c.type === 'income').reduce((s, c) => s + c.total, 0)
+	});
+	// Wallet spend bars: width proportional to the largest wallet total.
+	const maxWallet = $derived(Math.max(...data.walletTotals.map((w) => w.total), 1));
 	// Vertical bars: 6-month trend, income + expense side by side.
 	const maxMonthly = $derived(
 		Math.max(...data.monthlyTotals.map((m) => Math.max(m.income, m.expense)), 1)
@@ -59,7 +64,7 @@
 		{:else}
 			<ul class="space-y-3">
 				{#each data.categoryTotals as cat (cat.category + cat.type)}
-					{@const pct = Math.round((cat.total / maxCategory) * 100)}
+					{@const pct = Math.round((cat.total / (sumByType[cat.type] || 1)) * 100)}
 					<li>
 						<div class="mb-1 flex items-baseline justify-between gap-2 text-sm">
 							<span class="font-medium text-gray-900 dark:text-white">{cat.category}</span>
@@ -86,6 +91,42 @@
 								{cat.type === 'income' ? 'bg-emerald-500' : 'bg-red-500'}"
 								style="width: {pct}%"
 							></div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+
+	<!-- Wallet spend breakdown (horizontal bars, neutral color) -->
+	<section aria-label="Pengeluaran per dompet" class="mb-8">
+		<h2 class="mb-3 font-semibold text-gray-900 dark:text-white">Pengeluaran per Dompet</h2>
+		{#if data.walletTotals.length === 0 || data.walletTotals.every((w) => w.total === 0)}
+			<p
+				class="rounded-xl border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+			>
+				Belum ada pengeluaran bulan ini.
+			</p>
+		{:else}
+			<ul class="space-y-3">
+				{#each data.walletTotals as w (w.id)}
+					{@const pct = Math.round((w.total / maxWallet) * 100)}
+					<li>
+						<div class="mb-1 flex items-baseline justify-between gap-2 text-sm">
+							<span class="font-medium text-gray-900 dark:text-white">{w.name}</span>
+							<span class="ml-auto font-mono font-bold text-gray-900 dark:text-white">
+								{formatIDR(w.total)}
+							</span>
+						</div>
+						<div
+							class="h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"
+							role="progressbar"
+							aria-valuenow={pct}
+							aria-valuemin={0}
+							aria-valuemax={100}
+							aria-label="{w.name}: {pct}%"
+						>
+							<div class="h-full rounded-full bg-gray-400 dark:bg-gray-500" style="width: {pct}%"></div>
 						</div>
 					</li>
 				{/each}

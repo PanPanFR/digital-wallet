@@ -3,7 +3,7 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Sparkles, Send, Loader2, RotateCcw } from '@lucide/svelte';
 	import { notify } from '$lib/stores.svelte';
-	import { formatIDR } from '$lib/format';
+	import { CATEGORIES } from '$lib/constants';
 
 	let { form, data } = $props();
 
@@ -16,6 +16,7 @@
 		amount: number;
 		category: string;
 		type: 'income' | 'expense';
+		date: string;
 	};
 	let text = $state('');
 	let parsing = $state(false);
@@ -27,7 +28,16 @@
 	const selectedItems = $derived(previews.filter((_, i) => selected[i]));
 	const anySelected = $derived(selected.some(Boolean));
 
-	const walletName = (id: string) => data.wallets.find((w) => w.id === id)?.name ?? id;
+	// Coerce amount to number (number input can yield undefined when empty) — BulkSchema expects z.number().
+	const serializeItems = () =>
+		selectedItems.map((p) => ({
+			walletId: p.walletId,
+			description: p.description,
+			amount: Number(p.amount) || 0,
+			category: p.category,
+			type: p.type,
+			date: p.date
+		}));
 
 	async function doParse() {
 		if (!text.trim() || parsing) return;
@@ -166,27 +176,89 @@
 			{#if previews.length > 0}
 				<div class="space-y-2">
 					{#each previews as p, i (i)}
-						<label
-							class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 cursor-pointer"
+						<div
+							class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-2"
 						>
-							<input type="checkbox" bind:checked={selected[i]} class="accent-sky-600" />
-							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-medium text-gray-900 dark:text-white">{p.description}</p>
-								<p class="text-xs text-gray-500 dark:text-gray-400">
-									{p.category} · {walletName(p.walletId)}
-								</p>
+							<div class="flex items-center gap-3">
+								<input type="checkbox" bind:checked={selected[i]} class="accent-sky-600" />
+								<input
+									type="text"
+									bind:value={p.description}
+									aria-label="Keterangan transaksi {i + 1}"
+									class="min-w-0 flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+								/>
 							</div>
-							<span
-								class="font-mono text-sm font-bold whitespace-nowrap
-								{p.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}"
-							>
-								{p.type === 'income' ? '+' : '−'}{formatIDR(p.amount)}
-							</span>
-						</label>
+							<div class="grid grid-cols-2 gap-2">
+								<input
+									type="number"
+									min="1"
+									step="1"
+									bind:value={p.amount}
+									aria-label="Jumlah transaksi {i + 1}"
+									placeholder="Jumlah"
+									class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+								/>
+								<input
+									type="date"
+									bind:value={p.date}
+									aria-label="Tanggal transaksi {i + 1}"
+									class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+								/>
+								<select
+									bind:value={p.walletId}
+									aria-label="Dompet transaksi {i + 1}"
+									class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+								>
+									{#each ['digital', 'cash'] as kind (kind)}
+										{@const group = data.wallets.filter((w) => w.kind === kind)}
+										{#if group.length > 0}
+											<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
+												{#each group as w (w.id)}
+													<option value={w.id}>{w.name}</option>
+												{/each}
+											</optgroup>
+										{/if}
+									{/each}
+								</select>
+								<select
+									bind:value={p.category}
+									aria-label="Kategori transaksi {i + 1}"
+									class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 dark:text-white px-2.5 py-1.5 text-sm"
+								>
+									{#each CATEGORIES as c (c)}
+										<option value={c}>{c}</option>
+									{/each}
+								</select>
+							</div>
+							<div class="grid grid-cols-2 gap-2" role="group" aria-label="Tipe transaksi {i + 1}">
+								<button
+									type="button"
+									aria-pressed={p.type === 'expense'}
+									onclick={() => (p.type = 'expense')}
+									class="rounded-lg border py-1.5 text-sm
+									{p.type === 'expense'
+										? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
+										: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								>
+									Pengeluaran
+								</button>
+								<button
+									type="button"
+									aria-pressed={p.type === 'income'}
+									onclick={() => (p.type = 'income')}
+									class="rounded-lg border py-1.5 text-sm
+									{p.type === 'income'
+										? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+										: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								>
+									Pemasukan
+								</button>
+							</div>
+						</div>
 					{/each}
 
 					<form method="POST" action="?/create-bulk" use:enhance={handleSave}>
-						<input type="hidden" name="items" value={JSON.stringify(selectedItems)} />
+						<input type="hidden" name="items" value={JSON.stringify(serializeItems())} />
 						<button
 							type="submit"
 							disabled={!anySelected || saving}
