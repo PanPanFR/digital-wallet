@@ -26,7 +26,7 @@
 	let submitting = $state(false);
 	let description = $state('');
 	let amount = $state<string | number | undefined>('');
-	let type = $state<'income' | 'expense'>('expense');
+	let type = $state<TxRow['type']>('expense');
 	let category = $state<string>(CATEGORIES[0]);
 	let walletId = $state('');
 	let errors = $state<Record<string, string>>({});
