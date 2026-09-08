@@ -9,7 +9,13 @@ import {
 	getMonthlySummary,
 	getCategoryTotals,
 	getMonthlyTotals,
-	getWalletTotals
+	getWalletTotals,
+	listDebts,
+	listOpenDebts,
+	createDebt,
+	addDebtPayment,
+	deleteDebt,
+	getDebtDirectionTotals
 } from './db';
 
 function fakeDb(rows: unknown[]) {
@@ -169,5 +175,214 @@ describe('getWalletTotals', () => {
 		await getWalletTotals(db, '2026-09');
 		expect(calls[0].sql).toContain('t.date LIKE ?');
 		expect(calls[0].binds).toEqual(['2026-09%']);
+	});
+});
+
+/** Fake D1 that records batched statements (sql + binds) for money-path assertions. */
+function batchDb(rows: unknown[] = []) {
+	const batched: { sql: string; binds: unknown[] }[] = [];
+	const db = {
+		prepare: (sql: string) => {
+			const entry: { sql: string; binds: unknown[] } = { sql, binds: [] };
+			const result = {
+				all: async () => ({ results: rows }),
+				first: async () => rows[0] ?? null,
+				run: async () => ({ meta: { changes: 1 } })
+			};
+			return {
+				bind: (...b: unknown[]) => ((entry.binds = b), { ...result, ...entry }),
+				...result
+			};
+		},
+		batch: async (stmts: { sql: string; binds: unknown[] }[]) => {
+			batched.push(...stmts);
+			return stmts.map(() => ({ meta: {} }));
+		}
+	};
+	return { db: db as unknown as D1Database, batched };
+}
+
+describe('listDebts', () => {
+	it('maps rows and computes numeric remaining', async () => {
+		const rows = [
+			{
+				id: 'd1',
+				person: 'Budi',
+				direction: 'owe',
+				amount: '500000',
+				paid: '200000',
+				remaining: '300000',
+				wallet_id: null,
+				wallet_name: null,
+				date: '2026-09-01',
+				created_at: 'x',
+				updated_at: 'x'
+			}
+		];
+		const r = await listDebts(fakeDb(rows));
+		expect(r[0].amount).toBe(500000);
+		expect(r[0].paid).toBe(200000);
+		expect(r[0].remaining).toBe(300000);
+	});
+});
+
+describe('listOpenDebts', () => {
+	it('filters to amount > paid', async () => {
+		const { db, calls } = recordingDb();
+		await listOpenDebts(db);
+		expect(calls[0].sql).toContain('d.amount > d.paid');
+	});
+});
+
+describe('addDebtPayment', () => {
+	const oweDebt = {
+		id: 'd1',
+		person: 'Budi',
+		direction: 'owe',
+		amount: 500000,
+		paid: 300000,
+		remaining: 200000,
+		wallet_id: null,
+		wallet_name: null,
+		date: '2026-09-01',
+		created_at: 'x',
+		updated_at: 'x'
+	};
+	const owedDebt = {
+		id: 'd2',
+		person: 'Ani',
+		direction: 'owed',
+		amount: 500000,
+		paid: 300000,
+		remaining: 200000,
+		wallet_id: null,
+		wallet_name: null,
+		date: '2026-09-01',
+		created_at: 'x',
+		updated_at: 'x'
+	};
+
+	it('rejects overpay and does not batch', async () => {
+		const { db, batched } = batchDb([oweDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd1',
+			amount: 250000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toBe('overpay');
+		expect(batched).toHaveLength(0);
+	});
+
+	it('owe payment: expense tx, desc "Bayar utang ke", 3 batched stmts', async () => {
+		const { db, batched } = batchDb([oweDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd1',
+			amount: 200000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toEqual({ id: 'd1' });
+		expect(batched).toHaveLength(3);
+		expect(batched[0].sql).toContain('INSERT INTO debt_payments');
+		expect(batched[1].sql).toContain('INSERT INTO transactions');
+		expect(batched[1].binds).toEqual(
+			expect.arrayContaining(['w1', 'Bayar utang ke Budi', 200000, 'Lainnya', 'expense'])
+		);
+		expect(batched[2].sql).toContain('UPDATE debts SET paid = paid + ?');
+	});
+
+	it('owed payment: income tx, desc "Terima bayaran dari"', async () => {
+		const { db, batched } = batchDb([owedDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd2',
+			amount: 200000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toEqual({ id: 'd2' });
+		expect(batched[1].binds).toEqual(
+			expect.arrayContaining(['w1', 'Terima bayaran dari Ani', 200000, 'Lainnya', 'income'])
+		);
+	});
+});
+
+describe('deleteDebt', () => {
+	it('refuses when payments exist', async () => {
+		const db = {
+			prepare: () => ({
+				bind: () => ({
+					first: async () => ({ n: 1 }),
+					run: async () => ({ meta: { changes: 0 } })
+				})
+			})
+		} as unknown as D1Database;
+		expect(await deleteDebt(db, 'x')).toBe('has-payments');
+	});
+	it('deletes when clean', async () => {
+		const db = {
+			prepare: () => ({
+				bind: () => ({
+					first: async () => ({ n: 0 }),
+					run: async () => ({ meta: { changes: 1 } })
+				})
+			})
+		} as unknown as D1Database;
+		expect(await deleteDebt(db, 'x')).toBe('deleted');
+	});
+	it('returns not-found when no row', async () => {
+		const db = {
+			prepare: () => ({
+				bind: () => ({
+					first: async () => ({ n: 0 }),
+					run: async () => ({ meta: { changes: 0 } })
+				})
+			})
+		} as unknown as D1Database;
+		expect(await deleteDebt(db, 'x')).toBe('not-found');
+	});
+});
+
+describe('createDebt', () => {
+	const base = {
+		person: 'Budi',
+		direction: 'owe' as const,
+		amount: 100000,
+		date: '2026-09-08',
+		walletId: 'w1'
+	};
+
+	it('without reduceBalance runs a single insert, no batch', async () => {
+		const { db, batched } = batchDb();
+		const id = await createDebt(db, { ...base, walletId: null, reduceBalance: false });
+		expect(typeof id).toBe('string');
+		expect(batched).toHaveLength(0);
+	});
+
+	it('reduceBalance: 3 batched stmts (debt + payment + tx), paid set full', async () => {
+		const { db, batched } = batchDb();
+		const id = await createDebt(db, { ...base, walletId: 'w1', reduceBalance: true });
+		expect(typeof id).toBe('string');
+		expect(batched).toHaveLength(3);
+		expect(batched[0].sql).toContain('INSERT INTO debts');
+		expect(batched[0].binds).toEqual(
+			expect.arrayContaining([id, 'Budi', 'owe', 100000, 100000, 'w1', '2026-09-08'])
+		);
+		expect(batched[1].sql).toContain('INSERT INTO debt_payments');
+		expect(batched[2].sql).toContain('INSERT INTO transactions');
+		expect(batched[2].binds).toEqual(
+			expect.arrayContaining(['w1', 'Pinjam dari Budi', 100000, 'Lainnya', 'expense'])
+		);
+	});
+});
+
+describe('getDebtDirectionTotals', () => {
+	it('sums remaining per direction from open debts', async () => {
+		const rows = [
+			{ id: 'd1', person: 'B', direction: 'owe', amount: 100000, paid: 40000, remaining: 60000, wallet_id: null, wallet_name: null, date: '2026-09-01', created_at: 'x', updated_at: 'x' },
+			{ id: 'd2', person: 'A', direction: 'owed', amount: 200000, paid: 50000, remaining: 150000, wallet_id: null, wallet_name: null, date: '2026-09-01', created_at: 'x', updated_at: 'x' }
+		];
+		const t = await getDebtDirectionTotals(fakeDb(rows));
+		expect(t).toEqual({ owe: 60000, owed: 150000 });
 	});
 });
