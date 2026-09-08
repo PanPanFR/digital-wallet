@@ -14,7 +14,8 @@ const BulkSchema = z.array(
 		description: z.string().trim().min(1),
 		amount: z.number().int().positive().max(999_999_999),
 		category: z.string().trim().min(1).default('Lainnya'),
-		type: z.enum(['income', 'expense'])
+		type: z.enum(['income', 'expense']),
+		date: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)
 	})
 );
 
