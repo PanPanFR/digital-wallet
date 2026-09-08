@@ -7,12 +7,12 @@
 		"directory": ".svelte-kit/cloudflare",
 		"binding": "ASSETS"
 	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "finance-tracker-db",
-			"database_id": "2036d06c-c897-4d1d-9422-6e898854d700"
-		}
-	],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "digital-wallet-db",
+      "database_id": "a6c5170a-84d4-4077-9670-5dadeac0eba5"
+    }
+  ],
 	"observability": { "enabled": true }
 }
