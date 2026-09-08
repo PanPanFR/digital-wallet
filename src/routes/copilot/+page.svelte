@@ -5,12 +5,18 @@
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR } from '$lib/format';
 
-	let { form } = $props();
+	let { form, data } = $props();
 
 	let tab = $state<'parse' | 'report'>('parse');
 
 	// Parse tab
-	type Preview = { description: string; amount: number; category: string; type: 'income' | 'expense' };
+	type Preview = {
+		walletId: string;
+		description: string;
+		amount: number;
+		category: string;
+		type: 'income' | 'expense';
+	};
 	let text = $state('');
 	let parsing = $state(false);
 	let parseError = $state('');
@@ -20,6 +26,8 @@
 
 	const selectedItems = $derived(previews.filter((_, i) => selected[i]));
 	const anySelected = $derived(selected.some(Boolean));
+
+	const walletName = (id: string) => data.wallets.find((w) => w.id === id)?.name ?? id;
 
 	async function doParse() {
 		if (!text.trim() || parsing) return;
@@ -164,7 +172,9 @@
 							<input type="checkbox" bind:checked={selected[i]} class="accent-sky-600" />
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-medium text-gray-900 dark:text-white">{p.description}</p>
-								<p class="text-xs text-gray-500 dark:text-gray-400">{p.category}</p>
+								<p class="text-xs text-gray-500 dark:text-gray-400">
+									{p.category} · {walletName(p.walletId)}
+								</p>
 							</div>
 							<span
 								class="font-mono text-sm font-bold whitespace-nowrap

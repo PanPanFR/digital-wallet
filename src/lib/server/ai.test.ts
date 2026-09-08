@@ -16,7 +16,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { parseTransactions, reportAnswer } from '$lib/server/ai';
+import { buildParsePrompt, parseTransactions, reportAnswer } from '$lib/server/ai';
+import type { WalletRow } from '$lib/server/db';
+
+const testWallets: WalletRow[] = [
+	{ id: 'seed-digital', name: 'Dompet Digital', kind: 'digital', created_at: 'x' },
+	{ id: 'seed-cash', name: 'Tunai', kind: 'cash', created_at: 'x' }
+];
 
 interface FetchCall {
 	url: string;
@@ -78,23 +84,47 @@ describe('parseTransactions', () => {
 	it('returns normalized transactions from a valid Gemini response', async () => {
 		const json = JSON.stringify({
 			transactions: [
-				{ description: 'Kopi', amount: 25000, category: 'Makanan', type: 'expense' },
-				{ description: 'Gaji', amount: 5_000_000, category: 'Gaji', type: 'income' }
+				{
+					walletId: 'seed-digital',
+					description: 'Kopi',
+					amount: 25000,
+					category: 'Makanan',
+					type: 'expense'
+				},
+				{
+					walletId: 'seed-cash',
+					description: 'Gaji',
+					amount: 5_000_000,
+					category: 'Gaji',
+					type: 'income'
+				}
 			]
 		});
 		nextResponder = () => geminiTextResponse(json);
 
-		const out = await parseTransactions('test-key', 'beli kopi 25rb');
+		const out = await parseTransactions('test-key', 'beli kopi 25rb', testWallets);
 
 		expect(out).toEqual([
-			{ description: 'Kopi', amount: 25000, category: 'Makanan', type: 'expense' },
-			{ description: 'Gaji', amount: 5_000_000, category: 'Gaji', type: 'income' }
+			{
+				walletId: 'seed-digital',
+				description: 'Kopi',
+				amount: 25000,
+				category: 'Makanan',
+				type: 'expense'
+			},
+			{
+				walletId: 'seed-cash',
+				description: 'Gaji',
+				amount: 5_000_000,
+				category: 'Gaji',
+				type: 'income'
+			}
 		]);
 	});
 
 	it('sends the API key in the Authorization header to the Gemini/9router endpoint', async () => {
 		nextResponder = () => geminiTextResponse('{"transactions":[]}');
-		await parseTransactions('sk-test-1234', 'apa saja');
+		await parseTransactions('sk-test-1234', 'apa saja', testWallets);
 
 		expect(calls).toHaveLength(1);
 		const headers = calls[0].init.headers as Record<string, string>;
@@ -103,7 +133,7 @@ describe('parseTransactions', () => {
 
 	it('posts JSON to {baseUrl}/chat/completions with a model field', async () => {
 		nextResponder = () => geminiTextResponse('{"transactions":[]}');
-		await parseTransactions('k', 'x');
+		await parseTransactions('k', 'x', testWallets);
 
 		const { url, init } = calls[0];
 		expect(url).toMatch(/\/chat\/completions$/);
@@ -117,41 +147,41 @@ describe('parseTransactions', () => {
 	it('drops malformed entries and keeps valid ones', async () => {
 		const json = JSON.stringify({
 			transactions: [
-				{ description: 'OK 1', amount: 100, category: 'A', type: 'expense' },
+				{ walletId: 'seed-cash', description: 'OK 1', amount: 100, category: 'A', type: 'expense' },
 				{ description: 'missing amount', category: 'B', type: 'expense' },
-				{ description: 'bad type', amount: 50, category: 'C', type: 'transfer' },
+				{ walletId: 'seed-cash', description: 'bad type', amount: 50, category: 'C', type: 'transfer' },
 				null,
 				'not an object',
-				{ description: 'OK 2', amount: 200, category: 'D', type: 'income' }
+				{ walletId: 'seed-cash', description: 'OK 2', amount: 200, category: 'D', type: 'income' }
 			]
 		});
 		nextResponder = () => geminiTextResponse(json);
 
-		const out = await parseTransactions('k', 'mixed input');
+		const out = await parseTransactions('k', 'mixed input', testWallets);
 		expect(out).toEqual([
-			{ description: 'OK 1', amount: 100, category: 'A', type: 'expense' },
-			{ description: 'OK 2', amount: 200, category: 'D', type: 'income' }
+			{ walletId: 'seed-cash', description: 'OK 1', amount: 100, category: 'A', type: 'expense' },
+			{ walletId: 'seed-cash', description: 'OK 2', amount: 200, category: 'D', type: 'income' }
 		]);
 	});
 
 	it('returns an empty array (does not throw) when no valid transactions are present', async () => {
 		const json = JSON.stringify({
 			transactions: [
-				{ description: 'no amount' },
-				{ description: 'bad type', amount: 1, type: 'transfer' },
+				{ walletId: 'seed-cash', description: 'no amount' },
+				{ walletId: 'seed-cash', description: 'bad type', amount: 1, type: 'transfer' },
 				null,
 				42
 			]
 		});
 		nextResponder = () => geminiTextResponse(json);
 
-		const out = await parseTransactions('k', 'nothing usable');
+		const out = await parseTransactions('k', 'nothing usable', testWallets);
 		expect(out).toEqual([]);
 	});
 
 	it('returns an empty array when Gemini returns an empty transaction list', async () => {
 		nextResponder = () => geminiTextResponse('{"transactions":[]}');
-		const out = await parseTransactions('k', 'kosong');
+		const out = await parseTransactions('k', 'kosong', testWallets);
 		expect(out).toEqual([]);
 	});
 
@@ -159,26 +189,73 @@ describe('parseTransactions', () => {
 		nextResponder = () =>
 			new Response(JSON.stringify({ error: 'quota exceeded' }), { status: 429 });
 
-		await expect(parseTransactions('k', 'x')).rejects.toThrow(/quota|rate|limit|429/i);
+		await expect(parseTransactions('k', 'x', testWallets)).rejects.toThrow(/quota|rate|limit|429/i);
 	});
 
 	it('rejects with a friendly error on HTTP 500 (server error)', async () => {
 		nextResponder = () =>
 			new Response(JSON.stringify({ error: 'internal' }), { status: 500 });
 
-		await expect(parseTransactions('k', 'x')).rejects.toThrow(/server|try again|500/i);
+		await expect(parseTransactions('k', 'x', testWallets)).rejects.toThrow(/server|try again|500/i);
 	});
 
 	it('handles OpenAI-shape responses as well (extractContent fallback)', async () => {
 		const json = JSON.stringify({
-			transactions: [{ description: 'X', amount: 10, category: 'C', type: 'expense' }]
+			transactions: [{ walletId: 'seed-cash', description: 'X', amount: 10, category: 'C', type: 'expense' }]
 		});
 		nextResponder = () => openAITextResponse(json);
 
-		const out = await parseTransactions('k', 'whatever');
+		const out = await parseTransactions('k', 'whatever', testWallets);
 		expect(out).toEqual([
-			{ description: 'X', amount: 10, category: 'C', type: 'expense' }
+			{ walletId: 'seed-cash', description: 'X', amount: 10, category: 'C', type: 'expense' }
 		]);
+	});
+});
+
+describe('buildParsePrompt', () => {
+	it('includes wallet names and ids in the prompt', () => {
+		const prompt = buildParsePrompt(testWallets);
+		expect(prompt).toContain('seed-digital');
+		expect(prompt).toContain('Dompet Digital');
+		expect(prompt).toContain('Tunai');
+	});
+	it('requires walletId in the JSON format instruction', () => {
+		const prompt = buildParsePrompt(testWallets);
+		expect(prompt).toContain('walletId');
+	});
+});
+
+describe('parseTransactions (wallet-aware)', () => {
+	it('normalizes AI-picked walletId when valid', async () => {
+		const json = JSON.stringify({
+			transactions: [
+				{
+					walletId: 'seed-digital',
+					description: 'Kopi',
+					amount: 25000,
+					category: 'Makanan',
+					type: 'expense'
+				}
+			]
+		});
+		nextResponder = () => geminiTextResponse(json);
+
+		const out = await parseTransactions('k', 'beli kopi', testWallets);
+		expect(out[0].walletId).toBe('seed-digital');
+	});
+
+	it('passes unknown walletId through (parse endpoint rejects it)', async () => {
+		const json = JSON.stringify({
+			transactions: [
+				{ walletId: 'nope', description: 'X', amount: 10, type: 'expense' },
+				{ walletId: 'seed-cash', description: 'Y', amount: 20, type: 'expense' }
+			]
+		});
+		nextResponder = () => geminiTextResponse(json);
+
+		const out = await parseTransactions('k', 'mixed', testWallets);
+		expect(out).toHaveLength(2);
+		expect(out[0].walletId).toBe('nope');
 	});
 });
 

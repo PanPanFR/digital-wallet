@@ -1,10 +1,11 @@
 import { fail, redirect, type Actions, type ServerLoad, type RequestEvent } from '@sveltejs/kit';
 import { z } from 'zod';
-import { createTransactions } from '$lib/server/db';
+import { createTransactions, listWallets } from '$lib/server/db';
 
-export const load: ServerLoad = async ({ locals }: RequestEvent) => {
+export const load: ServerLoad = async ({ locals, platform }: RequestEvent) => {
 	if (!locals.session) redirect(303, '/login');
-	return {};
+	const wallets = await listWallets(platform!.env.DB);
+	return { wallets };
 };
 
 const BulkSchema = z.array(
