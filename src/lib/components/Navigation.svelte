@@ -6,6 +6,7 @@
 	const items = [
 		{ href: '/', label: 'Beranda', icon: Home },
 		{ href: '/transactions', label: 'Transaksi', icon: ArrowLeftRight },
+		{ href: '/wallets', label: 'Dompet', icon: Wallet },
 		{ href: '/analytics', label: 'Analitik', icon: BarChart3 },
 		{ href: '/copilot', label: 'Copilot', icon: Sparkles },
 		{ href: '/settings', label: 'Pengaturan', icon: Settings }
@@ -58,7 +59,7 @@
 	aria-label="Navigasi utama"
 	class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 md:hidden"
 >
-	<div class="grid grid-cols-5">
+	<div class="grid grid-cols-6">
 		{#each items as item (item.href)}
 			{@const active = page.url.pathname === item.href}
 			<a
