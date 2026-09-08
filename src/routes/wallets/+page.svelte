@@ -98,7 +98,7 @@
 </script>
 
 <svelte:head>
-	<title>Dompet · Finance Tracker</title>
+	<title>Dompet · Digital Wallet</title>
 </svelte:head>
 
 {#snippet kindToggle()}

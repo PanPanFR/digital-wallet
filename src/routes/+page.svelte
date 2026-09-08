@@ -24,7 +24,7 @@
 </script>
 
 <svelte:head>
-	<title>Beranda · Finance Tracker</title>
+	<title>Beranda · Digital Wallet</title>
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">

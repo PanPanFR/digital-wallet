@@ -6,14 +6,14 @@
  *  - Session token: `${payloadB64}.${sigHex}` where payload is base64 of
  *    JSON({exp, iat}) and sigHex is HMAC-SHA256(payloadB64) with the
  *    session secret.
- *  - Cookie name: "ft_session".
+ *  - Cookie name: "dw_session".
  *
  * On Cloudflare Workers, SESSION_SECRET is available via process.env thanks
  * to the nodejs_compat compat flag (populates process.env from bindings).
  * Throws if no secret is configured — there is deliberately no fallback.
  */
 
-const SESSION_COOKIE_NAME = 'ft_session';
+const SESSION_COOKIE_NAME = 'dw_session';
 const SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const encoder = new TextEncoder();
 

@@ -1,6 +1,6 @@
-# Finance Tracker v2
+# Digital Wallet
 
-Personal finance tracker: transactions CRUD, monthly dashboard, analytics, and AI copilot (parse free-text transactions, ask questions about your reports). SvelteKit rewrite of the original Next.js app, deployed as a single Cloudflare Worker with D1. OCR dropped.
+Personal digital wallet: named wallets (digital/cash), per-wallet + combined balances, transactions CRUD, monthly dashboard, analytics, and AI copilot (parse free-text transactions, ask questions about your reports). SvelteKit app deployed via Cloudflare Workers Builds (auto-deploy on push to main) with D1.
 
 ## Tech Stack
 
@@ -27,14 +27,14 @@ Personal finance tracker: transactions CRUD, monthly dashboard, analytics, and A
 2. Create a D1 database and put its `database_id` in `wrangler.jsonc`:
 
 	```bash
-	npx wrangler d1 create finance-tracker-db
+	npx wrangler d1 create digital-wallet-db
 	```
 
 3. Apply the schema (local + remote):
 
 	```bash
-	npx wrangler d1 execute finance-tracker-db --local --file schema.sql
-	npx wrangler d1 execute finance-tracker-db --remote --file schema.sql
+	npx wrangler d1 execute digital-wallet-db --local --file schema.sql
+	npx wrangler d1 execute digital-wallet-db --remote --file schema.sql
 	```
 
 4. Set secrets (once; they persist across deploys):

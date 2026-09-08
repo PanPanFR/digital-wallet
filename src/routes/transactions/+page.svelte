@@ -60,7 +60,7 @@
 </script>
 
 <svelte:head>
-	<title>Transaksi · Finance Tracker</title>
+	<title>Transaksi · Digital Wallet</title>
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">

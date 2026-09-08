@@ -21,7 +21,7 @@
 		<span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-white">
 			<Wallet size={17} />
 		</span>
-		<span class="font-semibold text-gray-900 dark:text-white">Finance Tracker</span>
+		<span class="font-semibold text-gray-900 dark:text-white">Digital Wallet</span>
 	</a>
 
 	<nav aria-label="Navigasi utama" class="flex-1 space-y-1 overflow-y-auto p-3">

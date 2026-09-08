@@ -105,7 +105,7 @@
 </script>
 
 <svelte:head>
-	<title>Copilot · Finance Tracker</title>
+	<title>Copilot · Digital Wallet</title>
 </svelte:head>
 
 <main class="mx-auto max-w-2xl px-4 py-6">
