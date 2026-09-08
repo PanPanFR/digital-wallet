@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { TrendingDown, TrendingUp, X } from '@lucide/svelte';
+	import { ArrowLeftRight, TrendingDown, TrendingUp, X } from '@lucide/svelte';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES } from '$lib/constants';
+	import { todayISO } from '$lib/format';
 	import type { TxRow, WalletRow } from '$lib/server/db';
 
 	let {
@@ -29,6 +30,8 @@
 	let type = $state<TxRow['type']>('expense');
 	let category = $state<string>(CATEGORIES[0]);
 	let walletId = $state('');
+	let toWalletId = $state('');
+	let date = $state(todayISO());
 	let errors = $state<Record<string, string>>({});
 
 	const isEdit = $derived(!!transaction);
@@ -40,6 +43,8 @@
 			type = transaction?.type ?? 'expense';
 			category = transaction?.category ?? CATEGORIES[0];
 			walletId = transaction?.wallet_id ?? '';
+			toWalletId = transaction?.to_wallet_id ?? '';
+			date = transaction?.date ?? todayISO();
 			errors = {};
 		}
 	});
@@ -103,7 +108,7 @@
 
 				<div>
 					<span class="block text-sm mb-1">Tipe</span>
-					<div class="grid grid-cols-2 gap-2" role="group" aria-label="Tipe transaksi">
+					<div class="grid grid-cols-3 gap-2" role="group" aria-label="Tipe transaksi">
 						<button
 							type="button"
 							aria-pressed={type === 'expense'}
@@ -126,8 +131,33 @@
 						>
 							<TrendingUp size={14} /> Pemasukan
 						</button>
+						<button
+							type="button"
+							aria-pressed={type === 'transfer'}
+							onclick={() => (type = 'transfer')}
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+								{type === 'transfer'
+								? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
+								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+						>
+							<ArrowLeftRight size={14} /> Transfer
+						</button>
 					</div>
 					{#if errors.type}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.type}</p>{/if}
+				</div>
+
+				<div>
+					<label for="tx-date" class="block text-sm mb-1">Tanggal</label>
+					<input
+						id="tx-date"
+						name="date"
+						type="date"
+						bind:value={date}
+						aria-invalid={!!errors.date}
+						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
+							{errors.date ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+					/>
+					{#if errors.date}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.date}</p>{/if}
 				</div>
 
 				<div>
@@ -155,6 +185,34 @@
 					</select>
 					{#if errors.walletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.walletId}</p>{/if}
 				</div>
+
+				{#if type === 'transfer'}
+					<div>
+						<label for="tx-to-wallet" class="block text-sm mb-1">Dompet tujuan</label>
+						<select
+							id="tx-to-wallet"
+							name="toWalletId"
+							bind:value={toWalletId}
+							required
+							aria-invalid={!!errors.toWalletId}
+							class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
+								{errors.toWalletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						>
+							<option value="" disabled>Pilih dompet tujuan</option>
+							{#each ['digital', 'cash'] as kind (kind)}
+								{@const group = wallets.filter((w) => w.kind === kind && w.id !== walletId)}
+								{#if group.length > 0}
+									<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
+										{#each group as w (w.id)}
+											<option value={w.id}>{w.name}</option>
+										{/each}
+									</optgroup>
+								{/if}
+							{/each}
+						</select>
+						{#if errors.toWalletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.toWalletId}</p>{/if}
+					</div>
+				{/if}
 
 				<div>
 					<div class="flex items-center justify-between mb-1">

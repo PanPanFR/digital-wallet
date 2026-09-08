@@ -9,9 +9,7 @@ const dateTime = new Intl.DateTimeFormat('id-ID', {
 	timeZone: 'Asia/Jakarta',
 	day: 'numeric',
 	month: 'short',
-	year: 'numeric',
-	hour: '2-digit',
-	minute: '2-digit'
+	year: 'numeric'
 });
 
 export function formatIDR(amount: number): string {

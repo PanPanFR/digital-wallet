@@ -17,14 +17,33 @@ export const load: ServerLoad = async ({ locals, platform, url }: RequestEvent) 
 	// ?wallet= holds either a kind ('digital'|'cash') or a wallet id.
 	const walletParam = url.searchParams.get('wallet') || undefined;
 	const kind = walletParam === 'digital' || walletParam === 'cash' ? walletParam : undefined;
+	const q = url.searchParams.get('q') || undefined;
+	const category = url.searchParams.get('category') || undefined;
+	const offsetParam = parseInt(url.searchParams.get('offset') ?? '', 10);
+	const offset = Number.isNaN(offsetParam) ? 0 : offsetParam;
+	const limit = 50;
 	const wallets = await listWallets(db);
 	const rows = await listTransactions(db, {
-		limit: 50,
+		limit,
+		offset,
 		month,
-		walletId: kind ? undefined : walletParam
+		walletId: kind ? undefined : walletParam,
+		search: q,
+		category
 	});
+	// hasMore computed on raw rows, before the client-visible kind filter.
+	const hasMore = rows.length === limit;
 	const transactions = kind ? rows.filter((t) => t.wallet_kind === kind) : rows;
-	return { transactions, wallets, month: month ?? null, wallet: walletParam ?? null };
+	return {
+		transactions,
+		wallets,
+		month: month ?? null,
+		wallet: walletParam ?? null,
+		q: q ?? '',
+		category: category ?? '',
+		offset,
+		hasMore
+	};
 };
 
 export const actions: Actions = {
