@@ -14,7 +14,7 @@ CREATE TABLE transactions_new (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 INSERT INTO transactions_new (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at, updated_at)
-SELECT id, wallet_id, NULL, description, amount, category, type, substr(created_at, 1, 10), created_at, updated_at
+SELECT id, wallet_id, NULL, description, amount, category, type, COALESCE(substr(created_at, 1, 10), date('now')), created_at, updated_at
 FROM transactions;
 DROP TABLE transactions;
 ALTER TABLE transactions_new RENAME TO transactions;
