@@ -4,6 +4,7 @@ import {
 	createTransaction,
 	deleteTransaction,
 	listTransactions,
+	listWallets,
 	updateTransaction
 } from '$lib/server/db';
 import { TxSchema, fieldErrors } from '$lib/server/validation';
@@ -13,8 +14,17 @@ export const load: ServerLoad = async ({ locals, platform, url }: RequestEvent) 
 	const db = platform!.env.DB;
 	const monthParam = url.searchParams.get('month');
 	const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : undefined;
-	const transactions = await listTransactions(db, { limit: 50, month });
-	return { transactions, month: month ?? null };
+	// ?wallet= holds either a kind ('digital'|'cash') or a wallet id.
+	const walletParam = url.searchParams.get('wallet') || undefined;
+	const kind = walletParam === 'digital' || walletParam === 'cash' ? walletParam : undefined;
+	const wallets = await listWallets(db);
+	const rows = await listTransactions(db, {
+		limit: 50,
+		month,
+		walletId: kind ? undefined : walletParam
+	});
+	const transactions = kind ? rows.filter((t) => t.wallet_kind === kind) : rows;
+	return { transactions, wallets, month: month ?? null, wallet: walletParam ?? null };
 };
 
 export const actions: Actions = {
