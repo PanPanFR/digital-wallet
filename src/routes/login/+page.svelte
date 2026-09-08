@@ -6,13 +6,13 @@
 </script>
 
 <svelte:head>
-	<title>{data.mode === 'setup' ? 'Atur Password' : 'Login'} · Finance Tracker</title>
+	<title>{data.mode === 'setup' ? 'Atur Password' : 'Login'} · Digital Wallet</title>
 </svelte:head>
 
 <main class="min-h-screen flex items-center justify-center px-4">
 	<div class="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 space-y-4">
 		<div class="text-center space-y-1">
-			<h1 class="text-xl font-semibold">Finance Tracker</h1>
+			<h1 class="text-xl font-semibold">Digital Wallet</h1>
 			<p class="text-sm text-gray-500 dark:text-gray-400">
 				{data.mode === 'setup' ? 'Atur master password' : 'Masuk untuk melanjutkan'}
 			</p>

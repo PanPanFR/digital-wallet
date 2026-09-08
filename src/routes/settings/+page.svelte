@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Pengaturan · Finance Tracker</title>
+	<title>Pengaturan · Digital Wallet</title>
 </svelte:head>
 
 <main class="min-h-screen p-4 max-w-md mx-auto space-y-6">

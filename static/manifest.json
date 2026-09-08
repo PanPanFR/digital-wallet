@@ -1,6 +1,6 @@
 {
-	"name": "Finance Tracker",
-	"short_name": "Finance Tracker",
+	"name": "Digital Wallet",
+	"short_name": "Digital Wallet",
 	"description": "Catat keuangan pribadi dengan ringkasan bulanan dan analitik AI",
 	"start_url": "/",
 	"display": "standalone",

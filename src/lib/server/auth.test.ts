@@ -7,7 +7,7 @@
  *    digest = SHA-256 PBKDF2 100k iter / 64 hex).
  *  - Session token format: `${payloadB64}.${sigHex}` where payload is
  *    base64(JSON({exp, iat})) and sigHex is HMAC-SHA256 of the base64 payload.
- *  - Cookie name: "ft_session".
+ *  - Cookie name: "dw_session".
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -37,7 +37,7 @@ afterAll(() => {
 
 describe('sessionCookieName', () => {
 	it('equals the cookie name used by the old app', () => {
-		expect(sessionCookieName).toBe('ft_session');
+		expect(sessionCookieName).toBe('dw_session');
 	});
 });
 

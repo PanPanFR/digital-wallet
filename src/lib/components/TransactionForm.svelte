@@ -5,13 +5,14 @@
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES } from '$lib/constants';
-	import type { TxRow } from '$lib/server/db';
+	import type { TxRow, WalletRow } from '$lib/server/db';
 
 	let {
 		transaction = null,
+		wallets = [] as WalletRow[],
 		open = false,
 		onclose
-	}: { transaction?: TxRow | null; open?: boolean; onclose: () => void } = $props();
+	}: { transaction?: TxRow | null; wallets?: WalletRow[]; open?: boolean; onclose: () => void } = $props();
 
 	const PRESETS: [number, string][] = [
 		[10_000, '+10rb'],
@@ -27,6 +28,7 @@
 	let amount = $state<string | number | undefined>('');
 	let type = $state<'income' | 'expense'>('expense');
 	let category = $state<string>(CATEGORIES[0]);
+	let walletId = $state('');
 	let errors = $state<Record<string, string>>({});
 
 	const isEdit = $derived(!!transaction);
@@ -37,6 +39,7 @@
 			amount = transaction ? String(transaction.amount) : '';
 			type = transaction?.type ?? 'expense';
 			category = transaction?.category ?? CATEGORIES[0];
+			walletId = transaction?.wallet_id ?? '';
 			errors = {};
 		}
 	});
@@ -125,6 +128,32 @@
 						</button>
 					</div>
 					{#if errors.type}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.type}</p>{/if}
+				</div>
+
+				<div>
+					<label for="tx-wallet" class="block text-sm mb-1">Dompet</label>
+					<select
+						id="tx-wallet"
+						name="walletId"
+						bind:value={walletId}
+						required
+						aria-invalid={!!errors.walletId}
+						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
+							{errors.walletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+					>
+						<option value="" disabled>Pilih dompet</option>
+						{#each ['digital', 'cash'] as kind (kind)}
+							{@const group = wallets.filter((w) => w.kind === kind)}
+							{#if group.length > 0}
+								<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
+									{#each group as w (w.id)}
+										<option value={w.id}>{w.name}</option>
+									{/each}
+								</optgroup>
+							{/if}
+						{/each}
+					</select>
+					{#if errors.walletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.walletId}</p>{/if}
 				</div>
 
 				<div>

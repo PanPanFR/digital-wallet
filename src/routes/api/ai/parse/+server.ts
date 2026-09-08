@@ -1,6 +1,7 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { parseTransactions } from '$lib/server/ai';
+import { listWallets } from '$lib/server/db';
 
 const ParseSchema = z.object({
 	text: z.string().trim().min(1, 'Teks tidak boleh kosong').max(500)
@@ -24,7 +25,12 @@ export const POST: RequestHandler = async ({ request, platform, url }) => {
 	}
 
 	try {
-		const transactions = await parseTransactions(apiKey, parsed.data.text);
+		const wallets = await listWallets(platform!.env.DB);
+		const transactions = await parseTransactions(apiKey, parsed.data.text, wallets);
+		const ids = new Set(wallets.map((w) => w.id));
+		if (transactions.some((t) => !ids.has(t.walletId))) {
+			return json({ error: 'AI memilih dompet tidak valid' }, { status: 400 });
+		}
 		return json({ transactions });
 	} catch (e) {
 		return json(
