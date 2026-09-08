@@ -21,7 +21,7 @@ export const actions: Actions = {
 	create: async ({ request, platform }: RequestEvent) => {
 		const parsed = TxSchema.safeParse(Object.fromEntries(await request.formData()));
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-		await createTransaction(platform!.env.DB, parsed.data);
+		await createTransaction(platform!.env.DB, { ...parsed.data, wallet_id: parsed.data.walletId });
 		return { success: true };
 	},
 
@@ -31,7 +31,10 @@ export const actions: Actions = {
 		if (!id) return fail(400, { errors: { id: 'ID transaksi tidak ditemukan' } });
 		const parsed = TxSchema.safeParse(form);
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-		await updateTransaction(platform!.env.DB, id, parsed.data);
+		await updateTransaction(platform!.env.DB, id, {
+			...parsed.data,
+			wallet_id: parsed.data.walletId
+		});
 		return { success: true };
 	},
 

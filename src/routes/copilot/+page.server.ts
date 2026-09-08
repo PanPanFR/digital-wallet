@@ -9,6 +9,7 @@ export const load: ServerLoad = async ({ locals }: RequestEvent) => {
 
 const BulkSchema = z.array(
 	z.object({
+		walletId: z.string().trim().min(1),
 		description: z.string().trim().min(1),
 		amount: z.number().int().positive().max(999_999_999),
 		category: z.string().trim().min(1).default('Lainnya'),
@@ -29,7 +30,10 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { error: 'Data transaksi tidak valid' });
 		if (parsed.data.length === 0) return fail(400, { error: 'Tidak ada transaksi dipilih' });
 
-		const count = await createTransactions(platform!.env.DB, parsed.data);
+		const count = await createTransactions(
+			platform!.env.DB,
+			parsed.data.map((d) => ({ ...d, wallet_id: d.walletId }))
+		);
 		return { success: true, count };
 	}
 };
