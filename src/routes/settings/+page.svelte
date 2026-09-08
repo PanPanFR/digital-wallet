@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let { data, form } = $props();
 	let submitting = $state(false);
@@ -79,6 +80,26 @@
 				class="w-full rounded bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium py-2 transition"
 			>
 				{submitting ? 'Menyimpan…' : 'Simpan Password'}
+			</button>
+		</form>
+	</section>
+
+	<section class="bg-white dark:bg-gray-900 rounded-2xl shadow p-5 space-y-4">
+		<h2 class="font-medium">Tampilan</h2>
+		<div class="flex items-center justify-between">
+			<p class="text-sm text-gray-700 dark:text-gray-300">Gelap atau terang</p>
+			<ThemeToggle />
+		</div>
+	</section>
+
+	<section class="bg-white dark:bg-gray-900 rounded-2xl shadow p-5 space-y-4">
+		<h2 class="font-medium">Sesi</h2>
+		<form method="POST" action="/?/logout">
+			<button
+				type="submit"
+				class="w-full rounded border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 font-medium py-2"
+			>
+				Keluar
 			</button>
 		</form>
 	</section>

@@ -2,7 +2,6 @@
 	import '../app.css';
 	import Toast from '$lib/components/Toast.svelte';
 	import Navigation from '$lib/components/Navigation.svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	let { data, children } = $props();
 </script>
 
