@@ -22,3 +22,13 @@ export function formatDate(iso: string): string {
 	const d = new Date(iso);
 	return Number.isNaN(d.getTime()) ? '' : dateTime.format(d);
 }
+
+/** Today's calendar date (YYYY-MM-DD) in WIB. */
+export function todayISO(): string {
+	return new Intl.DateTimeFormat('en-CA', {
+		timeZone: 'Asia/Jakarta',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	}).format(new Date());
+}
