@@ -1,27 +1,17 @@
-const CACHE = 'ftv2-static-v1';
-const ASSETS = ['/', '/manifest.json'];
+// Self-cleanup: an older SW (cache-first on all GETs) served stale page data,
+// making deleted transactions reappear after navigation. The app needs no SW
+// (all data lives in D1); this version unregisters itself and purges caches.
+// Deployed once; delete this file after 2027-01-01.
+self.addEventListener('install', () => self.skipWaiting());
 
-self.addEventListener('install', (e) => {
-	e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
-	self.skipWaiting();
-});
-
-self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
-
-self.addEventListener('fetch', (e) => {
-	const url = new URL(e.request.url);
-	if (e.request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
-	e.respondWith(
-		caches.match(e.request).then(
-			(hit) =>
-				hit ||
-				fetch(e.request).then((res) => {
-					if (url.origin === location.origin) {
-						const copy = res.clone();
-						caches.open(CACHE).then((c) => c.put(e.request, copy));
-					}
-					return res;
-				})
-		)
+self.addEventListener('activate', (e) => {
+	e.waitUntil(
+		(async () => {
+			const keys = await caches.keys();
+			await Promise.all(keys.map((k) => caches.delete(k)));
+			await self.registration.unregister();
+			const clients = await self.clients.matchAll({ type: 'window' });
+			for (const client of clients) client.navigate(client.url);
+		})()
 	);
 });
