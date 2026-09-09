@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Plus, Trash2, HandCoins, TrendingDown, TrendingUp, ArrowLeftRight } from '@lucide/svelte';
+	import { prefersReducedMotion } from 'svelte/motion';
+	import { fade, scale } from 'svelte/transition';
+	import { Plus, Trash2, TrendingDown, TrendingUp, ArrowLeftRight, X } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
@@ -9,6 +11,33 @@
 	import type { DebtRow, WalletRow } from '$lib/server/db';
 
 	let { data } = $props();
+
+	// Avatar initial tint per row direction (owe=red, owed=emerald)
+	function avatarTint(d: DebtRow) {
+		return d.direction === 'owe'
+			? 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400'
+			: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400';
+	}
+
+	function initials(name: string) {
+		return (
+			name
+				.trim()
+				.split(/\s+/)
+				.map((w) => [...w][0])
+				.filter(Boolean)
+				.slice(0, 2)
+				.join('')
+				.toUpperCase() || '?'
+		);
+	}
+
+	// KPI icon tiles: red hutang, emerald piutang, slate selisih
+	const kpiTiles = {
+		owe: 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
+		owed: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
+		diff: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+	} as const;
 
 	const PRESETS: [number, string][] = [
 		[10_000, '+10rb'],
@@ -176,60 +205,69 @@
 
 <main class="mx-auto max-w-3xl px-4 py-6">
 	<div class="mb-4 flex items-center justify-between gap-3">
-		<h1 class="text-xl font-semibold text-gray-900 dark:text-white">Hutang</h1>
-		<button
-			onclick={openCreate}
-			class="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 text-sm font-medium"
-		>
+		<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Hutang</h1>
+		<button onclick={openCreate} class="btn btn-primary px-3 py-2">
 			<Plus size={16} /> Catat
 		</button>
 	</div>
 
 	<section class="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan hutang">
-		<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-red-500"><TrendingDown size={14} /></span>
-				Hutang Saya
+		<div class="card p-4">
+			<div class="flex items-center gap-2.5">
+				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.owe}">
+					<TrendingDown size={16} />
+				</span>
+				<div>
+					<p class="text-xs text-slate-500 dark:text-slate-400">Hutang Saya</p>
+					<p class="text-lg font-bold tabular-nums text-red-600 dark:text-red-400">
+						{formatIDR(data.totals.owe)}
+					</p>
+				</div>
 			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-red-600 dark:text-red-400">
-				{formatIDR(data.totals.owe)}
-			</p>
 		</div>
 
-		<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-emerald-500"><TrendingUp size={14} /></span>
-				Piutang Saya
+		<div class="card p-4">
+			<div class="flex items-center gap-2.5">
+				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.owed}">
+					<TrendingUp size={16} />
+				</span>
+				<div>
+					<p class="text-xs text-slate-500 dark:text-slate-400">Piutang Saya</p>
+					<p class="text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+						{formatIDR(data.totals.owed)}
+					</p>
+				</div>
 			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
-				{formatIDR(data.totals.owed)}
-			</p>
 		</div>
 
-		<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-sky-500"><ArrowLeftRight size={14} /></span>
-				Selisih
+		<div class="card p-4">
+			<div class="flex items-center gap-2.5">
+				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.diff}">
+					<ArrowLeftRight size={16} />
+				</span>
+				<div>
+					<p class="text-xs text-slate-500 dark:text-slate-400">Selisih</p>
+					<p
+						class="text-lg font-bold tabular-nums
+						{diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}"
+					>
+						{formatIDR(diff)}
+					</p>
+				</div>
 			</div>
-			<p
-				class="mt-1 font-mono text-lg font-bold
-				{diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}"
-			>
-				{formatIDR(diff)}
-			</p>
 		</div>
 	</section>
 
 	<section class="mt-6" aria-label="Daftar hutang">
 		{#if data.debts.length === 0}
-			<p
-				class="rounded-xl border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
-			>
-				Belum ada catatan hutang.
-			</p>
+			<div class="card flex flex-col items-center justify-center gap-1 border-dashed py-10 text-center">
+				<TrendingDown size={24} class="text-slate-300 dark:text-slate-600" aria-hidden="true" />
+				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada catatan hutang.</p>
+				<p class="text-xs text-slate-400 dark:text-slate-500">Catat utang atau piutang dengan tombol Catat.</p>
+			</div>
 		{:else}
 			<div class="mb-2 flex items-center justify-between gap-3">
-				<label for="select-all-debts" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+				<label for="select-all-debts" class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
 					<input
 						id="select-all-debts"
 						bind:this={selectAllEl}
@@ -237,18 +275,18 @@
 						checked={allSelected}
 						onchange={toggleAll}
 						aria-label="Pilih semua catatan hutang"
-						class="h-4 w-4 rounded border-gray-300 text-sky-600 dark:border-gray-600"
+						class="h-4 w-4 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
 					/>
 					Pilih semua
 				</label>
 				{#if selectedCount > 0}
 					<div class="flex items-center gap-2">
-						<span class="text-xs text-gray-400 dark:text-gray-500">Menghapus yang terpilih di halaman ini saja.</span>
+						<span class="text-xs text-slate-400 dark:text-slate-500">Menghapus yang terpilih di halaman ini saja.</span>
 						<button
 							type="button"
 							onclick={() => (showBulkConfirm = true)}
 							aria-label="Hapus {selectedCount} catatan hutang terpilih"
-							class="flex items-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-medium text-white"
+							class="btn btn-danger px-3 py-2"
 						>
 							<Trash2 size={16} /> Hapus ({selectedCount})
 						</button>
@@ -256,7 +294,7 @@
 				{/if}
 			</div>
 			<ul
-				class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+				class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
 			>
 				{#each data.debts as d (d.id)}
 					<li class="px-4 py-3 {d.remaining === 0 ? 'opacity-60' : ''}">
@@ -266,41 +304,48 @@
 								checked={selected.has(d.id)}
 								onchange={() => toggleRow(d.id)}
 								aria-label="Pilih catatan hutang {d.person}"
-								class="h-4 w-4 shrink-0 rounded border-gray-300 text-sky-600 dark:border-gray-600"
+								class="h-4 w-4 shrink-0 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
 							/>
+							<span
+								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold {avatarTint(
+									d
+								)}"
+								aria-hidden="true"
+							>
+								{initials(d.person)}
+							</span>
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-1.5">
-									<p class="truncate text-sm font-medium text-gray-900 dark:text-white">
+									<p class="truncate text-sm font-medium text-slate-900 dark:text-white">
 										{d.person}
 									</p>
 									<span
-										class="rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap
+										class="chip
 										{d.direction === 'owe'
 										? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-										: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'}"
+										: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'}"
 									>
 										{d.direction === 'owe' ? 'Utang' : 'Piutang'}
 									</span>
 									{#if d.remaining === 0}
 										<span
-											class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+											class="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
 										>
 											Lunas
 										</span>
 									{/if}
 								</div>
-								<p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+								<p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
 									<span>{formatDate(d.date)}</span>
 									{#if d.wallet_name}
-										<span
-											class="rounded-full bg-indigo-50 px-1.5 py-0.5 font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400"
-										>
+										<!-- ponytail: DebtRow has no wallet_kind; neutral chip until load adds it -->
+										<span class="rounded-full bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
 											{d.wallet_name}
 										</span>
 									{/if}
 								</p>
 								<div
-									class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800"
+									class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
 									role="progressbar"
 									aria-valuenow={Math.round(pct(d))}
 									aria-valuemin={0}
@@ -315,29 +360,26 @@
 							</div>
 							<div class="flex flex-col items-end gap-1.5">
 								<div class="text-right">
-									<p class="text-[10px] text-gray-400 dark:text-gray-500">Sisa</p>
+									<p class="text-[10px] text-slate-400 dark:text-slate-500">Sisa</p>
 									<span
-										class="whitespace-nowrap font-mono text-sm font-bold
+										class="whitespace-nowrap text-sm font-bold tabular-nums
 										{d.remaining === 0
 										? 'text-emerald-600 dark:text-emerald-400'
-										: 'text-gray-900 dark:text-white'}"
+										: 'text-slate-900 dark:text-white'}"
 									>
 										{formatIDR(d.remaining)}
 									</span>
 								</div>
 								<div class="flex gap-1">
 									{#if d.remaining > 0}
-										<button
-											onclick={() => openPay(d)}
-											class="rounded-lg bg-sky-600 hover:bg-sky-500 px-2.5 py-1 text-xs font-medium text-white"
-										>
+										<button onclick={() => openPay(d)} class="btn btn-primary px-2.5 py-1 text-xs">
 											Bayar
 										</button>
 									{/if}
 									<button
 										onclick={() => (deleteTarget = d)}
 										aria-label="Hapus catatan hutang {d.person}"
-										class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
+										class="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50"
 									>
 										<Trash2 size={15} />
 									</button>
@@ -354,35 +396,35 @@
 <!-- Modal Catat Utang -->
 {#if showCreate}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onclick={() => (showCreate = false)}>
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
+		onclick={() => (showCreate = false)}
+	>
 		<div
-			class="w-full max-w-md space-y-4 rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900"
+			class="card w-full max-w-md space-y-4 p-5 shadow-lg"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="debt-form-title"
 			tabindex="-1"
 			use:modalAccessibility={{ onClose: () => (showCreate = false) }}
+			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
 			<div class="flex items-center justify-between">
 				<div>
 					<h2 id="debt-form-title" class="font-semibold">Catat Utang</h2>
-					<p class="text-xs text-gray-500 dark:text-gray-400">Catat utang kamu atau piutang orang lain</p>
+					<p class="text-xs text-slate-500 dark:text-slate-400">Catat utang kamu atau piutang orang lain</p>
 				</div>
-				<button
-					class="opacity-60 hover:opacity-100"
-					aria-label="Tutup dialog"
-					disabled={createSubmitting}
-					onclick={() => (showCreate = false)}
-				>
-					<HandCoins size={18} />
+				<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={createSubmitting} onclick={() => (showCreate = false)}>
+					<X size={18} />
 				</button>
 			</div>
 
 			<form method="POST" action="?/create" use:enhance={handleCreate} novalidate class="space-y-4">
 				<div>
-					<label for="debt-person" class="mb-1 block text-sm">Nama</label>
+					<label for="debt-person" class="label">Nama</label>
 					<input
 						id="debt-person"
 						name="person"
@@ -392,24 +434,23 @@
 						placeholder="cth. Budi, Ibu Sari"
 						bind:value={person}
 						aria-invalid={!!errors.person}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{errors.person ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {errors.person ? 'border-red-400' : ''}"
 					/>
 					{#if errors.person}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.person}</p>{/if}
 				</div>
 
 				<div>
-					<span class="mb-1 block text-sm">Arah</span>
+					<span class="label">Arah</span>
 					<input type="hidden" name="direction" value={direction} />
 					<div class="grid grid-cols-2 gap-2" role="group" aria-label="Arah hutang">
 						<button
 							type="button"
 							aria-pressed={direction === 'owe'}
 							onclick={() => (direction = 'owe')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owe'
 								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								: 'border-slate-200 text-slate-500 dark:border-slate-700'}"
 						>
 							<TrendingDown size={14} /> Saya Berhutang
 						</button>
@@ -417,10 +458,10 @@
 							type="button"
 							aria-pressed={direction === 'owed'}
 							onclick={() => (direction = 'owed')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owed'
-								? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+								: 'border-slate-200 text-slate-500 dark:border-slate-700'}"
 						>
 							<TrendingUp size={14} /> Saya Meminjamkan
 						</button>
@@ -432,7 +473,7 @@
 					<div class="mb-1 flex items-center justify-between">
 						<label for="debt-amount" class="text-sm">Jumlah (IDR)</label>
 						{#if amount && Number(amount) > 0}
-							<span class="text-xs font-bold text-sky-600 dark:text-sky-400">
+							<span class="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
 								Rp {Number(amount).toLocaleString('id-ID')}
 							</span>
 						{/if}
@@ -447,15 +488,14 @@
 						placeholder="0"
 						bind:value={amount}
 						aria-invalid={!!errors.amount}
-						class="w-full rounded-lg border px-3 py-2 font-bold bg-white dark:bg-gray-950
-							{errors.amount ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input font-semibold tabular-nums {errors.amount ? 'border-red-400' : ''}"
 					/>
 					{#if errors.amount}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
 						{#each PRESETS as [value, label] (label)}
 							<button
 								type="button"
-								class="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+								class="chip bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
 								onclick={() => addPreset(value)}
 							>
 								{label}
@@ -465,15 +505,14 @@
 				</div>
 
 				<div>
-					<label for="debt-date" class="mb-1 block text-sm">Tanggal</label>
+					<label for="debt-date" class="label">Tanggal</label>
 					<input
 						id="debt-date"
 						name="date"
 						type="date"
 						bind:value={date}
 						aria-invalid={!!errors.date}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{errors.date ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {errors.date ? 'border-red-400' : ''}"
 					/>
 					{#if errors.date}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.date}</p>{/if}
 				</div>
@@ -485,22 +524,21 @@
 							type="checkbox"
 							name="reduceBalance"
 							bind:checked={reduceBalance}
-							class="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-600 dark:border-gray-600"
+							class="mt-0.5 h-4 w-4 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
 						/>
 						<span>Langsung kurangi saldo dompet ini</span>
 					</label>
 
 					{#if reduceBalance}
 						<div>
-							<label for="debt-wallet" class="mb-1 block text-sm">Dompet</label>
+							<label for="debt-wallet" class="label">Dompet</label>
 							<select
 								id="debt-wallet"
 								name="walletId"
 								bind:value={walletId}
 								required
 								aria-invalid={!!errors.walletId}
-								class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-									{errors.walletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+								class="input {errors.walletId ? 'border-red-400' : ''}"
 							>
 								<option value="" disabled>Pilih dompet</option>
 								{#each ['digital', 'cash'] as kind (kind)}
@@ -520,19 +558,10 @@
 				</div>
 
 				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						disabled={createSubmitting}
-						onclick={() => (showCreate = false)}
-						class="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-					>
+					<button type="button" disabled={createSubmitting} onclick={() => (showCreate = false)} class="btn btn-outline px-4 py-2">
 						Batal
 					</button>
-					<button
-						type="submit"
-						disabled={createSubmitting}
-						class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-					>
+					<button type="submit" disabled={createSubmitting} class="btn btn-primary px-4 py-2">
 						{createSubmitting ? 'Menyimpan…' : 'Catat'}
 					</button>
 				</div>
@@ -544,26 +573,31 @@
 <!-- Modal Bayar -->
 {#if payTarget}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onclick={closePay}>
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
+		onclick={closePay}
+	>
 		<div
-			class="w-full max-w-md space-y-4 rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900"
+			class="card w-full max-w-md space-y-4 p-5 shadow-lg"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="pay-form-title"
 			tabindex="-1"
 			use:modalAccessibility={{ onClose: closePay }}
+			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
 			<div class="flex items-center justify-between">
 				<div>
 					<h2 id="pay-form-title" class="font-semibold">Bayar — {payTarget.person}</h2>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
+					<p class="text-xs text-slate-500 dark:text-slate-400">
 						{payTarget.direction === 'owe' ? 'Utang' : 'Piutang'} · {formatDate(payTarget.date)}
 					</p>
 				</div>
-				<button class="opacity-60 hover:opacity-100" aria-label="Tutup dialog" disabled={paySubmitting} onclick={closePay}>
-					✕
+				<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={paySubmitting} onclick={closePay}>
+					<X size={18} />
 				</button>
 			</div>
 
@@ -582,7 +616,7 @@
 				<div>
 					<div class="mb-1 flex items-center justify-between">
 						<label for="pay-amount" class="text-sm">Jumlah (IDR)</label>
-						<span class="text-xs text-gray-500 dark:text-gray-400">Sisa: {formatIDR(payTarget.remaining)}</span>
+						<span class="text-xs tabular-nums text-slate-500 dark:text-slate-400">Sisa: {formatIDR(payTarget.remaining)}</span>
 					</div>
 					<input
 						id="pay-amount"
@@ -594,22 +628,20 @@
 						required
 						bind:value={payAmount}
 						aria-invalid={!!payErrors.amount}
-						class="w-full rounded-lg border px-3 py-2 font-bold bg-white dark:bg-gray-950
-							{payErrors.amount ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input font-semibold tabular-nums {payErrors.amount ? 'border-red-400' : ''}"
 					/>
 					{#if payErrors.amount}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.amount}</p>{/if}
 				</div>
 
 				<div>
-					<label for="pay-wallet" class="mb-1 block text-sm">Dompet</label>
+					<label for="pay-wallet" class="label">Dompet</label>
 					<select
 						id="pay-wallet"
 						name="walletId"
 						bind:value={payWalletId}
 						required
 						aria-invalid={!!payErrors.walletId}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{payErrors.walletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {payErrors.walletId ? 'border-red-400' : ''}"
 					>
 						<option value="" disabled>Pilih dompet</option>
 						{#each ['digital', 'cash'] as kind (kind)}
@@ -627,33 +659,23 @@
 				</div>
 
 				<div>
-					<label for="pay-date" class="mb-1 block text-sm">Tanggal</label>
+					<label for="pay-date" class="label">Tanggal</label>
 					<input
 						id="pay-date"
 						name="date"
 						type="date"
 						bind:value={payDate}
 						aria-invalid={!!payErrors.date}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{payErrors.date ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {payErrors.date ? 'border-red-400' : ''}"
 					/>
 					{#if payErrors.date}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.date}</p>{/if}
 				</div>
 
 				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						disabled={paySubmitting}
-						onclick={closePay}
-						class="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-					>
+					<button type="button" disabled={paySubmitting} onclick={closePay} class="btn btn-outline px-4 py-2">
 						Batal
 					</button>
-					<button
-						type="submit"
-						disabled={paySubmitting}
-						class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-					>
+					<button type="submit" disabled={paySubmitting} class="btn btn-primary px-4 py-2">
 						{paySubmitting ? 'Menyimpan…' : 'Bayar'}
 					</button>
 				</div>

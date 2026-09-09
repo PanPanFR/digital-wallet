@@ -26,6 +26,7 @@
     "wrangler": "^4.0.0"
   },
   "dependencies": {
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@lucide/svelte": "^0.544.0",
     "zod": "^3.23.0"
   }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Wallet } from '@lucide/svelte';
 
 	let { data, form } = $props();
 	let submitting = $state(false);
@@ -10,16 +11,19 @@
 </svelte:head>
 
 <main class="min-h-screen flex items-center justify-center px-4">
-	<div class="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 space-y-4">
-		<div class="text-center space-y-1">
-			<h1 class="text-xl font-semibold">Digital Wallet</h1>
-			<p class="text-sm text-gray-500 dark:text-gray-400">
+	<div class="card w-full max-w-sm p-6 space-y-4">
+		<div class="flex flex-col items-center gap-2 text-center space-y-1">
+			<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-600 text-white shadow-xs">
+				<Wallet size={22} />
+			</div>
+			<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Digital Wallet</h1>
+			<p class="text-sm text-slate-500 dark:text-slate-400">
 				{data.mode === 'setup' ? 'Atur master password' : 'Masuk untuk melanjutkan'}
 			</p>
 		</div>
 
 		{#if data.mode === 'setup'}
-			<p class="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded p-2">
+			<p class="text-xs text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg p-2">
 				Ini pertama kalinya. Atur master password (min. 8 karakter). Password ini akan
 				digunakan untuk masuk ke aplikasi.
 			</p>
@@ -38,14 +42,14 @@
 			class="space-y-3"
 		>
 			<label class="block text-sm">
-				<span class="text-gray-700 dark:text-gray-300">Password</span>
+				<span class="label">Password</span>
 				<input
 					name="password"
 					type="password"
 					required
 					minlength="8"
 					autocomplete={data.mode === 'setup' ? 'new-password' : 'current-password'}
-					class="mt-1 w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500"
+					class="input"
 				/>
 			</label>
 
@@ -56,7 +60,7 @@
 			<button
 				type="submit"
 				disabled={submitting}
-				class="w-full rounded bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium py-2 transition"
+				class="btn btn-primary w-full py-2"
 			>
 				{submitting
 					? 'Memproses…'

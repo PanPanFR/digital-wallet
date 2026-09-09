@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon } from '@lucide/svelte';
+	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon, X } from '@lucide/svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { prefersReducedMotion } from 'svelte/motion';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
@@ -138,10 +140,10 @@
 			type="button"
 			aria-pressed={kind === 'digital'}
 			onclick={() => (kind = 'digital')}
-			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'digital'
 				? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-				: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
 		>
 			<Smartphone size={14} /> Digital
 		</button>
@@ -149,10 +151,10 @@
 			type="button"
 			aria-pressed={kind === 'cash'}
 			onclick={() => (kind = 'cash')}
-			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'cash'
-				? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-				: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+				? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
 		>
 			<Banknote size={14} /> Tunai
 		</button>
@@ -160,11 +162,11 @@
 {/snippet}
 
 {#snippet editRow(w: WalletWithBalance)}
-	<form method="POST" action="?/update" use:enhance={handleUpdate} novalidate class="space-y-3 px-4 py-3">
+	<form method="POST" action="?/update" use:enhance={handleUpdate} novalidate class="space-y-3 p-4">
 		<input type="hidden" name="id" value={w.id} />
 		<input type="hidden" name="kind" value={editKind} />
 		<div>
-			<label for="edit-name-{w.id}" class="mb-1 block text-sm">Nama dompet</label>
+			<label for="edit-name-{w.id}" class="label">Nama dompet</label>
 			<input
 				id="edit-name-{w.id}"
 				name="name"
@@ -172,8 +174,7 @@
 				required
 				bind:value={editName}
 				aria-invalid={!!editErrors.name}
-				class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-					{editErrors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+				class="input {editErrors.name ? 'border-red-400' : ''}"
 			/>
 			{#if editErrors.name}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{editErrors.name}</p>{/if}
 		</div>
@@ -183,13 +184,13 @@
 			<button
 				type="button"
 				onclick={() => (editingId = null)}
-				class="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+				class="btn btn-outline px-4 py-2"
 			>
 				Batal
 			</button>
 			<button
 				type="submit"
-				class="rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm font-medium text-white"
+				class="btn btn-primary px-4 py-2"
 			>
 				Simpan Perubahan
 			</button>
@@ -202,9 +203,22 @@
 		{@render editRow(w)}
 	{:else}
 		<div class="flex items-center gap-3 px-4 py-3">
+			<div
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg
+				{w.kind === 'digital'
+					? 'bg-sky-50 text-sky-500 dark:bg-sky-950'
+					: 'bg-amber-50 text-amber-500 dark:bg-amber-950'}"
+				aria-hidden="true"
+			>
+				{#if w.kind === 'digital'}
+					<Smartphone size={18} />
+				{:else}
+					<Banknote size={18} />
+				{/if}
+			</div>
 			<div class="min-w-0 flex-1">
-				<p class="truncate text-sm font-medium text-gray-900 dark:text-white">{w.name}</p>
-				<p class="font-mono text-sm font-bold {w.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}">
+				<p class="truncate text-sm font-medium text-slate-900 dark:text-white">{w.name}</p>
+				<p class="tabular-nums text-sm font-semibold {w.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}">
 					{formatIDR(w.balance)}
 				</p>
 			</div>
@@ -212,21 +226,21 @@
 				<button
 					onclick={() => openAdjust(w)}
 					aria-label="Atur saldo {w.name}"
-					class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-gray-800"
+					class="btn btn-ghost rounded-lg p-1.5 hover:text-emerald-600"
 				>
 					<WalletIcon size={15} />
 				</button>
 				<button
 					onclick={() => openEdit(w)}
 					aria-label="Edit {w.name}"
-					class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-sky-600 dark:hover:bg-gray-800"
+					class="btn btn-ghost rounded-lg p-1.5"
 				>
 					<Pencil size={15} />
 				</button>
 				<button
 					onclick={() => (deleteTarget = w)}
 					aria-label="Hapus {w.name}"
-					class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
+					class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600"
 				>
 					<Trash2 size={15} />
 				</button>
@@ -236,7 +250,7 @@
 {/snippet}
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<h1 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Dompet</h1>
+	<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">Dompet</h1>
 
 	<!-- Add form -->
 	<form
@@ -244,10 +258,10 @@
 		action="?/create"
 		use:enhance={handleCreate}
 		novalidate
-		class="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+		class="card mb-6 space-y-3 p-4"
 	>
 		<div>
-			<label for="wallet-name" class="mb-1 block text-sm">Nama dompet</label>
+			<label for="wallet-name" class="label">Nama dompet</label>
 			<input
 				id="wallet-name"
 				name="name"
@@ -256,14 +270,13 @@
 				placeholder="cth. GoPay, BCA, uang cash"
 				bind:value={name}
 				aria-invalid={!!errors.name}
-				class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-					{errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+				class="input {errors.name ? 'border-red-400' : ''}"
 			/>
 			{#if errors.name}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>{/if}
 		</div>
 
 		<div>
-			<span class="mb-1 block text-sm">Jenis</span>
+			<span class="label">Jenis</span>
 			{@render kindToggle()}
 			{#if errors.kind}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.kind}</p>{/if}
 			<input type="hidden" name="kind" value={kind} />
@@ -273,7 +286,10 @@
 			{#each PRESETS as p (p.name)}
 				<button
 					type="button"
-					class="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+					class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors
+						{name === p.name && kind === p.kind
+						? 'bg-orange-600 text-white'
+						: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
 					onclick={() => applyPreset(p)}
 				>
 					{p.name}
@@ -284,7 +300,7 @@
 		<div class="flex justify-end">
 			<button
 				type="submit"
-				class="rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm font-medium text-white"
+				class="btn btn-primary px-4 py-2"
 			>
 				Tambah Dompet
 			</button>
@@ -301,19 +317,21 @@
 	{/if}
 
 	{#if wallets.length === 0}
-		<p
-			class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
-		>
-			Belum ada dompet.
-		</p>
+		<div class="card py-12 text-center">
+			<WalletIcon size={40} class="mx-auto mb-3 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+			<p class="text-sm font-medium text-slate-900 dark:text-white">Belum ada dompet</p>
+			<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+				Tambahkan dompet pertama lewat formulir di atas.
+			</p>
+		</div>
 	{:else}
 		{#if digital.length > 0}
 			<section class="mb-6" aria-label="Dompet digital">
-				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white">
+				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
 					<span class="text-sky-500"><Smartphone size={16} /></span> Digital
 				</h2>
 				<ul
-					class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+					class="card divide-y divide-slate-100 dark:divide-slate-800"
 				>
 					{#each digital as w (w.id)}
 						<li>{@render walletRow(w)}</li>
@@ -324,11 +342,11 @@
 
 		{#if cash.length > 0}
 			<section aria-label="Dompet tunai">
-				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white">
-					<span class="text-emerald-500"><Banknote size={16} /></span> Tunai
+				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+					<span class="text-amber-500"><Banknote size={16} /></span> Tunai
 				</h2>
 				<ul
-					class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+					class="card divide-y divide-slate-100 dark:divide-slate-800"
 				>
 					{#each cash as w (w.id)}
 						<li>{@render walletRow(w)}</li>
@@ -352,27 +370,37 @@
 
 {#if adjustTarget}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick={() => (adjustTarget = null)}>
+	<div
+		class="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
+		onclick={() => (adjustTarget = null)}
+	>
 		<div
-			class="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-5 space-y-4"
+			class="w-full max-w-sm rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 p-5 space-y-4"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Atur saldo"
 			tabindex="-1"
 			use:modalAccessibility={{ onClose: () => (adjustTarget = null) }}
+			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
 			<form method="POST" action="?/adjust" use:enhance={handleAdjust} novalidate class="space-y-4">
 				<input type="hidden" name="id" value={adjustTarget.id} />
 				<div class="flex items-center justify-between">
-					<h3 class="font-semibold">Atur Saldo — {adjustTarget.name}</h3>
-					<button type="button" class="opacity-60 hover:opacity-100" aria-label="Tutup dialog" onclick={() => (adjustTarget = null)}>
-						✕
+					<h3 class="font-semibold text-slate-900 dark:text-white">Atur Saldo — {adjustTarget.name}</h3>
+					<button
+						type="button"
+						class="btn btn-ghost p-1.5"
+						aria-label="Tutup dialog"
+						onclick={() => (adjustTarget = null)}
+					>
+						<X size={18} />
 					</button>
 				</div>
 				<div>
-					<label for="adjust-balance" class="mb-1 block text-sm">Saldo baru</label>
+					<label for="adjust-balance" class="label">Saldo baru</label>
 					<input
 						id="adjust-balance"
 						name="newBalance"
@@ -381,20 +409,19 @@
 						required
 						bind:value={adjustValue}
 						aria-invalid={!!adjustErrors.newBalance}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{adjustErrors.newBalance ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input tabular-nums {adjustErrors.newBalance ? 'border-red-400' : ''}"
 					/>
 					{#if adjustErrors.newBalance}
 						<p class="mt-1 text-xs text-red-600 dark:text-red-400">{adjustErrors.newBalance}</p>
 					{/if}
 				</div>
-				<p class="text-xs text-gray-500 dark:text-gray-400">
+				<p class="text-xs text-slate-500 dark:text-slate-400">
 					Saldo saat ini {formatIDR(adjustTarget.balance)}. Perubahan dicatat sebagai transaksi "Penyesuaian saldo".
 				</p>
 				<div class="flex justify-end gap-2">
 					<button
 						type="button"
-						class="rounded px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+						class="btn btn-outline px-3 py-2"
 						onclick={() => (adjustTarget = null)}
 					>
 						Batal
@@ -402,7 +429,7 @@
 					<button
 						type="submit"
 						disabled={adjusting}
-						class="rounded px-3 py-1.5 text-sm text-white bg-sky-600 hover:bg-sky-500 disabled:opacity-60"
+						class="btn btn-primary px-3 py-2"
 					>
 						{adjusting ? 'Menyimpan…' : 'Simpan'}
 					</button>

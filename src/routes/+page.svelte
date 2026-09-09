@@ -33,8 +33,8 @@
 <main class="mx-auto max-w-3xl px-4 py-6">
 	<div class="mb-4 flex items-center justify-between gap-3">
 		<div>
-			<h1 class="text-xl font-semibold text-gray-900 dark:text-white">Beranda</h1>
-			<p class="text-xs text-gray-500 dark:text-gray-400">
+			<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Beranda</h1>
+			<p class="text-xs text-slate-500 dark:text-slate-400">
 				{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
 					new Date(`${data.month}-01T00:00:00`)
 				)}
@@ -48,74 +48,63 @@
 				type="month"
 				value={data.month}
 				onchange={onMonthChange}
-				class="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+				class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
 			/>
 		</form>
 		<button
 			onclick={() => (showForm = true)}
-			class="flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white px-3 py-2 text-sm font-medium"
+			class="btn btn-primary px-3 py-2"
 		>
 			<Plus size={16} /> Catat
 		</button>
 	</div>
 
 	<section
-		class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"
+		class="rounded-xl bg-orange-600 p-5"
 		aria-label="Total saldo"
 	>
-		<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-			<span class="text-sky-500"><Wallet size={14} /></span>
+		<div class="flex items-center gap-1.5 text-xs text-white/80">
+			<span><Wallet size={14} /></span>
 			Total Saldo
 		</div>
-		<p
-			class="mt-1 font-mono text-3xl font-bold
-			{data.totals.total < 0
-				? 'text-red-600 dark:text-red-400'
-				: 'text-gray-900 dark:text-white'}"
-		>
+		<p class="mt-1 text-3xl font-bold tabular-nums text-white">
 			{formatIDR(data.totals.total)}
 		</p>
 	</section>
 
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
-		<div
-			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-		>
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-indigo-500"><Smartphone size={14} /></span>
+		<div class="card p-4">
+			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+				<span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400"><Smartphone size={14} /></span>
 				Digital
 			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-indigo-600 dark:text-indigo-400">
+			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
 				{formatIDR(data.totals.digital)}
 			</p>
 		</div>
 
-		<div
-			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-		>
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-emerald-500"><Banknote size={14} /></span>
+		<div class="card p-4">
+			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+				<span class="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"><Banknote size={14} /></span>
 				Tunai
 			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
+			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
 				{formatIDR(data.totals.cash)}
 			</p>
 		</div>
 	</section>
 
 	<section class="mt-6" aria-label="Ringkasan">
-		<div
-			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-		>
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-sky-500"><Wallet size={14} /></span>
+		<div class="card p-4">
+			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+				<span class="text-slate-400"><Wallet size={14} /></span>
 				Saldo Bersih
 			</div>
 			<p
-				class="mt-1 font-mono text-lg font-bold
+				class="mt-1 text-lg font-bold tabular-nums
 				{data.summary.net < 0
 					? 'text-red-600 dark:text-red-400'
-					: 'text-gray-900 dark:text-white'}"
+					: 'text-slate-900 dark:text-white'}"
 			>
 				{formatIDR(data.summary.net)}
 			</p>
@@ -126,58 +115,70 @@
 		<a
 			href="/hutang"
 			aria-label="Ringkasan hutang dan piutang"
-			class="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+			class="card mt-3 flex items-center justify-between gap-3 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
 		>
 			<div>
-				<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-					<span class="text-red-500"><HandCoins size={14} /></span>
+				<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+					<span class="text-slate-400"><HandCoins size={14} /></span>
 					Hutang &amp; Piutang
 				</div>
 				<p class="mt-1 text-sm">
-					<span class="font-mono font-bold text-red-600 dark:text-red-400">
+					<span class="font-bold tabular-nums text-red-600 dark:text-red-400">
 						Hutang {formatIDR(data.debtTotals.owe)}
 					</span>
-					<span class="text-gray-400"> · </span>
-					<span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+					<span class="text-slate-400"> · </span>
+					<span class="font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
 						Piutang {formatIDR(data.debtTotals.owed)}
 					</span>
 				</p>
 			</div>
-			<ArrowUpRight size={16} class="text-gray-400" />
+			<ArrowUpRight size={16} class="text-slate-400" />
 		</a>
 	{/if}
 
 	<section class="mt-6" aria-label="Daftar dompet">
-		<h2 class="mb-2 font-semibold text-gray-900 dark:text-white">Dompet</h2>
+		<h2 class="mb-2 font-semibold text-slate-900 dark:text-white">Dompet</h2>
 
 		{#if data.wallets.length === 0}
-			<p
-				class="rounded-xl border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+			<div
+				class="card flex flex-col items-center gap-1 py-10 text-center"
 			>
-				Belum ada dompet.
-			</p>
+				<Wallet size={28} class="text-slate-300 dark:text-slate-600" />
+				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada dompet.</p>
+				<p class="text-xs text-slate-400 dark:text-slate-500">
+					Tambahkan dompet digital atau tunai untuk mulai mencatat.
+				</p>
+			</div>
 		{:else}
 			<div class="space-y-4">
 				{#each groups as group (group.label)}
 					{#if group.wallets.length > 0}
-						<h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">{group.label}</h3>
+						<h3 class="text-xs font-medium text-slate-500 dark:text-slate-400">{group.label}</h3>
 						<ul
-							class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+							class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
 						>
 							{#each group.wallets as w (w.id)}
 								<li class="flex items-center">
 									<a
 										href="/transactions?wallet={w.id}"
-										class="flex flex-1 items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800"
+										class="flex flex-1 items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
 									>
-										<span class="truncate text-sm font-medium text-gray-900 dark:text-white">
+										<span
+											class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+											{w.kind === 'digital'
+												? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
+												: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
+										>
+											{#if w.kind === 'digital'}<Smartphone size={16} />{:else}<Banknote size={16} />{/if}
+										</span>
+										<span class="truncate text-sm font-medium text-slate-900 dark:text-white">
 											{w.name}
 										</span>
 										<span
-											class="whitespace-nowrap font-mono text-sm font-bold
+											class="ml-auto whitespace-nowrap text-sm font-bold tabular-nums
 											{w.balance < 0
 												? 'text-red-600 dark:text-red-400'
-												: 'text-gray-900 dark:text-white'}"
+												: 'text-slate-900 dark:text-white'}"
 										>
 											{formatIDR(w.balance)}
 										</span>
@@ -193,10 +194,10 @@
 
 	<section class="mt-6" aria-label="Transaksi terakhir">
 		<div class="mb-2 flex items-center justify-between">
-			<h2 class="font-semibold text-gray-900 dark:text-white">Transaksi Terakhir</h2>
+			<h2 class="font-semibold text-slate-900 dark:text-white">Transaksi Terakhir</h2>
 			<a
 				href="/transactions"
-				class="flex items-center gap-0.5 text-sm text-sky-600 hover:underline dark:text-sky-400"
+				class="flex items-center gap-0.5 text-sm text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
 			>
 				Lihat semua <ArrowUpRight size={14} />
 			</a>
@@ -205,46 +206,57 @@
 		{#if navigating.to?.url.pathname === '/'}
 			<Skeleton rows={4} />
 		{:else if data.recent.length === 0}
-			<p
-				class="rounded-xl border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
-			>
-				Belum ada transaksi.
-			</p>
+			<div class="card flex flex-col items-center gap-1 py-10 text-center">
+				<Plus size={28} class="text-slate-300 dark:text-slate-600" />
+				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada transaksi.</p>
+				<p class="text-xs text-slate-400 dark:text-slate-500">
+					Tekan Catat untuk menambahkan transaksi pertama.
+				</p>
+			</div>
 		{:else}
 			<ul
-				class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
+				class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
 			>
 				{#each data.recent as tx (tx.id)}
 					<li class="flex items-center gap-3 px-4 py-3">
+						<span
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+							{tx.wallet_kind === 'digital'
+								? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
+								: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
+						>
+							{#if tx.wallet_kind === 'digital'}<Smartphone size={16} />{:else}<Banknote size={16} />{/if}
+						</span>
 						<div class="min-w-0 flex-1">
-							<p class="truncate text-sm font-medium text-gray-900 dark:text-white">
+							<p class="truncate text-sm font-medium text-slate-900 dark:text-white">
 								{tx.description}
 							</p>
-							<p class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+							<p class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
 								<span>{tx.category} · {formatDate(tx.date)}</span>
 							{#if tx.type === 'transfer'}
 								<span
-									class="rounded-full px-1.5 py-0.5 font-medium
-									bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400"
+									class="chip bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
 								>
 									→ {tx.dest_wallet_name}
 								</span>
 							{/if}
 								<span
-									class="rounded-full px-1.5 py-0.5 font-medium
+									class="chip
 									{tx.wallet_kind === 'digital'
-										? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400'
-										: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'}"
+										? 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
+										: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'}"
 								>
 									{tx.wallet_name}
 								</span>
 							</p>
 						</div>
 						<span
-							class="whitespace-nowrap font-mono text-sm font-bold
-							{tx.type === 'income'
-								? 'text-emerald-600 dark:text-emerald-400'
-								: 'text-red-600 dark:text-red-400'}"
+							class="whitespace-nowrap text-sm font-bold tabular-nums
+							{tx.type === 'transfer'
+								? 'text-slate-600 dark:text-slate-300'
+								: tx.type === 'income'
+									? 'text-emerald-600 dark:text-emerald-400'
+									: 'text-red-600 dark:text-red-400'}"
 						>
 							{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
 						</span>
