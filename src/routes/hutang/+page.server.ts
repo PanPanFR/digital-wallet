@@ -3,6 +3,7 @@ import {
 	createDebt,
 	addDebtPayment,
 	deleteDebt,
+	deleteDebts,
 	getDebtDirectionTotals,
 	listDebts,
 	listWallets
@@ -55,5 +56,17 @@ export const actions: Actions = {
 		if (res === 'has-payments') return fail(400, { error: 'Tidak bisa dihapus: sudah ada pembayaran' });
 		if (res === 'not-found') return fail(400, { error: 'Utang tidak ditemukan' });
 		return { success: true };
+	},
+
+	bulkDelete: async ({ request, platform }: RequestEvent) => {
+		const ids = [...new Set(
+			String((await request.formData()).get('ids') ?? '')
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean)
+		)];
+		if (ids.length === 0) return fail(400, { error: 'Pilih catatan utang dulu' });
+		const { deleted, rejected } = await deleteDebts(platform!.env.DB, ids);
+		return { success: true, deleted, rejected };
 	}
 };
