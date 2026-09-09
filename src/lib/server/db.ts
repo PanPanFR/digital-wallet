@@ -72,22 +72,43 @@ export async function listWallets(db: D1Database): Promise<WalletRow[]> {
 	return results ?? [];
 }
 
-/** Create a wallet, returns the new id. */
+/**
+ * True when a wallet with this name already exists. Comparison is
+ * case-insensitive after trimming; excludeId skips one wallet's own row so
+ * renaming a wallet to its current name is allowed.
+ */
+export async function walletNameExists(db: D1Database, name: string, excludeId?: string): Promise<boolean> {
+	const where = excludeId
+		? 'WHERE lower(trim(name)) = lower(trim(?)) AND id != ?'
+		: 'WHERE lower(trim(name)) = lower(trim(?))';
+	const row = await db
+		.prepare(`SELECT COUNT(*) AS n FROM wallets ${where}`)
+		.bind(...(excludeId ? [name, excludeId] : [name]))
+		.first<{ n: number }>();
+	return (row?.n ?? 0) > 0;
+}
+
+/** Create a wallet. Returns 'duplicate' if the name is taken, else the new id. */
 export async function createWallet(
 	db: D1Database,
 	w: { name: string; kind: 'digital' | 'cash' }
-): Promise<string> {
+): Promise<'duplicate' | string> {
+	if (await walletNameExists(db, w.name)) return 'duplicate';
 	const id = crypto.randomUUID().replace(/-/g, '');
 	await db.prepare('INSERT INTO wallets (id, name, kind) VALUES (?, ?, ?)').bind(id, w.name, w.kind).run();
 	return id;
 }
 
-/** Update wallet name/kind. Returns true if a row was changed. */
+/**
+ * Update wallet name/kind. Returns 'duplicate' if the new name collides with
+ * another wallet (own row excluded), else true if a row was changed.
+ */
 export async function updateWallet(
 	db: D1Database,
 	id: string,
 	w: Partial<{ name: string; kind: 'digital' | 'cash' }>
-): Promise<boolean> {
+): Promise<'duplicate' | boolean> {
+	if (w.name !== undefined && (await walletNameExists(db, w.name, id))) return 'duplicate';
 	const fields: string[] = [];
 	const values: unknown[] = [];
 	if (w.name !== undefined) {
@@ -140,6 +161,32 @@ const BALANCE_SQL =
 export async function getWalletBalances(db: D1Database): Promise<WalletWithBalance[]> {
 	const { results } = await db.prepare(BALANCE_SQL).all<WalletWithBalance>();
 	return (results ?? []).map((r) => ({ ...r, balance: Number(r.balance) || 0 }));
+}
+
+/**
+ * Set a wallet's balance directly ("Atur Saldo") without breaking the
+ * computed-balance model: posts one adjustment transaction for the diff
+ * (income when raising, expense when lowering, description "Penyesuaian
+ * saldo"). No balance column, no migration.
+ */
+export async function adjustWalletBalance(
+	db: D1Database,
+	walletId: string,
+	newBalance: number
+): Promise<'not-found' | 'no-change' | 'adjusted'> {
+	const wallets = await getWalletBalances(db);
+	const wallet = wallets.find((w) => w.id === walletId);
+	if (!wallet) return 'not-found';
+	const diff = Math.round(newBalance) - wallet.balance;
+	if (diff === 0) return 'no-change';
+	await createTransaction(db, {
+		wallet_id: walletId,
+		description: 'Penyesuaian saldo',
+		amount: Math.abs(diff),
+		category: 'Lainnya',
+		type: diff > 0 ? 'income' : 'expense'
+	});
+	return 'adjusted';
 }
 
 /** Combined balance per wallet kind + grand total. */

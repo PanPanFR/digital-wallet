@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Pencil, Trash2, Smartphone, Banknote } from '@lucide/svelte';
+	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR } from '$lib/format';
 	import type { WalletWithBalance } from '$lib/server/db';
@@ -30,6 +31,11 @@
 	let deleting = $state(false);
 	let deleteForm: HTMLFormElement | null = null;
 	let listError = $state('');
+
+	let adjustTarget = $state<WalletWithBalance | null>(null);
+	let adjustValue = $state(0);
+	let adjustErrors = $state<Record<string, string>>({});
+	let adjusting = $state(false);
 
 	const wallets = $derived(data.wallets as WalletWithBalance[]);
 	const digital = $derived(wallets.filter((w) => w.kind === 'digital'));
@@ -92,6 +98,31 @@
 				listError = (result.data as { error?: string }).error ?? 'Gagal menghapus dompet';
 			} else {
 				listError = 'Gagal menghapus dompet';
+			}
+		};
+	};
+
+	function openAdjust(w: WalletWithBalance) {
+		adjustTarget = w;
+		adjustValue = w.balance;
+		adjustErrors = {};
+		adjusting = false;
+		listError = '';
+	}
+
+	const handleAdjust: SubmitFunction = () => {
+		adjusting = true;
+		return async ({ result, update }) => {
+			adjusting = false;
+			if (result.type === 'failure' && result.data) {
+				adjustErrors = (result.data as { errors?: Record<string, string> }).errors ?? {};
+				return;
+			}
+			await update();
+			if (result.type === 'success') {
+				notify('success', 'Saldo diperbarui');
+				adjustTarget = null;
+				adjustErrors = {};
 			}
 		};
 	};
@@ -178,6 +209,13 @@
 				</p>
 			</div>
 			<div class="flex gap-1">
+				<button
+					onclick={() => openAdjust(w)}
+					aria-label="Atur saldo {w.name}"
+					class="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-gray-800"
+				>
+					<WalletIcon size={15} />
+				</button>
 				<button
 					onclick={() => openEdit(w)}
 					aria-label="Edit {w.name}"
@@ -311,6 +349,68 @@
 	onConfirm={() => deleteForm?.requestSubmit()}
 	onCancel={() => (deleteTarget = null)}
 />
+
+{#if adjustTarget}
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+	<div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick={() => (adjustTarget = null)}>
+		<div
+			class="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-5 space-y-4"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Atur saldo"
+			tabindex="-1"
+			use:modalAccessibility={{ onClose: () => (adjustTarget = null) }}
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
+			<form method="POST" action="?/adjust" use:enhance={handleAdjust} novalidate class="space-y-4">
+				<input type="hidden" name="id" value={adjustTarget.id} />
+				<div class="flex items-center justify-between">
+					<h3 class="font-semibold">Atur Saldo — {adjustTarget.name}</h3>
+					<button type="button" class="opacity-60 hover:opacity-100" aria-label="Tutup dialog" onclick={() => (adjustTarget = null)}>
+						✕
+					</button>
+				</div>
+				<div>
+					<label for="adjust-balance" class="mb-1 block text-sm">Saldo baru</label>
+					<input
+						id="adjust-balance"
+						name="newBalance"
+						type="number"
+						min="0"
+						required
+						bind:value={adjustValue}
+						aria-invalid={!!adjustErrors.newBalance}
+						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
+							{adjustErrors.newBalance ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+					/>
+					{#if adjustErrors.newBalance}
+						<p class="mt-1 text-xs text-red-600 dark:text-red-400">{adjustErrors.newBalance}</p>
+					{/if}
+				</div>
+				<p class="text-xs text-gray-500 dark:text-gray-400">
+					Saldo saat ini {formatIDR(adjustTarget.balance)}. Perubahan dicatat sebagai transaksi "Penyesuaian saldo".
+				</p>
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+						onclick={() => (adjustTarget = null)}
+					>
+						Batal
+					</button>
+					<button
+						type="submit"
+						disabled={adjusting}
+						class="rounded px-3 py-1.5 text-sm text-white bg-sky-600 hover:bg-sky-500 disabled:opacity-60"
+					>
+						{adjusting ? 'Menyimpan…' : 'Simpan'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
 
 <form method="POST" action="?/delete" bind:this={deleteForm} use:enhance={handleDelete} class="hidden">
 	<input type="hidden" name="id" value={deleteTarget?.id ?? ''} />

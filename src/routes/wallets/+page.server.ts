@@ -1,6 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, ServerLoad, RequestEvent } from '@sveltejs/kit';
-import { createWallet, deleteWallet, getWalletBalances, updateWallet } from '$lib/server/db';
+import { z } from 'zod';
+import {
+	adjustWalletBalance,
+	createWallet,
+	deleteWallet,
+	getWalletBalances,
+	updateWallet
+} from '$lib/server/db';
 import { WalletSchema, fieldErrors } from '$lib/server/validation';
 
 export const load: ServerLoad = async ({ locals, platform }: RequestEvent) => {
@@ -9,11 +16,18 @@ export const load: ServerLoad = async ({ locals, platform }: RequestEvent) => {
 	return { wallets: await getWalletBalances(db) };
 };
 
+const DUP_ERRORS = { name: 'Dompet dengan nama itu sudah ada' };
+const AdjustSchema = z.object({
+	id: z.string().min(1, { message: 'ID dompet tidak ditemukan' }),
+	newBalance: z.coerce.number().int().min(0).max(999_999_999_999)
+});
+
 export const actions: Actions = {
 	create: async ({ request, platform }: RequestEvent) => {
 		const parsed = WalletSchema.safeParse(Object.fromEntries(await request.formData()));
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-		await createWallet(platform!.env.DB, parsed.data);
+		const result = await createWallet(platform!.env.DB, parsed.data);
+		if (result === 'duplicate') return fail(400, { errors: DUP_ERRORS });
 		return { success: true };
 	},
 
@@ -23,7 +37,16 @@ export const actions: Actions = {
 		if (!id) return fail(400, { errors: { id: 'ID dompet tidak ditemukan' } });
 		const parsed = WalletSchema.safeParse(form);
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-		await updateWallet(platform!.env.DB, id, parsed.data);
+		const result = await updateWallet(platform!.env.DB, id, parsed.data);
+		if (result === 'duplicate') return fail(400, { errors: DUP_ERRORS });
+		return { success: true };
+	},
+
+	adjust: async ({ request, platform }: RequestEvent) => {
+		const parsed = AdjustSchema.safeParse(Object.fromEntries(await request.formData()));
+		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
+		const result = await adjustWalletBalance(platform!.env.DB, parsed.data.id, parsed.data.newBalance);
+		if (result === 'not-found') return fail(404, { error: 'Dompet tidak ditemukan' });
 		return { success: true };
 	},
 
