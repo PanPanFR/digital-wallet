@@ -313,6 +313,16 @@ export async function deleteTransaction(db: D1Database, id: string): Promise<boo
 	return (result.meta?.changes ?? 0) > 0;
 }
 
+/** Delete multiple transactions by id. Returns number deleted. */
+export async function deleteTransactions(db: D1Database, ids: string[]): Promise<number> {
+	if (ids.length === 0) return 0;
+	const r = await db
+		.prepare(`DELETE FROM transactions WHERE id IN (${ids.map(() => '?').join(',')})`)
+		.bind(...ids)
+		.run();
+	return r.meta?.changes ?? 0;
+}
+
 /** Aggregate income/expense/net for a single month (YYYY-MM). Transfers excluded. */
 export async function getMonthlySummary(db: D1Database, month: string): Promise<MonthlySummary> {
 	const { results } = await db
@@ -628,6 +638,29 @@ export async function deleteDebt(
 	if ((usage?.n ?? 0) > 0) return 'has-payments';
 	const r = await db.prepare('DELETE FROM debts WHERE id = ?').bind(id).run();
 	return (r.meta?.changes ?? 0) > 0 ? 'deleted' : 'not-found';
+}
+
+/**
+ * Delete multiple debts. Debts that have payments are rejected (left intact).
+ * Returns how many were deleted and how many were rejected.
+ */
+export async function deleteDebts(
+	db: D1Database,
+	ids: string[]
+): Promise<{ deleted: number; rejected: number }> {
+	if (ids.length === 0) return { deleted: 0, rejected: 0 };
+	const { results } = await db
+		.prepare(`SELECT debt_id FROM debt_payments WHERE debt_id IN (${ids.map(() => '?').join(',')})`)
+		.bind(...ids)
+		.all<{ debt_id: string }>();
+	const blocked = new Set((results ?? []).map((r) => r.debt_id));
+	const deletable = ids.filter((id) => !blocked.has(id));
+	if (deletable.length === 0) return { deleted: 0, rejected: blocked.size };
+	const r = await db
+		.prepare(`DELETE FROM debts WHERE id IN (${deletable.map(() => '?').join(',')})`)
+		.bind(...deletable)
+		.run();
+	return { deleted: r.meta?.changes ?? 0, rejected: blocked.size };
 }
 
 /** Sum of remaining per direction across open debts. */

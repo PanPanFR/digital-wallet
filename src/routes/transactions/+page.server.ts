@@ -3,6 +3,7 @@ import type { Actions, ServerLoad, RequestEvent } from '@sveltejs/kit';
 import {
 	createTransaction,
 	deleteTransaction,
+	deleteTransactions,
 	listTransactions,
 	listWallets,
 	updateTransaction
@@ -79,5 +80,17 @@ export const actions: Actions = {
 		if (!id) return fail(400, { errors: { id: 'ID transaksi tidak ditemukan' } });
 		await deleteTransaction(platform!.env.DB, id);
 		return { success: true };
+	},
+
+	bulkDelete: async ({ request, platform }: RequestEvent) => {
+		const ids = [...new Set(
+			String((await request.formData()).get('ids') ?? '')
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean)
+		)];
+		if (ids.length === 0) return fail(400, { error: 'Pilih transaksi dulu' });
+		const count = await deleteTransactions(platform!.env.DB, ids);
+		return { success: true, count };
 	}
 };

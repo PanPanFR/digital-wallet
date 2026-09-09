@@ -17,6 +17,57 @@
 	let deleting = $state(false);
 	let deleteForm: HTMLFormElement | null = null;
 
+	let selected = $state(new Set<string>());
+	let selectAllEl = $state<HTMLInputElement | null>(null);
+	let showBulkConfirm = $state(false);
+	let bulkDeleting = $state(false);
+	let bulkForm: HTMLFormElement | null = null;
+
+	const selectedCount = $derived(selected.size);
+	const allSelected = $derived(
+		data.transactions.length > 0 && selectedCount === data.transactions.length
+	);
+	const indeterminate = $derived(selectedCount > 0 && !allSelected);
+
+	$effect(() => {
+		if (selectAllEl) selectAllEl.indeterminate = indeterminate;
+	});
+
+	// ponytail: clear selection whenever page data changes (filter/pagination/delete)
+	// so stale ids from another view can never reach bulkDelete
+	$effect(() => {
+		void data.transactions;
+		selected = new Set();
+	});
+
+	function toggleRow(id: string, checked: boolean) {
+		const next = new Set(selected);
+		if (checked) next.add(id);
+		else next.delete(id);
+		selected = next;
+	}
+
+	function toggleAll(checked: boolean) {
+		selected = checked ? new Set(data.transactions.map((t) => t.id)) : new Set();
+	}
+
+	const handleBulkDelete: SubmitFunction = () => {
+		bulkDeleting = true;
+		return async ({ result, update }) => {
+			bulkDeleting = false;
+			showBulkConfirm = false;
+			await update();
+			if (result.type === 'success') {
+				selected = new Set();
+				notify('success', 'Transaksi terpilih dihapus');
+			} else if (result.type === 'failure' && result.data?.error) {
+				notify('error', String(result.data.error));
+			} else {
+				notify('error', 'Gagal menghapus transaksi');
+			}
+		};
+	};
+
 	function openAdd() {
 		editing = null;
 		showForm = true;
@@ -187,11 +238,43 @@
 			Belum ada transaksi{data.month ? ` untuk ${monthLabel}` : ''}.
 		</p>
 	{:else}
+		<div class="mb-2 flex items-center gap-3">
+			<label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+				<input
+					type="checkbox"
+					checked={allSelected}
+					onchange={(e) => toggleAll(e.currentTarget.checked)}
+					aria-label="Pilih semua transaksi di halaman ini"
+					class="h-4 w-4 rounded border-gray-300 dark:border-gray-700 text-sky-600"
+				/>
+				Pilih semua
+			</label>
+			{#if selectedCount > 0}
+				<button
+					onclick={() => (showBulkConfirm = true)}
+					class="ml-auto rounded-lg bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 text-sm font-medium"
+				>
+					Hapus ({selectedCount})
+				</button>
+			{/if}
+		</div>
+		{#if selectedCount > 0}
+			<p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+				Menghapus yang terpilih di halaman ini saja.
+			</p>
+		{/if}
 		<ul
 			class="divide-y divide-gray-100 dark:divide-gray-800 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
 		>
 			{#each data.transactions as tx (tx.id)}
 				<li class="flex items-center gap-3 px-4 py-3">
+					<input
+						type="checkbox"
+						checked={selected.has(tx.id)}
+						onchange={(e) => toggleRow(tx.id, e.currentTarget.checked)}
+						aria-label="Pilih transaksi {tx.description}"
+						class="h-4 w-4 shrink-0 rounded border-gray-300 dark:border-gray-700 text-sky-600"
+					/>
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-gray-900 dark:text-white">{tx.description}</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
@@ -266,4 +349,17 @@
 
 <form method="POST" action="?/delete" bind:this={deleteForm} use:enhance={handleDelete} class="hidden">
 	<input type="hidden" name="id" value={deleteTarget?.id ?? ''} />
+</form>
+
+<ConfirmModal
+	open={showBulkConfirm}
+	title="Hapus Transaksi"
+	message={`Hapus ${selectedCount} transaksi terpilih? Tindakan ini tidak bisa dibatalkan.`}
+	confirmText={bulkDeleting ? 'Menghapus…' : 'Hapus'}
+	onConfirm={() => bulkForm?.requestSubmit()}
+	onCancel={() => (showBulkConfirm = false)}
+/>
+
+<form method="POST" action="?/bulkDelete" bind:this={bulkForm} use:enhance={handleBulkDelete} class="hidden">
+	<input type="hidden" name="ids" value={[...selected].join(',')} />
 </form>
