@@ -3,8 +3,6 @@
 	import {
 		Plus,
 		ArrowUpRight,
-		TrendingDown,
-		TrendingUp,
 		Wallet,
 		Smartphone,
 		Banknote,
@@ -105,31 +103,7 @@
 		</div>
 	</section>
 
-	<section class="mt-6 grid gap-3 sm:grid-cols-3" aria-label="Ringkasan">
-		<div
-			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-		>
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-emerald-500"><TrendingUp size={14} /></span>
-				Pemasukan
-			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
-				{formatIDR(data.summary.income)}
-			</p>
-		</div>
-
-		<div
-			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-		>
-			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-				<span class="text-red-500"><TrendingDown size={14} /></span>
-				Pengeluaran
-			</div>
-			<p class="mt-1 font-mono text-lg font-bold text-red-600 dark:text-red-400">
-				{formatIDR(data.summary.expense)}
-			</p>
-		</div>
-
+	<section class="mt-6" aria-label="Ringkasan">
 		<div
 			class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
 		>
