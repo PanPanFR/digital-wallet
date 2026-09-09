@@ -7,7 +7,8 @@
 		TrendingUp,
 		Wallet,
 		Smartphone,
-		Banknote
+		Banknote,
+		HandCoins
 	} from '@lucide/svelte';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
 	import Skeleton from '$lib/components/Skeleton.svelte';
@@ -146,6 +147,31 @@
 			</p>
 		</div>
 	</section>
+
+	{#if data.debtTotals.owe > 0 || data.debtTotals.owed > 0}
+		<a
+			href="/hutang"
+			aria-label="Ringkasan hutang dan piutang"
+			class="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+		>
+			<div>
+				<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+					<span class="text-red-500"><HandCoins size={14} /></span>
+					Hutang &amp; Piutang
+				</div>
+				<p class="mt-1 text-sm">
+					<span class="font-mono font-bold text-red-600 dark:text-red-400">
+						Hutang {formatIDR(data.debtTotals.owe)}
+					</span>
+					<span class="text-gray-400"> · </span>
+					<span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+						Piutang {formatIDR(data.debtTotals.owed)}
+					</span>
+				</p>
+			</div>
+			<ArrowUpRight size={16} class="text-gray-400" />
+		</a>
+	{/if}
 
 	<section class="mt-6" aria-label="Daftar dompet">
 		<h2 class="mb-2 font-semibold text-gray-900 dark:text-white">Dompet</h2>

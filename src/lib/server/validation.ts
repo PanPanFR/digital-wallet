@@ -42,3 +42,40 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
 	}
 	return out;
 }
+
+/** Debt create validation (two-way owe/owed, optional immediate balance reduction). */
+export const DebtSchema = z
+	.object({
+		person: z.string().trim().min(1, 'Nama wajib diisi').max(60, 'Nama terlalu panjang'),
+		direction: z.enum(['owe', 'owed'], { message: 'Arah tidak valid' }),
+		amount: z.coerce
+			.number()
+			.int('Jumlah harus bilangan bulat')
+			.positive('Jumlah harus lebih dari 0')
+			.max(999_999_999, 'Jumlah terlalu besar'),
+		date: z.preprocess(
+			(v) => (v === '' || v === undefined || v === null ? todayISO() : v),
+			z.string().regex(DATE_RE, 'Tanggal tidak valid')
+		),
+		walletId: z.string().trim().default(''),
+		reduceBalance: z.string().optional()
+	})
+	.refine((d) => d.reduceBalance !== 'on' || d.walletId !== '', {
+		message: 'Pilih dompet dulu',
+		path: ['walletId']
+	});
+
+/** Debt payment validation (partial/full installment). */
+export const DebtPaymentSchema = z.object({
+	debtId: z.string().trim().min(1),
+	amount: z.coerce
+		.number()
+		.int('Jumlah harus bilangan bulat')
+		.positive('Jumlah harus lebih dari 0')
+		.max(999_999_999, 'Jumlah terlalu besar'),
+	walletId: z.string().trim().min(1, 'Pilih dompet dulu'),
+	date: z.preprocess(
+		(v) => (v === '' || v === undefined || v === null ? todayISO() : v),
+		z.string().regex(DATE_RE, 'Tanggal tidak valid')
+	)
+});

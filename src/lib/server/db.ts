@@ -465,3 +465,175 @@ export async function hitRateLimit(
 		return true;
 	}
 }
+
+// ---------- Debts ----------
+
+export interface DebtRow {
+	id: string;
+	person: string;
+	direction: 'owe' | 'owed';
+	amount: number;
+	paid: number;
+	remaining: number;
+	wallet_id: string | null;
+	wallet_name: string | null;
+	date: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface DebtPaymentRow {
+	id: string;
+	debt_id: string;
+	amount: number;
+	wallet_id: string;
+	wallet_name: string;
+	date: string;
+}
+
+const DEBT_SELECT = `SELECT d.*, w.name AS wallet_name, (d.amount - d.paid) AS remaining
+	FROM debts d LEFT JOIN wallets w ON w.id = d.wallet_id`;
+
+function mapDebt(r: Record<string, unknown>): DebtRow {
+	return {
+		...(r as unknown as DebtRow),
+		amount: Number(r.amount) || 0,
+		paid: Number(r.paid) || 0,
+		remaining: Number(r.remaining) || 0
+	};
+}
+
+/** List all debts (open + paid off), newest first. */
+export async function listDebts(db: D1Database): Promise<DebtRow[]> {
+	const { results } = await db
+		.prepare(`${DEBT_SELECT} ORDER BY d.date DESC, d.created_at DESC`)
+		.all<Record<string, unknown>>();
+	return (results ?? []).map(mapDebt);
+}
+
+/** Open debts only (paid < amount). Used by AI chatbox next plan — keep name. */
+export async function listOpenDebts(db: D1Database): Promise<DebtRow[]> {
+	const { results } = await db
+		.prepare(`${DEBT_SELECT} WHERE d.amount > d.paid ORDER BY d.date DESC, d.created_at DESC`)
+		.all<Record<string, unknown>>();
+	return (results ?? []).map(mapDebt);
+}
+
+/** Fetch a single debt by id, or null. */
+export async function getDebt(db: D1Database, id: string): Promise<DebtRow | null> {
+	const row = await db
+		.prepare(`${DEBT_SELECT} WHERE d.id = ?`)
+		.bind(id)
+		.first<Record<string, unknown>>();
+	return row ? mapDebt(row) : null;
+}
+
+/**
+ * Create a debt. With reduceBalance, the record is created already fully paid
+ * and a single atomic batch also drops a debt_payments row + the matching
+ * transaction. This keeps the invariant paid == SUM(debt_payments) on every path.
+ */
+export async function createDebt(
+	db: D1Database,
+	input: {
+		person: string;
+		direction: 'owe' | 'owed';
+		amount: number;
+		date: string;
+		walletId: string | null;
+		reduceBalance: boolean;
+	}
+): Promise<string> {
+	const id = crypto.randomUUID().replace(/-/g, '');
+	const debtStmt = db
+		.prepare(
+			'INSERT INTO debts (id, person, direction, amount, paid, wallet_id, date) VALUES (?, ?, ?, ?, ?, ?, ?)'
+		)
+		.bind(id, input.person, input.direction, input.amount, input.reduceBalance ? input.amount : 0, input.walletId, input.date);
+
+	if (!input.reduceBalance) {
+		await debtStmt.run();
+		return id;
+	}
+
+	// ponytail: reduceBalance = record + full payment in one path; 1 payment row per
+	// catat so paid always equals SUM(debt_payments). No separate code path.
+	const walletId = input.walletId as string;
+	const txType = input.direction === 'owe' ? 'expense' : 'income';
+	const desc =
+		input.direction === 'owe'
+			? `Pinjam dari ${input.person}`
+			: `Pinjamkan ke ${input.person}`;
+	const payId = crypto.randomUUID().replace(/-/g, '');
+	const txId = crypto.randomUUID().replace(/-/g, '');
+	await db.batch([
+		debtStmt,
+		db
+			.prepare('INSERT INTO debt_payments (id, debt_id, amount, wallet_id, date) VALUES (?, ?, ?, ?, ?)')
+			.bind(payId, id, input.amount, walletId, input.date),
+		db
+			.prepare(
+				'INSERT INTO transactions (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?)'
+			)
+			.bind(txId, walletId, desc, input.amount, 'Lainnya', txType, input.date, new Date().toISOString())
+	]);
+	return id;
+}
+
+/**
+ * Record a partial/full payment. Returns 'not-found' / 'overpay' on guard
+ * failure, otherwise { id }. Always atomic via db.batch: payment row, matching
+ * transaction, and debts.paid increment.
+ */
+export async function addDebtPayment(
+	db: D1Database,
+	input: { debtId: string; amount: number; walletId: string; date: string }
+): Promise<'overpay' | 'not-found' | { id: string }> {
+	const debt = await getDebt(db, input.debtId);
+	if (!debt) return 'not-found';
+	if (input.amount > debt.remaining) return 'overpay';
+
+	const payId = crypto.randomUUID().replace(/-/g, '');
+	const txId = crypto.randomUUID().replace(/-/g, '');
+	const type = debt.direction === 'owe' ? 'expense' : 'income';
+	const desc =
+		debt.direction === 'owe'
+			? `Bayar utang ke ${debt.person}`
+			: `Terima bayaran dari ${debt.person}`;
+	await db.batch([
+		db
+			.prepare('INSERT INTO debt_payments (id, debt_id, amount, wallet_id, date) VALUES (?, ?, ?, ?, ?)')
+			.bind(payId, debt.id, input.amount, input.walletId, input.date),
+		db
+			.prepare(
+				'INSERT INTO transactions (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?)'
+			)
+			.bind(txId, input.walletId, desc, input.amount, 'Lainnya', type, input.date, new Date().toISOString()),
+		db
+			.prepare("UPDATE debts SET paid = paid + ?, updated_at = datetime('now') WHERE id = ?")
+			.bind(input.amount, debt.id)
+	]);
+	return { id: debt.id };
+}
+
+/** Delete a debt. Refuses ('has-payments') if any payment exists. */
+export async function deleteDebt(
+	db: D1Database,
+	id: string
+): Promise<'deleted' | 'has-payments' | 'not-found'> {
+	const usage = await db
+		.prepare('SELECT COUNT(*) AS n FROM debt_payments WHERE debt_id = ?')
+		.bind(id)
+		.first<{ n: number }>();
+	if ((usage?.n ?? 0) > 0) return 'has-payments';
+	const r = await db.prepare('DELETE FROM debts WHERE id = ?').bind(id).run();
+	return (r.meta?.changes ?? 0) > 0 ? 'deleted' : 'not-found';
+}
+
+/** Sum of remaining per direction across open debts. */
+export async function getDebtDirectionTotals(db: D1Database): Promise<{ owe: number; owed: number }> {
+	const open = await listOpenDebts(db);
+	const totals = { owe: 0, owed: 0 };
+	for (const d of open) totals[d.direction] += d.remaining;
+	return totals;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TxSchema, WalletSchema, fieldErrors } from './validation';
+import { TxSchema, WalletSchema, DebtSchema, DebtPaymentSchema, fieldErrors } from './validation';
 
 describe('TxSchema', () => {
 	it('requires walletId', () => {
@@ -87,4 +87,74 @@ describe('WalletSchema', () => {
 		expect(WalletSchema.safeParse({ name: 'GoPay', kind: 'digital' }).success).toBe(true));
 	it('rejects empty name', () =>
 		expect(WalletSchema.safeParse({ name: '  ', kind: 'cash' }).success).toBe(false));
+});
+
+describe('DebtSchema', () => {
+	const base = { person: 'Budi', direction: 'owe', amount: 100000, date: '2026-09-08' };
+
+	it('rejects empty person', () => {
+		const r = DebtSchema.safeParse({ ...base, person: '  ' });
+		expect(r.success).toBe(false);
+		if (!r.success) expect(fieldErrors(r.error).person).toBeTruthy();
+	});
+	it('rejects amount <= 0', () => {
+		const r = DebtSchema.safeParse({ ...base, amount: 0 });
+		expect(r.success).toBe(false);
+	});
+	it('rejects malformed date', () => {
+		const r = DebtSchema.safeParse({ ...base, date: '2026-13-40' });
+		expect(r.success).toBe(false);
+		if (!r.success) expect(fieldErrors(r.error).date).toBe('Tanggal tidak valid');
+	});
+	it('rejects invalid direction', () => {
+		const r = DebtSchema.safeParse({ ...base, direction: 'left' });
+		expect(r.success).toBe(false);
+		if (!r.success) expect(fieldErrors(r.error).direction).toBeTruthy();
+	});
+	it('accepts owe + owed', () => {
+		expect(DebtSchema.safeParse({ ...base, direction: 'owe' }).success).toBe(true);
+		expect(DebtSchema.safeParse({ ...base, direction: 'owed' }).success).toBe(true);
+	});
+	it('defaults date to todayISO when missing', () => {
+		const r = DebtSchema.safeParse({ person: 'Budi', direction: 'owe', amount: 100000 });
+		expect(r.success).toBe(true);
+		if (r.success) expect(r.data.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
+});
+
+describe('DebtSchema reduceBalance', () => {
+	const base = { person: 'Budi', direction: 'owe', amount: 100000, date: '2026-09-08' };
+
+	it('without walletId errors when reduceBalance is on', () => {
+		const r = DebtSchema.safeParse({ ...base, reduceBalance: 'on', walletId: '' });
+		expect(r.success).toBe(false);
+		if (!r.success) expect(fieldErrors(r.error).walletId).toBe('Pilih dompet dulu');
+	});
+	it('with walletId succeeds when reduceBalance is on', () => {
+		const r = DebtSchema.safeParse({ ...base, reduceBalance: 'on', walletId: 'w1' });
+		expect(r.success).toBe(true);
+	});
+	it('without reduceBalance ignores walletId', () => {
+		const r = DebtSchema.safeParse({ ...base, walletId: '', reduceBalance: undefined });
+		expect(r.success).toBe(true);
+	});
+});
+
+describe('DebtPaymentSchema', () => {
+	const base = { debtId: 'd1', amount: 50000, walletId: 'w1', date: '2026-09-08' };
+
+	it('requires walletId', () => {
+		const r = DebtPaymentSchema.safeParse({ ...base, walletId: '' });
+		expect(r.success).toBe(false);
+		if (!r.success) expect(fieldErrors(r.error).walletId).toBe('Pilih dompet dulu');
+	});
+	it('rejects amount <= 0', () => {
+		const r = DebtPaymentSchema.safeParse({ ...base, amount: -1 });
+		expect(r.success).toBe(false);
+	});
+	it('defaults date to todayISO when missing', () => {
+		const r = DebtPaymentSchema.safeParse({ debtId: 'd1', amount: 50000, walletId: 'w1' });
+		expect(r.success).toBe(true);
+		if (r.success) expect(r.data.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
 });
