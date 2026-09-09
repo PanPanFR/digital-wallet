@@ -4,7 +4,9 @@ import {
 	getWalletBalances,
 	deleteWallet,
 	listWallets,
+	createWallet,
 	updateWallet,
+	adjustWalletBalance,
 	listTransactions,
 	getMonthlySummary,
 	getCategoryTotals,
@@ -118,6 +120,73 @@ describe('updateWallet', () => {
 	});
 	it('returns false when nothing to update', async () => {
 		expect(await updateWallet(fakeDb([]), 'x', {})).toBe(false);
+	});
+});
+
+describe('duplicate wallet name guard', () => {
+	it('createWallet compares case/whitespace-insensitively via SQL', async () => {
+		const { db, calls } = recordingDb([{ n: 1 }]);
+		const res = await createWallet(db, { name: ' gopay ', kind: 'digital' });
+		expect(res).toBe('duplicate');
+		expect(calls).toHaveLength(1); // no INSERT attempted
+		expect(calls[0].sql).toContain('lower(trim(name)) = lower(trim(?))');
+		expect(calls[0].binds).toEqual([' gopay ']);
+	});
+	it('createWallet inserts when name is free', async () => {
+		const { db, calls } = recordingDb([{ n: 0 }]);
+		const id = await createWallet(db, { name: 'GoPay', kind: 'digital' });
+		expect(typeof id).toBe('string');
+		expect(calls[1].sql).toContain('INSERT INTO wallets');
+	});
+	it('updateWallet rejects a colliding rename', async () => {
+		const { db, calls } = recordingDb([{ n: 1 }]);
+		const res = await updateWallet(db, 'w1', { name: 'GoPay' });
+		expect(res).toBe('duplicate');
+		expect(calls).toHaveLength(1); // no UPDATE attempted
+	});
+	it('updateWallet allows self-update (excludes own id)', async () => {
+		const { db, calls } = recordingDb([{ n: 0 }]);
+		const res = await updateWallet(db, 'w1', { name: 'GoPay' });
+		expect(res).toBe(true);
+		expect(calls[0].binds).toEqual(['GoPay', 'w1']);
+	});
+});
+
+describe('adjustWalletBalance', () => {
+	const wallet = {
+		id: 'w1',
+		name: 'GoPay',
+		kind: 'digital',
+		created_at: 'x',
+		balance: 100000
+	};
+	it('creates an expense tx when lowering the balance', async () => {
+		const { db, calls } = recordingDb([wallet]);
+		const res = await adjustWalletBalance(db, 'w1', 40000);
+		expect(res).toBe('adjusted');
+		const insert = calls.find((c) => c.sql.includes('INSERT INTO transactions'))!;
+		expect(insert.binds).toEqual(
+			expect.arrayContaining(['w1', 'Penyesuaian saldo', 60000, 'Lainnya', 'expense'])
+		);
+	});
+	it('creates an income tx when raising the balance', async () => {
+		const { db, calls } = recordingDb([{ ...wallet, balance: 40000 }]);
+		const res = await adjustWalletBalance(db, 'w1', 100000);
+		expect(res).toBe('adjusted');
+		const insert = calls.find((c) => c.sql.includes('INSERT INTO transactions'))!;
+		expect(insert.binds).toEqual(
+			expect.arrayContaining(['w1', 'Penyesuaian saldo', 60000, 'Lainnya', 'income'])
+		);
+	});
+	it('no-change when target equals current balance, no tx created', async () => {
+		const { db, calls } = recordingDb([wallet]);
+		const res = await adjustWalletBalance(db, 'w1', 100000);
+		expect(res).toBe('no-change');
+		expect(calls.some((c) => c.sql.includes('INSERT INTO transactions'))).toBe(false);
+	});
+	it('not-found for a missing wallet', async () => {
+		const { db } = recordingDb([]);
+		expect(await adjustWalletBalance(db, 'nope', 100000)).toBe('not-found');
 	});
 });
 
