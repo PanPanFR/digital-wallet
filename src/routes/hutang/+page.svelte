@@ -145,7 +145,7 @@
 		<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
 				<span class="text-red-500"><TrendingDown size={14} /></span>
-				Kamu Berutang
+				Hutang Saya
 			</div>
 			<p class="mt-1 font-mono text-lg font-bold text-red-600 dark:text-red-400">
 				{formatIDR(data.totals.owe)}
@@ -155,7 +155,7 @@
 		<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 			<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
 				<span class="text-emerald-500"><TrendingUp size={14} /></span>
-				Dipinjamkan
+				Piutang Saya
 			</div>
 			<p class="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
 				{formatIDR(data.totals.owed)}
@@ -333,7 +333,7 @@
 								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
 								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
 						>
-							<TrendingDown size={14} /> Kamu Berutang
+							<TrendingDown size={14} /> Saya Berhutang
 						</button>
 						<button
 							type="button"
@@ -344,7 +344,7 @@
 								? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
 								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
 						>
-							<TrendingUp size={14} /> Dipinjamkan
+							<TrendingUp size={14} /> Saya Meminjamkan
 						</button>
 					</div>
 					{#if errors.direction}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.direction}</p>{/if}
