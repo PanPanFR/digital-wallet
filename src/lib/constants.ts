@@ -1,4 +1,4 @@
-/** Shared transaction categories — must match the AI prompt in src/lib/server/ai.ts. */
+/** Shared transaction categories — UI-only (form select + category filter). */
 export const CATEGORIES = [
 	'Makanan',
 	'Transportasi',

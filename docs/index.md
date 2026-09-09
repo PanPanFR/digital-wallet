@@ -20,7 +20,6 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-- [../plan/ux-data-model.md](../plan/ux-data-model.md) — transaction `date` column, `transfer` type with `to_wallet_id` (excluded from aggregates), editable copilot preview, list search/category filter/pagination, analytics fixes. Money-path change; requires a D1 migration (local **and** remote) before the UI lands.
-- [../plan/ux-mobile-settings.md](../plan/ux-mobile-settings.md) — logout + theme toggle on mobile via the Pengaturan page (today both exist only in the desktop sidebar). Independent of the above.
+None — see [plan/](../plan/) for any work in flight.
 
-Neither plan's behavior is implemented in `main` as of this writing — do not document them as current.
+Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.

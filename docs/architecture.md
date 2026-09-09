@@ -8,13 +8,13 @@ Everything ships as **one Cloudflare Worker** plus its static-asset bucket, prod
 
 - Server code (load functions, form actions, API routes, hooks) compiles to `.svelte-kit/cloudflare/_worker.js` — the Worker entry point (`wrangler.jsonc` → `main`).
 - Client chunks, `static/` files (manifest, icons, `sw.js`) are served through the `ASSETS` binding; the adapter's default `serve` fallback sends unmatched requests to the Worker.
-- `compatibility_flags: ["nodejs_compat"]` lets server code use `process.env` — secrets/vars from bindings are surfaced there (that is how `src/lib/server/auth.ts` and `ai.ts` read `SESSION_SECRET` / `AI_BASE_URL` / `AI_MODEL` instead of `platform.env`).
-- Pages render server-side (SSR); there is no separate API server and no client-side data fetching except the two copilot JSON endpoints.
+- `compatibility_flags: ["nodejs_compat"]` lets server code use `process.env` — secrets/vars from bindings are surfaced there (that is how `src/lib/server/auth.ts` and `ai.ts` read `SESSION_SECRET` / `AI_BASE_URL` / `AI_MODEL`; `src/routes/api/ai/report/+server.ts` reads `GOOGLE_API_KEY` from `platform.env` instead).
+- Pages render server-side (SSR); there is no separate API server and no client-side data fetching except the one copilot JSON endpoint (`/api/ai/report`).
 
 ```mermaid
 flowchart LR
     B[Browser] -->|HTML form POST / navigation| H[Worker: hooks.server.ts]
-    B -->|POST /api/ai/parse, /api/ai/report JSON| H
+    B -->|POST /api/ai/report JSON| H
     H -->|session valid| R[Route +page.server.ts / +server.ts]
     H -->|invalid, page| L[303 redirect /login]
     H -->|invalid, /api/*| J[401 JSON]
@@ -36,7 +36,7 @@ Login itself (see `docs/specs/2026-09-03-svelte-rewrite-design.md` § Auth Flow 
 - First run: `/login` detects no `master_password_hash` in `app_settings` and shows **setup** mode; submitting sets the password (PBKDF2-SHA256, 100k iterations, stored as `saltHex:hashHex`).
 - After that: **login** mode verifies the password. Failed attempts go through the D1-backed rate limiter (`hitRateLimit('login', 15min, 5)` in `src/routes/login/+page.server.ts`) — it survives Worker isolate restarts, unlike an in-memory counter. It deliberately **fails open** if the DB write errors.
 - Success issues the cookie via `src/lib/server/session.ts` (`httpOnly`, `sameSite=lax`, `secure` unless dev).
-- CSRF: mutations use SvelteKit form actions (built-in origin checks); the two JSON endpoints compare `Origin` to the request origin manually (`src/routes/api/ai/*`).
+- CSRF: mutations use SvelteKit form actions (built-in origin checks); the copilot JSON endpoint compares `Origin` to the request origin manually (`src/routes/api/ai/report/+server.ts`).
 
 ## Data access
 
@@ -44,17 +44,22 @@ All SQL lives in `src/lib/server/db.ts`; every function takes `D1Database` as it
 
 Two load-bearing rules:
 
-- **Balances are computed, never stored.** Per-wallet, per-kind, and combined totals all derive from `SUM(CASE type WHEN 'income' THEN amount ELSE -amount END)` over `transactions` (`BALANCE_SQL`, `getKindTotals`). This was the central decision of the digital-wallet transformation — a stored balance column is a sync bug waiting to happen. Source: `docs/specs/2026-09-08-digital-wallet-design.md`.
-- **zod validation is server-side, one source of truth.** `src/lib/server/validation.ts` (`TxSchema`, `WalletSchema`, `fieldErrors`) guards every money path; the same schemas run in form actions and API endpoints.
+- **Balances are computed, never stored.** Per-wallet, per-kind, and combined totals all derive from a `SUM(CASE …)` over `transactions` that signs income/expense and, for `transfer`, keys off which wallet the row touches (`BALANCE_CASE`/`BALANCE_SQL`, `getKindTotals`). This was the central decision of the digital-wallet transformation — a stored balance column is a sync bug waiting to happen. Source: `docs/specs/2026-09-08-digital-wallet-design.md`.
+- **zod validation is server-side, one source of truth.** `src/lib/server/validation.ts` (`TxSchema`, `WalletSchema`, `DebtSchema`, `DebtPaymentSchema`, `fieldErrors`) guards every money path; the same schemas run in form actions and API endpoints.
 
 ## AI copilot
 
-`src/lib/server/ai.ts` talks to an OpenAI-compatible `/chat/completions` endpoint (default `https://9router.panpan.my.id/v1`, model default `gemini-2.5-flash`, overridable via `AI_BASE_URL` / `AI_MODEL`). `GOOGLE_API_KEY` is the Bearer token name kept for backwards compatibility. Two flows, both POST JSON from `src/routes/copilot/+page.svelte`:
+`/copilot` is an Indonesian chatbox: free-form questions answered from a per-request JSON snapshot of the user's finances (wallet balances, this/last-month summaries, category totals, 6-month trend, open debts, 10 recent transactions) built by `src/routes/api/ai/report/+server.ts` and sent to `chatAnswer()` in `src/lib/server/ai.ts`. The call goes to an OpenAI-compatible `/chat/completions` endpoint; the AI is strictly read-only (server-side chat history is not stored — the client replays the last ≤8 turns). The earlier free-text **parse** flow (`/api/ai/parse`, preview → confirm → bulk save) was removed with the chatbox rework.
 
-- **Parse** (`POST /api/ai/parse`): free text (≤500 chars) → LLM with the user's wallet list embedded in the system prompt → loose-JSON-tolerant extraction → zod-normalized transactions → client shows checkboxes → confirmed rows bulk-saved through the `?/create-bulk` form action on `/copilot` (re-validated server-side; unknown wallet ids rejected in the endpoint). AI output is *never* trusted to write directly.
-- **Report** (`POST /api/ai/report`): current-month summary + category totals + wallet balances serialized to JSON as context → free-form Indonesian answer.
+Provider config resolves in precedence order (shared by the report endpoint, `resolveProviderConfig` in `src/lib/server/aiProviders.ts`):
 
-The parse prompt pins category values to the 8 constants in `src/lib/constants.ts` — those two files must stay in sync.
+1. per-request body override (`providerId`/`model`, model honored only if it is one of that provider's models),
+2. a user-stored provider in `app_settings` (`ai_providers` JSON array + `ai_active_provider`), managed via CRUD form actions on `/settings`; keys are stored plaintext (single-user tradeoff) and stripped by `toSummary()` before anything ships to the client,
+3. env fallback `GOOGLE_API_KEY` / `AI_BASE_URL` (default `https://9router.panpan.my.id/v1`) / `AI_MODEL` (default `gemini-2.5-flash`).
+
+With neither a stored provider nor `GOOGLE_API_KEY`, `/api/ai/report` returns 503 ("Fitur AI belum dikonfigurasi") and the copilot degrades gracefully.
+
+The 8 fixed transaction categories in `src/lib/constants.ts` drive the form/category filter; there is no AI parse prompt to keep them in sync with anymore.
 
 ## Frontend layering
 
@@ -82,18 +87,19 @@ Known cosmetic gap: both `src/app.html` and `manifest.json` reference `/favicon.
 │   ├── app.css                # Tailwind v4 entry + class-based dark variant
 │   ├── app.d.ts               # Platform/Locals types (D1, ASSETS, env var names)
 │   ├── lib/
-│   │   ├── server/            # db.ts, auth.ts, session.ts, ai.ts, validation.ts (+ *.test.ts)
+│   │   ├── server/            # db.ts, auth.ts, session.ts, ai.ts, aiProviders.ts, validation.ts (+ *.test.ts)
 │   │   ├── components/        # TransactionForm, ConfirmModal, Toast, Skeleton, Navigation, ThemeToggle
-│   │   ├── constants.ts       # CATEGORIES (must match ai.ts parse prompt)
+│   │   ├── constants.ts       # CATEGORIES (form + category filter)
 │   │   ├── format.ts          # IDR currency + WIB date formatting
 │   │   ├── stores.svelte.ts   # toast state (runes)
 │   │   └── modalAccessibility.ts
 │   └── routes/
 │       ├── +page.svelte|.server.ts        # dashboard: totals, balances, recent, quick-add, logout action
-│       ├── login/ wallets/ transactions/ analytics/ copilot/ settings/
-│       └── api/ai/{parse,report}/+server.ts
+│       ├── login/ wallets/ transactions/ hutang/ analytics/ copilot/ settings/
+│       └── api/ai/report/+server.ts       # copilot chatbox JSON endpoint
 ├── static/                    # manifest.json, icon.svg, sw.js (cleanup stub only)
 ├── schema.sql                 # full D1 schema, idempotent (see data-model.md)
+├── migrations/                # one-off structural migrations (NNN-*.sql), applied manually
 ├── wrangler.jsonc             # worker name, D1 + ASSETS bindings, nodejs_compat
 ├── svelte.config.js / vite.config.ts / vitest.config.ts / tsconfig.json
 └── docs/ + plan/              # this documentation; plan/ holds approved-but-unmerged work
@@ -106,4 +112,4 @@ Full rationale lives in the specs — summaries above, details in:
 - `docs/specs/2026-09-03-svelte-rewrite-design.md` — framework/hosting/styling/PWA choices of the rewrite.
 - `docs/specs/2026-09-08-digital-wallet-design.md` — wallet model, clean-start D1 (no data migration), kind CHECK constraint, seed wallets, rebrand checklist, Workers Builds over manual deploys.
 
-Upcoming changes (transaction `date`, wallet-to-wallet `transfer`, mobile settings) are approved but **not implemented in `main`** — see [index.md](index.md#approved-plans-not-yet-in-main) and the `plan/` documents.
+Visual layer (merged `ui-redesign`): design tokens + component utilities (`.card`, `.btn*`, `.input`, `.chip`, `.label`) live in `src/app.css`; single orange-600 brand accent, semantic palette (emerald income, red expense, sky digital kind, amber cash kind, neutral slate transfers), Plus Jakarta Sans, `tabular-nums` money. New UI work should reuse those utilities instead of raw utility strings — see [index.md](index.md).

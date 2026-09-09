@@ -4,13 +4,14 @@ A single-user personal finance tracker built around **wallets**: every income an
 
 ## Features
 
-- **Wallets** (`/wallets`): CRUD named wallets of kind `digital` or `cash`, quick presets (GoPay, OVO, DANA, ShopeePay), two seeded defaults. A wallet with transactions cannot be deleted.
-- **Balances** — always computed from transactions (`SUM(income) − SUM(expense)`), never stored: per wallet, digital/cash subtotals, and a combined total on the dashboard.
-- **Transactions** (`/transactions`): create/edit/delete via form actions with zod validation and inline errors; filter by month and by wallet or kind; 50 per page; quick-add on the dashboard.
-- **Dashboard** (`/`): current-month income/expense/net, combined + per-kind totals, per-wallet balances, 5 latest transactions.
-- **Analytics** (`/analytics`): per-category bars for a chosen month and a 6-month income/expense trend — pure CSS bars over SQL aggregates, no chart library.
-- **AI copilot** (`/copilot`, optional): parse free-text ("beli kopi 25rb") into transactions with preview → confirm → bulk save, and ask questions about the current month. Requires an OpenAI-compatible endpoint (`GOOGLE_API_KEY`); the whole feature returns 503 without it.
-- **Auth**: single master password (PBKDF2-SHA256), HMAC-signed session cookie (`dw_session`, 7 days), login rate-limited to 5 attempts / 15 min.
+- **Wallets** (`/wallets`): CRUD named wallets of kind `digital` or `cash`, quick presets (GoPay, OVO, DANA, ShopeePay), two seeded defaults. Duplicate names (case-insensitive) are rejected. A wallet referenced by transactions cannot be deleted. "Atur Saldo" edits a wallet's balance by posting one automatic adjustment transaction (`Penyesuaian saldo`) — balances stay computed.
+- **Balances** — always computed from transactions (`SUM(income) − SUM(expense)`, transfers signed per side), never stored: per wallet, digital/cash subtotals, and a combined total on the dashboard.
+- **Transactions** (`/transactions`): create/edit/delete via form actions with zod validation and inline errors; income/expense/**transfer** (wallet→wallet, excluded from income/expense aggregates) with an explicit `date`; filter by month, wallet/kind, description search, and category; 50 per page with offset paging; bulk select + delete; quick-add on the dashboard.
+- **Debts / Hutang** (`/hutang`): two-way records (`owe`/`owed`) with partial payments; each payment atomically writes a matching transaction and touches the chosen wallet. Debts with payments cannot be deleted (bulk delete skips and reports them). Open totals show on the dashboard.
+- **Dashboard** (`/`): month picker with net balance for the month, combined + per-kind totals, hutang/piutang summary, per-wallet balances, 5 latest transactions.
+- **Analytics** (`/analytics`): per-category bars for a chosen month, per-wallet expense totals, and a 6-month income/expense trend — pure CSS bars over SQL aggregates, no chart library.
+- **AI copilot** (`/copilot`): chatbox answering questions about your finances (month summaries, categories, trends, wallet balances, open debts injected as a JSON snapshot; read-only, never writes). Providers (base URL, API key, models) are managed in `/settings`; with no stored provider the app falls back to `GOOGLE_API_KEY`/`AI_BASE_URL`/`AI_MODEL` env, and with neither configured the endpoint returns 503.
+- **Auth**: single master password (PBKDF2-SHA256), HMAC-signed session cookie (`dw_session`, 7 days), login rate-limited to 5 attempts / 15 min. `/settings` holds change-password and the AI provider CRUD.
 - **UI**: dark/light theme (system default, persisted in `localStorage`), desktop sidebar + mobile bottom nav, toasts, confirm modals, focus-trapped dialogs.
 
 > No offline support: the app needs network. The old service worker was removed (a cache-first SW served stale page data after deletes); `static/sw.js` now only unregisters stale workers left over from old deploys. Details: [docs/architecture.md](docs/architecture.md).
@@ -42,7 +43,7 @@ Create `.dev.vars` (git-ignored; values are yours — names/purposes in [docs/de
 
 ```
 SESSION_SECRET=<any-random-string>
-GOOGLE_API_KEY=<optional, enables the AI copilot>
+GOOGLE_API_KEY=<optional env fallback for the AI copilot; providers can also be stored in /settings>
 ```
 
 ```bash
