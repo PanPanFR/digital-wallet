@@ -3,7 +3,9 @@
  *
  * chatAnswer:
  *  - Endpoint: POST {baseUrl}/chat/completions (OpenAI-compatible shape, Gemini
- *    via 9router). Auth: `Authorization: Bearer <apiKey>`. Model: gemini-2.5-flash.
+ *    via 9router). Auth: `Authorization: Bearer <apiKey>`.
+ *  - Config is passed explicitly (AiConfig from stored provider or env) —
+ *    baseUrl/model come from cfg, not global env.
  *  - Messages: [system (IDR + plain-text rules), user (WIB time + context JSON
  *    + optional history transcript + last question)].
  *  - Response text unwrapped via `extractContent`, trimmed.
@@ -20,6 +22,8 @@ interface FetchCall {
 
 let calls: FetchCall[] = [];
 let nextResponder: (url: string, init: RequestInit) => Response | Promise<Response>;
+
+const CFG = { baseUrl: 'https://cfg.example.com/v1', apiKey: 'cfg-key', model: 'cfg-model' };
 
 beforeEach(() => {
 	calls = [];
@@ -62,7 +66,7 @@ describe('chatAnswer', () => {
 	it('returns the text content from a Gemini response', async () => {
 		nextResponder = () => geminiTextResponse('Pengeluaran hari ini Rp25.000.');
 
-		const answer = await chatAnswer('k', 'berapakah pengeluaran hari ini?', [], '{"summary":{}}');
+		const answer = await chatAnswer(CFG, 'berapakah pengeluaran hari ini?', [], '{"summary":{}}');
 		expect(answer).toBe('Pengeluaran hari ini Rp25.000.');
 	});
 
@@ -70,7 +74,7 @@ describe('chatAnswer', () => {
 		nextResponder = () => geminiTextResponse('ok');
 
 		await chatAnswer(
-			'k',
+			CFG,
 			'terus bulan lalu gimana?',
 			[
 				{ role: 'user', content: 'berapakah' },
@@ -99,20 +103,33 @@ describe('chatAnswer', () => {
 	it('omits the conversation block and uses 1024 max_tokens when history is empty', async () => {
 		nextResponder = () => geminiTextResponse('ok');
 
-		await chatAnswer('k', 'satu', [], '{"x":1}');
+		await chatAnswer(CFG, 'satu', [], '{"x":1}');
 
 		const body = JSON.parse(calls[0].init.body as string);
 		expect(body.messages[1].content).not.toContain('Percakapan sebelumnya');
 		expect(body.max_tokens).toBe(1024);
 	});
 
+	it('hits the cfg baseUrl with the cfg model and apiKey in the payload/headers', async () => {
+		nextResponder = () => geminiTextResponse('ok');
+
+		await chatAnswer(CFG, 'q', [], '{}');
+
+		const { url, init } = calls[0];
+		expect(url).toBe('https://cfg.example.com/v1/chat/completions');
+		const headers = init.headers as Record<string, string>;
+		expect(headers.Authorization).toBe('Bearer cfg-key');
+		const body = JSON.parse(init.body as string);
+		expect(body.model).toBe('cfg-model');
+	});
+
 	it('rejects with a friendly error on HTTP 429', async () => {
 		nextResponder = () => new Response('{}', { status: 429 });
-		await expect(chatAnswer('k', 'q', [], '{}')).rejects.toThrow(/quota|rate|limit|429/i);
+		await expect(chatAnswer(CFG, 'q', [], '{}')).rejects.toThrow(/quota|rate|limit|429/i);
 	});
 
 	it('rejects with a friendly error on HTTP 500', async () => {
 		nextResponder = () => new Response('{}', { status: 500 });
-		await expect(chatAnswer('k', 'q', [], '{}')).rejects.toThrow(/server|try again|500/i);
+		await expect(chatAnswer(CFG, 'q', [], '{}')).rejects.toThrow(/server|try again|500/i);
 	});
 });

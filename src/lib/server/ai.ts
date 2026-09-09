@@ -13,13 +13,14 @@
 const DEFAULT_BASE_URL = 'https://9router.panpan.my.id/v1';
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 
-interface AiConfig {
+export interface AiConfig {
 	baseUrl: string;
 	apiKey: string;
 	model: string;
 }
 
-function getConfig(apiKey: string): AiConfig {
+/** Env-backed config (GOOGLE_API_KEY / AI_BASE_URL / AI_MODEL) with defaults. */
+export function getConfigFromEnv(apiKey: string): AiConfig {
 	return {
 		baseUrl: (process.env.AI_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, ''),
 		apiKey,
@@ -98,12 +99,11 @@ function mapStatusToFriendlyError(status: number, bodyText: string): Error {
  * reply. Throws with a friendly message on rate-limit / server errors.
  */
 export async function chatAnswer(
-	apiKey: string,
+	cfg: AiConfig,
 	question: string,
 	history: { role: 'user' | 'assistant'; content: string }[],
 	contextJson: string
 ): Promise<string> {
-	const cfg = getConfig(apiKey);
 
 	const systemPrompt = `Kamu adalah asisten keuangan pribadi untuk pengguna Indonesia. Jawab PERTANYAAN pengguna HANYA berdasarkan data konteks yang diberikan. Jangan mengarang angka. Kalau data tidak ada / tidak relevan, katakan "Tidak ada data..." lalu berhenti. Gunakan format Rupiah (Rp1.250.000). Jawab dalam bahasa Indonesia, plain text tanpa bullet/markdown, ringkas dan terstruktur.`;
 
