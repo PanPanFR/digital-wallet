@@ -60,7 +60,8 @@ export const POST: RequestHandler = async ({ request, platform, url }) => {
 		summaryLastMonth: summaryLast,
 		categories,
 		trend6Months: trend6,
-		openDebts
+		openDebts,
+		recent
 	});
 
 	try {

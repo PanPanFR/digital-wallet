@@ -10,7 +10,10 @@
 	let scrollBox: HTMLDivElement | undefined = $state();
 
 	const historyForApi = $derived(
-		chat.slice(-8).map((m) => ({ role: m.role, content: m.content }))
+		chat
+			.filter((m) => !m.error)
+			.slice(-8)
+			.map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }))
 	);
 
 	async function ask(q?: string) {
@@ -127,6 +130,7 @@
 				bind:value={question}
 				placeholder="cth. Berapa pengeluaran hari ini? Ada utang apa saja?"
 				maxlength="500"
+				disabled={asking}
 				aria-label="Pertanyaan"
 				class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950 dark:text-white"
 			/>
