@@ -91,6 +91,8 @@ Key/value store (`key` PK, `value` NOT NULL, `updated_at`). Read/write via `getS
 | Key | Written by | Purpose |
 |---|---|---|
 | `master_password_hash` | login setup action, settings change-password | PBKDF2 hash `saltHex:hashHex` (16-byte salt, SHA-256, 100k iterations, `auth.ts:37-56`). Its presence/absence switches `/login` between setup and login mode |
+| `ai_providers` | settings AI save/delete actions | JSON array of user-configured AI providers `{ id, name, baseUrl, apiKey, model, models[] }`. Read by `aiProviders.ts` (defensive parse → `[]` on corrupt data). API keys are stored plaintext — accepted tradeoff for a single-user app behind a master password, and never sent to the client |
+| `ai_active_provider` | settings AI set-active action | Id of the active AI provider (`''` = none → env fallback `GOOGLE_API_KEY`/`AI_BASE_URL`/`AI_MODEL`) |
 
 ## `rate_limits` (schema.sql:33-37)
 
