@@ -15,7 +15,9 @@ import {
 	createDebt,
 	addDebtPayment,
 	deleteDebt,
-	getDebtDirectionTotals
+	getDebtDirectionTotals,
+	deleteTransactions,
+	deleteDebts
 } from './db';
 
 function fakeDb(rows: unknown[]) {
@@ -384,5 +386,65 @@ describe('getDebtDirectionTotals', () => {
 		];
 		const t = await getDebtDirectionTotals(fakeDb(rows));
 		expect(t).toEqual({ owe: 60000, owed: 150000 });
+	});
+});
+
+/** Fake D1 with a live row store so bulk DELETEs actually mutate rows. Mirrors
+ *  fakeDb: all/first/run exposed on the prepared statement AND the bound one. */
+function storeDb<T extends { id: string }>(rows: T[], payments: { debt_id: string }[] = []) {
+	const live = [...rows];
+	const stmt = (sql: string, binds: unknown[]) => ({
+		all: async () => ({
+			results: sql.includes('debt_payments')
+				? payments.filter((p) => binds.includes(p.debt_id))
+				: [...live]
+		}),
+		first: async () => live[0] ?? null,
+		run: async () => {
+			const before = live.length;
+			if (sql.startsWith('DELETE')) {
+				const ids = new Set(binds as string[]);
+				live.splice(0, live.length, ...live.filter((r) => !ids.has(r.id)));
+			}
+			return { meta: { changes: before - live.length } };
+		}
+	});
+	const db = {
+		prepare: (sql: string) => ({ ...stmt(sql, []), bind: (...b: unknown[]) => stmt(sql, b) })
+	};
+	return { db: db as unknown as D1Database, live };
+}
+
+describe('deleteTransactions', () => {
+	it('deletes only the given ids and returns the deleted count', async () => {
+		const { db, live } = storeDb([{ id: 't1' }, { id: 't2' }, { id: 't3' }]);
+		expect(await deleteTransactions(db, ['t1', 't3'])).toBe(2);
+		expect(live.map((r) => r.id)).toEqual(['t2']);
+	});
+	it('empty ids is a no-op', async () => {
+		const { db, live } = storeDb([{ id: 't1' }]);
+		expect(await deleteTransactions(db, [])).toBe(0);
+		expect(live).toHaveLength(1);
+	});
+});
+
+describe('deleteDebts', () => {
+	it('deletes debts without payments and returns the deleted count', async () => {
+		const { db, live } = storeDb([{ id: 'd1' }, { id: 'd2' }]);
+		expect(await deleteDebts(db, ['d1', 'd2'])).toEqual({ deleted: 2, rejected: 0 });
+		expect(live).toHaveLength(0);
+	});
+	it('rejects debts that have payments and keeps them intact', async () => {
+		const { db, live } = storeDb(
+			[{ id: 'd1' }, { id: 'd2' }, { id: 'd3' }],
+			[{ debt_id: 'd2' }, { debt_id: 'd2' }]
+		);
+		expect(await deleteDebts(db, ['d1', 'd2', 'd3'])).toEqual({ deleted: 2, rejected: 1 });
+		expect(live.map((r) => r.id)).toEqual(['d2']);
+	});
+	it('rejects everything without deleting when all ids have payments', async () => {
+		const { db, live } = storeDb([{ id: 'd1' }], [{ debt_id: 'd1' }]);
+		expect(await deleteDebts(db, ['d1'])).toEqual({ deleted: 0, rejected: 1 });
+		expect(live).toHaveLength(1);
 	});
 });

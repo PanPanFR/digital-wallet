@@ -44,6 +44,32 @@
 	let deleting = $state(false);
 	let deleteForm: HTMLFormElement | null = null;
 
+	// Bulk select
+	let selected = $state(new Set<string>());
+	let showBulkConfirm = $state(false);
+	let bulkDeleting = $state(false);
+	let bulkForm: HTMLFormElement | null = null;
+	let selectAllEl = $state<HTMLInputElement | null>(null);
+
+	const selectedCount = $derived(selected.size);
+	const allSelected = $derived(data.debts.length > 0 && selectedCount === data.debts.length);
+	const indeterminate = $derived(selectedCount > 0 && !allSelected);
+
+	$effect(() => {
+		if (selectAllEl) selectAllEl.indeterminate = indeterminate;
+	});
+
+	function toggleAll() {
+		selected = allSelected ? new Set() : new Set(data.debts.map((d) => d.id));
+	}
+
+	function toggleRow(id: string) {
+		const next = new Set(selected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selected = next;
+	}
+
 	const diff = $derived(data.totals.owed - data.totals.owe);
 
 	function addPreset(value: number) {
@@ -124,6 +150,24 @@
 			else notify('error', 'Gagal menghapus catatan hutang');
 		};
 	};
+
+	const handleBulkDelete: SubmitFunction = () => {
+		bulkDeleting = true;
+		return async ({ result, update }) => {
+			bulkDeleting = false;
+			showBulkConfirm = false;
+			await update();
+			if (result.type === 'success') {
+				const res = result.data as { deleted?: number; rejected?: number };
+				selected = new Set();
+				if (res.rejected && res.rejected > 0)
+					notify('error', `${res.rejected} catatan punya pembayaran dan tidak dihapus`);
+				else notify('success', 'Utang dihapus');
+			} else if (result.type === 'failure' && result.data) {
+				notify('error', (result.data as { error?: string }).error ?? 'Gagal menghapus catatan hutang');
+			} else notify('error', 'Gagal menghapus catatan hutang');
+		};
+	};
 </script>
 
 <svelte:head>
@@ -184,12 +228,46 @@
 				Belum ada catatan hutang.
 			</p>
 		{:else}
+			<div class="mb-2 flex items-center justify-between gap-3">
+				<label for="select-all-debts" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+					<input
+						id="select-all-debts"
+						bind:this={selectAllEl}
+						type="checkbox"
+						checked={allSelected}
+						onchange={toggleAll}
+						aria-label="Pilih semua catatan hutang"
+						class="h-4 w-4 rounded border-gray-300 text-sky-600 dark:border-gray-600"
+					/>
+					Pilih semua
+				</label>
+				{#if selectedCount > 0}
+					<div class="flex items-center gap-2">
+						<span class="text-xs text-gray-400 dark:text-gray-500">Menghapus yang terpilih di halaman ini saja.</span>
+						<button
+							type="button"
+							onclick={() => (showBulkConfirm = true)}
+							aria-label="Hapus {selectedCount} catatan hutang terpilih"
+							class="flex items-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-500 px-3 py-2 text-sm font-medium text-white"
+						>
+							<Trash2 size={16} /> Hapus ({selectedCount})
+						</button>
+					</div>
+				{/if}
+			</div>
 			<ul
 				class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
 			>
 				{#each data.debts as d (d.id)}
 					<li class="px-4 py-3 {d.remaining === 0 ? 'opacity-60' : ''}">
 						<div class="flex items-center gap-3">
+							<input
+								type="checkbox"
+								checked={selected.has(d.id)}
+								onchange={() => toggleRow(d.id)}
+								aria-label="Pilih catatan hutang {d.person}"
+								class="h-4 w-4 shrink-0 rounded border-gray-300 text-sky-600 dark:border-gray-600"
+							/>
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-1.5">
 									<p class="truncate text-sm font-medium text-gray-900 dark:text-white">
@@ -597,4 +675,17 @@
 
 <form method="POST" action="?/delete" bind:this={deleteForm} use:enhance={handleDelete} class="hidden">
 	<input type="hidden" name="id" value={deleteTarget?.id ?? ''} />
+</form>
+
+<ConfirmModal
+	open={showBulkConfirm}
+	title="Hapus Catatan Terpilih"
+	message={`Hapus ${selectedCount} catatan hutang terpilih? Catatan yang sudah punya pembayaran tidak akan dihapus. Tindakan ini tidak bisa dibatalkan.`}
+	confirmText={bulkDeleting ? 'Menghapus…' : 'Hapus'}
+	onConfirm={() => bulkForm?.requestSubmit()}
+	onCancel={() => (showBulkConfirm = false)}
+/>
+
+<form method="POST" action="?/bulkDelete" bind:this={bulkForm} use:enhance={handleBulkDelete} class="hidden">
+	<input type="hidden" name="ids" value={[...selected].join(',')} />
 </form>
