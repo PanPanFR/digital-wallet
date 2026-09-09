@@ -7,7 +7,7 @@
 </svelte:head>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-	<p class="text-6xl font-bold tabular-nums text-slate-300 dark:text-slate-700">{page.status}</p>
+	<p class="text-6xl font-bold tabular-nums text-slate-400 dark:text-slate-500">{page.status}</p>
 	<h1 class="text-xl font-semibold text-slate-900 dark:text-white">
 		{page.status === 404 ? 'Halaman tidak ditemukan' : 'Terjadi kesalahan'}
 	</h1>

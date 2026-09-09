@@ -302,7 +302,11 @@
 				</span>
 					<span
 						class="tabular-nums text-sm font-semibold whitespace-nowrap
-						{tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}"
+						{tx.type === 'transfer'
+							? 'text-slate-600 dark:text-slate-300'
+							: tx.type === 'income'
+								? 'text-emerald-600 dark:text-emerald-400'
+								: 'text-red-600 dark:text-red-400'}"
 					>
 						{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
 					</span>
