@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { ArrowLeftRight, TrendingDown, TrendingUp, X } from '@lucide/svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { prefersReducedMotion } from 'svelte/motion';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES } from '$lib/constants';
@@ -72,14 +74,19 @@
 
 {#if open}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick={onclose}>
+	<div
+		class="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
+		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
+		onclick={onclose}
+	>
 		<div
-			class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-5 space-y-4"
+			class="w-full max-w-md rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 p-5 space-y-4"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="transaction-form-title"
 			tabindex="-1"
 			use:modalAccessibility={{ onClose: onclose }}
+			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 		>
@@ -88,12 +95,12 @@
 					<h2 id="transaction-form-title" class="font-semibold">
 						{isEdit ? 'Edit Transaksi' : 'Catat Transaksi'}
 					</h2>
-					<p class="text-xs text-gray-500 dark:text-gray-400">
+					<p class="text-xs text-slate-500 dark:text-slate-400">
 						{isEdit ? 'Ubah detail transaksi yang ada' : 'Tambahkan pengeluaran atau pemasukan'}
 					</p>
 				</div>
 				<button
-					class="opacity-60 hover:opacity-100"
+					class="btn-ghost p-1.5"
 					aria-label="Tutup dialog"
 					disabled={submitting}
 					onclick={onclose}
@@ -107,16 +114,16 @@
 				<input type="hidden" name="type" value={type} />
 
 				<div>
-					<span class="block text-sm mb-1">Tipe</span>
+					<span class="label">Tipe</span>
 					<div class="grid grid-cols-3 gap-2" role="group" aria-label="Tipe transaksi">
 						<button
 							type="button"
 							aria-pressed={type === 'expense'}
 							onclick={() => (type = 'expense')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'expense'
 								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
 						>
 							<TrendingDown size={14} /> Pengeluaran
 						</button>
@@ -124,10 +131,10 @@
 							type="button"
 							aria-pressed={type === 'income'}
 							onclick={() => (type = 'income')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'income'
 								? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
-								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
 						>
 							<TrendingUp size={14} /> Pemasukan
 						</button>
@@ -135,10 +142,10 @@
 							type="button"
 							aria-pressed={type === 'transfer'}
 							onclick={() => (type = 'transfer')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm
+							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'transfer'
-								? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-								: 'border-gray-200 text-gray-500 dark:border-gray-700'}"
+								? 'border-slate-400 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
 						>
 							<ArrowLeftRight size={14} /> Transfer
 						</button>
@@ -147,29 +154,27 @@
 				</div>
 
 				<div>
-					<label for="tx-date" class="block text-sm mb-1">Tanggal</label>
+					<label for="tx-date" class="label">Tanggal</label>
 					<input
 						id="tx-date"
 						name="date"
 						type="date"
 						bind:value={date}
 						aria-invalid={!!errors.date}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{errors.date ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {errors.date ? 'border-red-400 dark:border-red-500' : ''}"
 					/>
 					{#if errors.date}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.date}</p>{/if}
 				</div>
 
 				<div>
-					<label for="tx-wallet" class="block text-sm mb-1">Dompet</label>
+					<label for="tx-wallet" class="label">Dompet</label>
 					<select
 						id="tx-wallet"
 						name="walletId"
 						bind:value={walletId}
 						required
 						aria-invalid={!!errors.walletId}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{errors.walletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {errors.walletId ? 'border-red-400 dark:border-red-500' : ''}"
 					>
 						<option value="" disabled>Pilih dompet</option>
 						{#each ['digital', 'cash'] as kind (kind)}
@@ -188,15 +193,14 @@
 
 				{#if type === 'transfer'}
 					<div>
-						<label for="tx-to-wallet" class="block text-sm mb-1">Dompet tujuan</label>
+						<label for="tx-to-wallet" class="label">Dompet tujuan</label>
 						<select
 							id="tx-to-wallet"
 							name="toWalletId"
 							bind:value={toWalletId}
 							required
 							aria-invalid={!!errors.toWalletId}
-							class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-								{errors.toWalletId ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+							class="input {errors.toWalletId ? 'border-red-400 dark:border-red-500' : ''}"
 						>
 							<option value="" disabled>Pilih dompet tujuan</option>
 							{#each ['digital', 'cash'] as kind (kind)}
@@ -216,9 +220,9 @@
 
 				<div>
 					<div class="flex items-center justify-between mb-1">
-						<label for="tx-amount" class="text-sm">Jumlah (IDR)</label>
+						<label for="tx-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
 						{#if amount && Number(amount) > 0}
-							<span class="text-xs font-bold text-sky-600 dark:text-sky-400">
+							<span class="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
 								Rp {Number(amount).toLocaleString('id-ID')}
 							</span>
 						{/if}
@@ -233,15 +237,14 @@
 						placeholder="0"
 						bind:value={amount}
 						aria-invalid={!!errors.amount}
-						class="w-full rounded-lg border px-3 py-2 font-bold bg-white dark:bg-gray-950
-							{errors.amount ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input text-lg font-semibold tabular-nums {errors.amount ? 'border-red-400 dark:border-red-500' : ''}"
 					/>
 					{#if errors.amount}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
 						{#each PRESETS as [value, label] (label)}
 							<button
 								type="button"
-								class="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+								class="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
 								onclick={() => addPreset(value)}
 							>
 								{label}
@@ -251,7 +254,7 @@
 				</div>
 
 				<div>
-					<label for="tx-description" class="block text-sm mb-1">Deskripsi</label>
+					<label for="tx-description" class="label">Deskripsi</label>
 					<input
 						id="tx-description"
 						name="description"
@@ -260,20 +263,14 @@
 						placeholder="cth. Kopi susu, tiket KRL, gaji freelance"
 						bind:value={description}
 						aria-invalid={!!errors.description}
-						class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-950
-							{errors.description ? 'border-red-400' : 'border-gray-300 dark:border-gray-700'}"
+						class="input {errors.description ? 'border-red-400 dark:border-red-500' : ''}"
 					/>
 					{#if errors.description}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.description}</p>{/if}
 				</div>
 
 				<div>
-					<label for="tx-category" class="block text-sm mb-1">Kategori</label>
-					<select
-						id="tx-category"
-						name="category"
-						bind:value={category}
-						class="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 bg-white dark:bg-gray-950"
-					>
+					<label for="tx-category" class="label">Kategori</label>
+					<select id="tx-category" name="category" bind:value={category} class="input">
 						{#each CATEGORIES as c (c)}
 							<option value={c}>{c}</option>
 						{/each}
@@ -282,19 +279,10 @@
 				</div>
 
 				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						disabled={submitting}
-						onclick={onclose}
-						class="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-					>
+					<button type="button" disabled={submitting} onclick={onclose} class="btn-outline px-4 py-2">
 						Batal
 					</button>
-					<button
-						type="submit"
-						disabled={submitting}
-						class="rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white px-4 py-2 text-sm font-medium"
-					>
+					<button type="submit" disabled={submitting} class="btn-primary px-4 py-2">
 						{submitting ? 'Menyimpan…' : isEdit ? 'Simpan Perubahan' : 'Catat'}
 					</button>
 				</div>
