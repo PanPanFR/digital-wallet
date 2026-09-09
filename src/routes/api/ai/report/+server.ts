@@ -1,10 +1,21 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { reportAnswer } from '$lib/server/ai';
-import { getCategoryTotals, getMonthlySummary, getWalletBalances } from '$lib/server/db';
+import { chatAnswer } from '$lib/server/ai';
+import {
+	getCategoryTotals,
+	getMonthlySummary,
+	getMonthlyTotals,
+	getWalletBalances,
+	listOpenDebts,
+	listTransactions
+} from '$lib/server/db';
 
-const ReportSchema = z.object({
-	question: z.string().trim().min(1, 'Pertanyaan tidak boleh kosong').max(500)
+const ChatSchema = z.object({
+	question: z.string().trim().min(1, 'Pertanyaan tidak boleh kosong').max(500),
+	history: z
+		.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(2000) }))
+		.max(8)
+		.default([])
 });
 
 export const POST: RequestHandler = async ({ request, platform, url }) => {
@@ -19,22 +30,41 @@ export const POST: RequestHandler = async ({ request, platform, url }) => {
 		return json({ error: 'Fitur AI belum dikonfigurasi' }, { status: 503 });
 	}
 
-	const parsed = ReportSchema.safeParse(await request.json().catch(() => ({})));
+	const parsed = ChatSchema.safeParse(await request.json().catch(() => ({})));
 	if (!parsed.success) {
 		return json({ error: 'Pertanyaan tidak boleh kosong (maks. 500 karakter)' }, { status: 400 });
 	}
 
 	const db = platform!.env.DB;
-	const month = new Date().toISOString().slice(0, 7);
-	const [summary, categories, wallets] = await Promise.all([
-		getMonthlySummary(db, month),
-		getCategoryTotals(db, month),
-		getWalletBalances(db)
-	]);
-	const summaryJson = JSON.stringify({ month, summary, categories, walletBalances: wallets });
+	const now = new Date();
+	const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+	const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+	const lastMonth = `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, '0')}`;
+
+	const [wallets, summaryThis, summaryLast, categories, trend6, openDebts, recent] =
+		await Promise.all([
+			getWalletBalances(db),
+			getMonthlySummary(db, thisMonth),
+			getMonthlySummary(db, lastMonth),
+			getCategoryTotals(db, thisMonth),
+			getMonthlyTotals(db, 6),
+			listOpenDebts(db),
+			listTransactions(db, { limit: 10 })
+		]);
+
+	const contextJson = JSON.stringify({
+		thisMonth,
+		lastMonth,
+		wallets,
+		summaryThisMonth: summaryThis,
+		summaryLastMonth: summaryLast,
+		categories,
+		trend6Months: trend6,
+		openDebts
+	});
 
 	try {
-		const answer = await reportAnswer(apiKey, parsed.data.question, summaryJson);
+		const answer = await chatAnswer(apiKey, parsed.data.question, parsed.data.history, contextJson);
 		return json({ answer });
 	} catch (e) {
 		return json(
