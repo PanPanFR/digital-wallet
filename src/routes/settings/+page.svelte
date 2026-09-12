@@ -222,9 +222,7 @@
 										bind:value={editName}
 										required
 										maxlength="50"
-										class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {editErrors.name
-											? 'border-red-400 dark:border-red-500'
-											: 'border-slate-300 dark:border-slate-700'}"
+										class="input {editErrors.name ? 'border-red-400 dark:border-red-500' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -235,9 +233,7 @@
 										bind:value={editBaseUrl}
 										placeholder="https://…/v1"
 										required
-										class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {editErrors.baseUrl
-											? 'border-red-400 dark:border-red-500'
-											: 'border-slate-300 dark:border-slate-700'}"
+										class="input {editErrors.baseUrl ? 'border-red-400 dark:border-red-500' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -247,9 +243,7 @@
 										type="password"
 										bind:value={editApiKey}
 										autocomplete="new-password"
-										class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {editErrors.apiKey
-											? 'border-red-400 dark:border-red-500'
-											: 'border-slate-300 dark:border-slate-700'}"
+										class="input {editErrors.apiKey ? 'border-red-400 dark:border-red-500' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -259,9 +253,7 @@
 										bind:value={editModels}
 										required
 										rows="2"
-										class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {editErrors.models
-											? 'border-red-400 dark:border-red-500'
-											: 'border-slate-300 dark:border-slate-700'}"
+										class="input {editErrors.models ? 'border-red-400 dark:border-red-500' : ''}"
 									></textarea>
 								</label>
 								{#if Object.keys(editErrors).length > 0}
@@ -352,9 +344,7 @@
 					required
 					maxlength="50"
 					placeholder="cth. 9router, OpenAI, Groq"
-					class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {addErrors.name
-						? 'border-red-400 dark:border-red-500'
-						: 'border-slate-300 dark:border-slate-700'}"
+					class="input {addErrors.name ? 'border-red-400 dark:border-red-500' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -365,9 +355,7 @@
 					bind:value={addBaseUrl}
 					placeholder="https://…/v1"
 					required
-					class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {addErrors.baseUrl
-						? 'border-red-400 dark:border-red-500'
-						: 'border-slate-300 dark:border-slate-700'}"
+					class="input {addErrors.baseUrl ? 'border-red-400 dark:border-red-500' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -378,9 +366,7 @@
 					bind:value={addApiKey}
 					autocomplete="new-password"
 					required
-					class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {addErrors.apiKey
-						? 'border-red-400 dark:border-red-500'
-						: 'border-slate-300 dark:border-slate-700'}"
+					class="input {addErrors.apiKey ? 'border-red-400 dark:border-red-500' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -391,9 +377,7 @@
 					required
 					rows="2"
 					placeholder="gemini-2.5-flash, gpt-4o-mini"
-					class="w-full rounded-lg border px-2 py-1.5 text-sm text-slate-900 bg-white dark:bg-slate-950 dark:text-white {addErrors.models
-						? 'border-red-400 dark:border-red-500'
-						: 'border-slate-300 dark:border-slate-700'}"
+					class="input {addErrors.models ? 'border-red-400 dark:border-red-500' : ''}"
 				></textarea>
 			</label>
 			{#if Object.keys(addErrors).length > 0}
