@@ -253,20 +253,6 @@ export async function listTransactions(
 	return results ?? [];
 }
 
-/** Fetch a single transaction by id (with wallet info). Returns null if not found. */
-export async function getTransaction(db: D1Database, id: string): Promise<TxRow | null> {
-	const row = await db
-		.prepare(
-			`SELECT t.*, w.name AS wallet_name, w.kind AS wallet_kind, w2.name AS dest_wallet_name
-			 FROM transactions t JOIN wallets w ON w.id = t.wallet_id
-			 LEFT JOIN wallets w2 ON w2.id = t.to_wallet_id
-			 WHERE t.id = ?`
-		)
-		.bind(id)
-		.first<TxRow>();
-	return row ?? null;
-}
-
 /** Insert a single transaction, returns the created row id. */
 export async function createTransaction(db: D1Database, tx: TxInput): Promise<string> {
 	const id = crypto.randomUUID().replace(/-/g, '');
@@ -281,25 +267,6 @@ export async function createTransaction(db: D1Database, tx: TxInput): Promise<st
 		.bind(id, tx.wallet_id, toWalletId, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, date, createdAt)
 		.run();
 	return id;
-}
-
-/** Batch insert multiple transactions. Returns count inserted. */
-export async function createTransactions(db: D1Database, items: TxInput[]): Promise<number> {
-	if (items.length === 0) return 0;
-	const stmts = items.map((tx) => {
-		const id = crypto.randomUUID().replace(/-/g, '');
-		const createdAt = tx.created_at || new Date().toISOString();
-		const date = tx.date || new Date().toISOString().slice(0, 10);
-		const toWalletId = tx.type === 'transfer' ? (tx.to_wallet_id ?? null) : null;
-		return db
-			.prepare(
-				`INSERT INTO transactions (id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-			)
-			.bind(id, tx.wallet_id, toWalletId, tx.description, tx.amount, tx.category || 'Lainnya', tx.type, date, createdAt);
-	});
-	await db.batch(stmts);
-	return items.length;
 }
 
 /** Update a transaction by id. Returns true if a row was changed. */
