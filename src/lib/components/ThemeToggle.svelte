@@ -22,7 +22,7 @@
 <button
 	type="button"
 	onclick={toggle}
-	class="btn-ghost p-2"
+	class="btn btn-ghost p-2"
 	aria-label={dark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'}
 	aria-pressed={dark}
 	title={dark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'}
