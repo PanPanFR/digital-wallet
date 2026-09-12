@@ -6,7 +6,7 @@
 	import { prefersReducedMotion } from 'svelte/motion';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
-	import { CATEGORIES } from '$lib/constants';
+	import { CATEGORIES, AMOUNT_PRESETS } from '$lib/constants';
 	import { todayISO } from '$lib/format';
 	import type { TxRow, WalletRow } from '$lib/server/db';
 
@@ -16,15 +16,6 @@
 		open = false,
 		onclose
 	}: { transaction?: TxRow | null; wallets?: WalletRow[]; open?: boolean; onclose: () => void } = $props();
-
-	const PRESETS: [number, string][] = [
-		[10_000, '+10rb'],
-		[25_000, '+25rb'],
-		[50_000, '+50rb'],
-		[100_000, '+100rb'],
-		[500_000, '+500rb'],
-		[1_000_000, '+1jt']
-	];
 
 	let submitting = $state(false);
 	let description = $state('');
@@ -241,7 +232,7 @@
 					/>
 					{#if errors.amount}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
-						{#each PRESETS as [value, label] (label)}
+						{#each AMOUNT_PRESETS as [value, label] (label)}
 							<button
 								type="button"
 								class="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"

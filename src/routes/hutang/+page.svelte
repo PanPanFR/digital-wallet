@@ -8,6 +8,7 @@
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR, formatDate, todayISO } from '$lib/format';
+	import { AMOUNT_PRESETS } from '$lib/constants';
 	import type { DebtRow, WalletRow } from '$lib/server/db';
 
 	let { data } = $props();
@@ -38,15 +39,6 @@
 		owed: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
 		diff: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
 	} as const;
-
-	const PRESETS: [number, string][] = [
-		[10_000, '+10rb'],
-		[25_000, '+25rb'],
-		[50_000, '+50rb'],
-		[100_000, '+100rb'],
-		[500_000, '+500rb'],
-		[1_000_000, '+1jt']
-	];
 
 	// Create modal
 	let showCreate = $state(false);
@@ -492,7 +484,7 @@
 					/>
 					{#if errors.amount}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
-						{#each PRESETS as [value, label] (label)}
+						{#each AMOUNT_PRESETS as [value, label] (label)}
 							<button
 								type="button"
 								class="chip bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
