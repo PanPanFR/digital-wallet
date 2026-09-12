@@ -11,7 +11,6 @@ declare global {
 				ASSETS: Fetcher;
 				SESSION_SECRET?: string;
 				GOOGLE_API_KEY?: string;
-				AI_API_KEY?: string;
 				AI_BASE_URL?: string;
 				AI_MODEL?: string;
 			};
@@ -20,7 +19,6 @@ declare global {
 		interface PageData {}
 		interface Error {
 			message: string;
-			code?: string;
 		}
 	}
 }
