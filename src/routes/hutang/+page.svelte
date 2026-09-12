@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { prefersReducedMotion } from 'svelte/motion';
-	import { fade, scale } from 'svelte/transition';
 	import { Plus, Trash2, TrendingDown, TrendingUp, ArrowLeftRight, X } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import ModalShell from '$lib/components/ModalShell.svelte';
 	import WalletSelect from '$lib/components/WalletSelect.svelte';
-	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR, formatDate, todayISO } from '$lib/format';
 	import { AMOUNT_PRESETS } from '$lib/constants';
@@ -387,33 +385,16 @@
 </main>
 
 <!-- Modal Catat Utang -->
-{#if showCreate}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
-		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
-		onclick={() => (showCreate = false)}
-	>
-		<div
-			class="card w-full max-w-md space-y-4 p-5 shadow-lg"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="debt-form-title"
-			tabindex="-1"
-			use:modalAccessibility={{ onClose: () => (showCreate = false) }}
-			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-		>
-			<div class="flex items-center justify-between">
-				<div>
-					<h2 id="debt-form-title" class="font-semibold">Catat Utang</h2>
-					<p class="text-xs text-slate-500 dark:text-slate-400">Catat utang kamu atau piutang orang lain</p>
-				</div>
-				<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={createSubmitting} onclick={() => (showCreate = false)}>
-					<X size={18} />
-				</button>
-			</div>
+<ModalShell open={showCreate} labelledby="debt-form-title" onClose={() => (showCreate = false)}>
+	<div class="flex items-center justify-between">
+		<div>
+			<h2 id="debt-form-title" class="font-semibold">Catat Utang</h2>
+			<p class="text-xs text-slate-500 dark:text-slate-400">Catat utang kamu atau piutang orang lain</p>
+		</div>
+		<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={createSubmitting} onclick={() => (showCreate = false)}>
+			<X size={18} />
+		</button>
+	</div>
 
 			<form method="POST" action="?/create" use:enhance={handleCreate} novalidate class="space-y-4">
 				<div>
@@ -547,40 +528,21 @@
 					</button>
 				</div>
 			</form>
-		</div>
-	</div>
-{/if}
+</ModalShell>
 
 <!-- Modal Bayar -->
-{#if payTarget}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
-		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
-		onclick={closePay}
-	>
-		<div
-			class="card w-full max-w-md space-y-4 p-5 shadow-lg"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="pay-form-title"
-			tabindex="-1"
-			use:modalAccessibility={{ onClose: closePay }}
-			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-		>
-			<div class="flex items-center justify-between">
-				<div>
-					<h2 id="pay-form-title" class="font-semibold">Bayar — {payTarget.person}</h2>
-					<p class="text-xs text-slate-500 dark:text-slate-400">
-						{payTarget.direction === 'owe' ? 'Utang' : 'Piutang'} · {formatDate(payTarget.date)}
-					</p>
-				</div>
-				<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={paySubmitting} onclick={closePay}>
-					<X size={18} />
-				</button>
-			</div>
+<ModalShell open={!!payTarget} labelledby="pay-form-title" onClose={closePay}>
+	<div class="flex items-center justify-between">
+		<div>
+			<h2 id="pay-form-title" class="font-semibold">Bayar — {payTarget?.person}</h2>
+			<p class="text-xs text-slate-500 dark:text-slate-400">
+				{payTarget?.direction === 'owe' ? 'Utang' : 'Piutang'} · {payTarget ? formatDate(payTarget.date) : ''}
+			</p>
+		</div>
+		<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={paySubmitting} onclick={closePay}>
+			<X size={18} />
+		</button>
+	</div>
 
 			{#if payError}
 				<p
@@ -649,9 +611,7 @@
 					</button>
 				</div>
 			</form>
-		</div>
-	</div>
-{/if}
+</ModalShell>
 
 <ConfirmModal
 	open={!!deleteTarget}

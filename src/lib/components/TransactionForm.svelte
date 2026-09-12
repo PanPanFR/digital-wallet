@@ -2,9 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { ArrowLeftRight, TrendingDown, TrendingUp, X } from '@lucide/svelte';
-	import { fade, scale } from 'svelte/transition';
-	import { prefersReducedMotion } from 'svelte/motion';
-	import { modalAccessibility } from '$lib/modalAccessibility';
+	import ModalShell from '$lib/components/ModalShell.svelte';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES, AMOUNT_PRESETS } from '$lib/constants';
 	import WalletSelect from '$lib/components/WalletSelect.svelte';
@@ -64,42 +62,25 @@
 	};
 </script>
 
-{#if open}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
-		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
-		onclick={onclose}
-	>
-		<div
-			class="w-full max-w-md rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 p-5 space-y-4"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="transaction-form-title"
-			tabindex="-1"
-			use:modalAccessibility={{ onClose: onclose }}
-			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+<ModalShell {open} labelledby="transaction-form-title" onClose={onclose}>
+	<div class="flex items-center justify-between">
+		<div>
+			<h2 id="transaction-form-title" class="font-semibold">
+				{isEdit ? 'Edit Transaksi' : 'Catat Transaksi'}
+			</h2>
+			<p class="text-xs text-slate-500 dark:text-slate-400">
+				{isEdit ? 'Ubah detail transaksi yang ada' : 'Tambahkan pengeluaran atau pemasukan'}
+			</p>
+		</div>
+		<button
+			class="btn btn-ghost p-1.5"
+			aria-label="Tutup dialog"
+			disabled={submitting}
+			onclick={onclose}
 		>
-			<div class="flex items-center justify-between">
-				<div>
-					<h2 id="transaction-form-title" class="font-semibold">
-						{isEdit ? 'Edit Transaksi' : 'Catat Transaksi'}
-					</h2>
-					<p class="text-xs text-slate-500 dark:text-slate-400">
-						{isEdit ? 'Ubah detail transaksi yang ada' : 'Tambahkan pengeluaran atau pemasukan'}
-					</p>
-				</div>
-				<button
-					class="btn-ghost p-1.5"
-					aria-label="Tutup dialog"
-					disabled={submitting}
-					onclick={onclose}
-				>
-					<X size={18} />
-				</button>
-			</div>
+			<X size={18} />
+		</button>
+	</div>
 
 			<form method="POST" action={isEdit ? '?/update' : '?/create'} use:enhance={handleSubmit} class="space-y-4" novalidate>
 				<input type="hidden" name="id" value={transaction?.id ?? ''} />
@@ -249,14 +230,12 @@
 				</div>
 
 				<div class="flex justify-end gap-2">
-					<button type="button" disabled={submitting} onclick={onclose} class="btn-outline px-4 py-2">
+					<button type="button" disabled={submitting} onclick={onclose} class="btn btn-outline px-4 py-2">
 						Batal
 					</button>
-					<button type="submit" disabled={submitting} class="btn-primary px-4 py-2">
+					<button type="submit" disabled={submitting} class="btn btn-primary px-4 py-2">
 						{submitting ? 'Menyimpan…' : isEdit ? 'Simpan Perubahan' : 'Catat'}
 					</button>
 				</div>
 			</form>
-		</div>
-	</div>
-{/if}
+</ModalShell>

@@ -2,10 +2,8 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon, X } from '@lucide/svelte';
-	import { fade, scale } from 'svelte/transition';
-	import { prefersReducedMotion } from 'svelte/motion';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
-	import { modalAccessibility } from '$lib/modalAccessibility';
+	import ModalShell from '$lib/components/ModalShell.svelte';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR } from '$lib/format';
 	import type { WalletWithBalance } from '$lib/server/db';
@@ -368,76 +366,64 @@
 	onCancel={() => (deleteTarget = null)}
 />
 
-{#if adjustTarget}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 z-50 bg-slate-950/50 flex items-center justify-center p-4"
-		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
-		onclick={() => (adjustTarget = null)}
-	>
-		<div
-			class="w-full max-w-sm rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 p-5 space-y-4"
-			role="dialog"
-			aria-modal="true"
-			aria-label="Atur saldo"
-			tabindex="-1"
-			use:modalAccessibility={{ onClose: () => (adjustTarget = null) }}
-			transition:scale={{ start: 0.96, duration: prefersReducedMotion.current ? 0 : 140 }}
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-		>
-			<form method="POST" action="?/adjust" use:enhance={handleAdjust} novalidate class="space-y-4">
-				<input type="hidden" name="id" value={adjustTarget.id} />
-				<div class="flex items-center justify-between">
-					<h3 class="font-semibold text-slate-900 dark:text-white">Atur Saldo — {adjustTarget.name}</h3>
-					<button
-						type="button"
-						class="btn btn-ghost p-1.5"
-						aria-label="Tutup dialog"
-						onclick={() => (adjustTarget = null)}
-					>
-						<X size={18} />
-					</button>
-				</div>
-				<div>
-					<label for="adjust-balance" class="label">Saldo baru</label>
-					<input
-						id="adjust-balance"
-						name="newBalance"
-						type="number"
-						min="0"
-						required
-						bind:value={adjustValue}
-						aria-invalid={!!adjustErrors.newBalance}
-						class="input tabular-nums {adjustErrors.newBalance ? 'border-red-400' : ''}"
-					/>
-					{#if adjustErrors.newBalance}
-						<p class="mt-1 text-xs text-red-600 dark:text-red-400">{adjustErrors.newBalance}</p>
-					{/if}
-				</div>
-				<p class="text-xs text-slate-500 dark:text-slate-400">
-					Saldo saat ini {formatIDR(adjustTarget.balance)}. Perubahan dicatat sebagai transaksi "Penyesuaian saldo".
-				</p>
-				<div class="flex justify-end gap-2">
-					<button
-						type="button"
-						class="btn btn-outline px-3 py-2"
-						onclick={() => (adjustTarget = null)}
-					>
-						Batal
-					</button>
-					<button
-						type="submit"
-						disabled={adjusting}
-						class="btn btn-primary px-3 py-2"
-					>
-						{adjusting ? 'Menyimpan…' : 'Simpan'}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-{/if}
+<ModalShell
+	open={!!adjustTarget}
+	title="Atur saldo"
+	width="max-w-sm"
+	onClose={() => (adjustTarget = null)}
+>
+	{#if adjustTarget}
+		<form method="POST" action="?/adjust" use:enhance={handleAdjust} novalidate class="space-y-4">
+			<input type="hidden" name="id" value={adjustTarget.id} />
+			<div class="flex items-center justify-between">
+				<h3 class="font-semibold text-slate-900 dark:text-white">Atur Saldo — {adjustTarget.name}</h3>
+				<button
+					type="button"
+					class="btn btn-ghost p-1.5"
+					aria-label="Tutup dialog"
+					onclick={() => (adjustTarget = null)}
+				>
+					<X size={18} />
+				</button>
+			</div>
+			<div>
+				<label for="adjust-balance" class="label">Saldo baru</label>
+				<input
+					id="adjust-balance"
+					name="newBalance"
+					type="number"
+					min="0"
+					required
+					bind:value={adjustValue}
+					aria-invalid={!!adjustErrors.newBalance}
+					class="input tabular-nums {adjustErrors.newBalance ? 'border-red-400' : ''}"
+				/>
+				{#if adjustErrors.newBalance}
+					<p class="mt-1 text-xs text-red-600 dark:text-red-400">{adjustErrors.newBalance}</p>
+				{/if}
+			</div>
+			<p class="text-xs text-slate-500 dark:text-slate-400">
+				Saldo saat ini {formatIDR(adjustTarget.balance)}. Perubahan dicatat sebagai transaksi "Penyesuaian saldo".
+			</p>
+			<div class="flex justify-end gap-2">
+				<button
+					type="button"
+					class="btn btn-outline px-3 py-2"
+					onclick={() => (adjustTarget = null)}
+				>
+					Batal
+				</button>
+				<button
+					type="submit"
+					disabled={adjusting}
+					class="btn btn-primary px-3 py-2"
+				>
+					{adjusting ? 'Menyimpan…' : 'Simpan'}
+				</button>
+			</div>
+		</form>
+	{/if}
+</ModalShell>
 
 <form method="POST" action="?/delete" bind:this={deleteForm} use:enhance={handleDelete} class="hidden">
 	<input type="hidden" name="id" value={deleteTarget?.id ?? ''} />
