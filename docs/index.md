@@ -20,6 +20,8 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-None — see [plan/](../plan/) for any work in flight.
+- [debt-delete-with-payments.md](../plan/debt-delete-with-payments.md) — Delete debts that have payment records: atomic cascade of `debt_payments`, wallet `transactions` preserved.
+- [mobile-bottom-nav-sheet.md](../plan/mobile-bottom-nav-sheet.md) — Cramped 7-slot mobile bottom bar → 5 slots (4 primary + a "Lainnya" bottom sheet).
+
 
 Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
