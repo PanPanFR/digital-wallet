@@ -65,7 +65,6 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 	} catch {
 		return false;
 	}
-	if ((salt as Uint8Array).length === 0) return false;
 	if (salt.length === 0) return false;
 
 	const keyMaterial = await crypto.subtle.importKey(
