@@ -48,10 +48,7 @@ Read via `platform.env` (SvelteKit) or `process.env` (server code with `nodejs_c
 | `AI_BASE_URL` | plain var | no | Chat-completions base URL for the env fallback. Default `https://9router.panpan.my.id/v1` (`ai.ts:13`) | `src/lib/server/ai.ts:25` |
 | `AI_MODEL` | plain var | no | Model name for the env fallback. Default `gemini-2.5-flash` (`ai.ts:14`) | `src/lib/server/ai.ts:27` |
 
-Two mismatches worth knowing (as of `main`):
-
-- `src/app.d.ts:14` declares an `AI_API_KEY` binding that **no code reads** — dead type, ignore it (or delete it if you're in there anyway).
-- Local dev reads `.dev.vars`; `wrangler secret put` only affects the deployed Worker. Keeping both in sync is manual.
+Note on local vs prod secrets: local dev reads `.dev.vars`; `wrangler secret put` only affects the deployed Worker. Keeping both in sync is manual.
 
 ## Daily workflow
 

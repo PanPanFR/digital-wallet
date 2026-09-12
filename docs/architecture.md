@@ -76,7 +76,7 @@ Tailwind CSS v4 via `@tailwindcss/vite` (no config file; `src/app.css` imports `
 
 The app links `static/manifest.json` (name, colors, standalone display) but **runs without a service worker on purpose**. A cache-first SW cached SSR HTML and `__data.json` responses and never invalidated them — deleted transactions reappeared after navigation (fixed in commit `a501625c`). `static/sw.js` is now a self-cleanup stub: on activate it purges all caches, unregisters itself, and reloads clients; it is no longer registered by app code and is slated for deletion after 2027-01-01. Data lives in D1 and always requires network.
 
-Known cosmetic gap: both `src/app.html` and `manifest.json` reference `/favicon.png`, which does not exist in `static/` (only `icon.svg` does).
+App icon is `static/icon.svg` only.
 
 ## Repository layout
 
@@ -88,8 +88,8 @@ Known cosmetic gap: both `src/app.html` and `manifest.json` reference `/favicon.
 │   ├── app.d.ts               # Platform/Locals types (D1, ASSETS, env var names)
 │   ├── lib/
 │   │   ├── server/            # db.ts, auth.ts, session.ts, ai.ts, aiProviders.ts, validation.ts (+ *.test.ts)
-│   │   ├── components/        # TransactionForm, ConfirmModal, Toast, Skeleton, Navigation, ThemeToggle
-│   │   ├── constants.ts       # CATEGORIES (form + category filter)
+│   │   ├── components/        # TransactionForm, ConfirmModal, Toast, Skeleton, Navigation, ThemeToggle, WalletSelect, ModalShell
+│   │   ├── constants.ts       # CATEGORIES, AMOUNT_PRESETS
 │   │   ├── format.ts          # IDR currency + WIB date formatting
 │   │   ├── stores.svelte.ts   # toast state (runes)
 │   │   └── modalAccessibility.ts
