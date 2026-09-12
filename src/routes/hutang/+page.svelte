@@ -5,6 +5,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { Plus, Trash2, TrendingDown, TrendingUp, ArrowLeftRight, X } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import WalletSelect from '$lib/components/WalletSelect.svelte';
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR, formatDate, todayISO } from '$lib/format';
@@ -524,26 +525,14 @@
 					{#if reduceBalance}
 						<div>
 							<label for="debt-wallet" class="label">Dompet</label>
-							<select
+							<WalletSelect
 								id="debt-wallet"
 								name="walletId"
 								bind:value={walletId}
 								required
-								aria-invalid={!!errors.walletId}
-								class="input {errors.walletId ? 'border-red-400' : ''}"
-							>
-								<option value="" disabled>Pilih dompet</option>
-								{#each ['digital', 'cash'] as kind (kind)}
-									{@const group = data.wallets.filter((w: WalletRow) => w.kind === kind)}
-									{#if group.length > 0}
-										<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
-											{#each group as w (w.id)}
-												<option value={w.id}>{w.name}</option>
-											{/each}
-										</optgroup>
-									{/if}
-								{/each}
-							</select>
+								invalid={!!errors.walletId}
+								wallets={data.wallets}
+							/>
 							{#if errors.walletId}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.walletId}</p>{/if}
 						</div>
 					{/if}
@@ -627,26 +616,14 @@
 
 				<div>
 					<label for="pay-wallet" class="label">Dompet</label>
-					<select
+					<WalletSelect
 						id="pay-wallet"
 						name="walletId"
 						bind:value={payWalletId}
 						required
-						aria-invalid={!!payErrors.walletId}
-						class="input {payErrors.walletId ? 'border-red-400' : ''}"
-					>
-						<option value="" disabled>Pilih dompet</option>
-						{#each ['digital', 'cash'] as kind (kind)}
-							{@const group = data.wallets.filter((w: WalletRow) => w.kind === kind)}
-							{#if group.length > 0}
-								<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
-									{#each group as w (w.id)}
-										<option value={w.id}>{w.name}</option>
-									{/each}
-								</optgroup>
-							{/if}
-						{/each}
-					</select>
+						invalid={!!payErrors.walletId}
+						wallets={data.wallets}
+					/>
 					{#if payErrors.walletId}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.walletId}</p>{/if}
 				</div>
 

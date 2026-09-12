@@ -4,6 +4,7 @@
 	import { Plus, Pencil, Trash2, ReceiptText } from '@lucide/svelte';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import WalletSelect from '$lib/components/WalletSelect.svelte';
 	import { notify } from '$lib/stores.svelte';
 	import { formatIDR, formatDate } from '$lib/format';
 	import { CATEGORIES } from '$lib/constants';
@@ -181,24 +182,15 @@
 			class="input w-auto"
 		/>
 		<label for="wallet-filter" class="text-sm text-slate-600 dark:text-slate-400">Dompet</label>
-		<select
+		<WalletSelect
 			id="wallet-filter"
 			name="wallet"
 			value={selectedWalletId}
-			class="input w-auto"
-		>
-			<option value="">Semua dompet</option>
-			{#each ['digital', 'cash'] as kind (kind)}
-				{@const group = data.wallets.filter((w: WalletRow) => w.kind === kind)}
-				{#if group.length > 0}
-					<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
-						{#each group as w (w.id)}
-							<option value={w.id}>{w.name}</option>
-						{/each}
-					</optgroup>
-				{/if}
-			{/each}
-		</select>
+			placeholder="Semua dompet"
+			placeholderDisabled={false}
+			className="w-auto"
+			wallets={data.wallets}
+		/>
 		<input
 			type="search"
 			name="q"

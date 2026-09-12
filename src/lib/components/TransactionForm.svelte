@@ -7,6 +7,7 @@
 	import { modalAccessibility } from '$lib/modalAccessibility';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES, AMOUNT_PRESETS } from '$lib/constants';
+	import WalletSelect from '$lib/components/WalletSelect.svelte';
 	import { todayISO } from '$lib/format';
 	import type { TxRow, WalletRow } from '$lib/server/db';
 
@@ -159,52 +160,30 @@
 
 				<div>
 					<label for="tx-wallet" class="label">Dompet</label>
-					<select
+					<WalletSelect
 						id="tx-wallet"
 						name="walletId"
 						bind:value={walletId}
 						required
-						aria-invalid={!!errors.walletId}
-						class="input {errors.walletId ? 'border-red-400 dark:border-red-500' : ''}"
-					>
-						<option value="" disabled>Pilih dompet</option>
-						{#each ['digital', 'cash'] as kind (kind)}
-							{@const group = wallets.filter((w) => w.kind === kind)}
-							{#if group.length > 0}
-								<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
-									{#each group as w (w.id)}
-										<option value={w.id}>{w.name}</option>
-									{/each}
-								</optgroup>
-							{/if}
-						{/each}
-					</select>
+						invalid={!!errors.walletId}
+						{wallets}
+					/>
 					{#if errors.walletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.walletId}</p>{/if}
 				</div>
 
 				{#if type === 'transfer'}
 					<div>
 						<label for="tx-to-wallet" class="label">Dompet tujuan</label>
-						<select
+						<WalletSelect
 							id="tx-to-wallet"
 							name="toWalletId"
 							bind:value={toWalletId}
 							required
-							aria-invalid={!!errors.toWalletId}
-							class="input {errors.toWalletId ? 'border-red-400 dark:border-red-500' : ''}"
-						>
-							<option value="" disabled>Pilih dompet tujuan</option>
-							{#each ['digital', 'cash'] as kind (kind)}
-								{@const group = wallets.filter((w) => w.kind === kind && w.id !== walletId)}
-								{#if group.length > 0}
-									<optgroup label={kind === 'digital' ? 'Digital' : 'Tunai'}>
-										{#each group as w (w.id)}
-											<option value={w.id}>{w.name}</option>
-										{/each}
-									</optgroup>
-								{/if}
-							{/each}
-						</select>
+							invalid={!!errors.toWalletId}
+							excludeId={walletId}
+							placeholder="Pilih dompet tujuan"
+							{wallets}
+						/>
 						{#if errors.toWalletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.toWalletId}</p>{/if}
 					</div>
 				{/if}
