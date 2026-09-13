@@ -128,8 +128,8 @@
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<div class="mb-4 flex items-center justify-between gap-3">
-		<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Transaksi</h1>
+	<div class="page-header">
+		<h1 class="page-title">Transaksi</h1>
 		<button
 			onclick={openAdd}
 			class="btn btn-primary px-3 py-2"
@@ -142,7 +142,7 @@
 		<a
 			href={filterHref(null)}
 			aria-current={isChipActive(null) ? 'true' : undefined}
-			class="rounded-full px-3 py-1 text-xs font-medium transition-colors
+			class="chip px-3 py-1 transition-colors
 				{isChipActive(null)
 				? 'bg-orange-600 text-white'
 				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
@@ -152,7 +152,7 @@
 		<a
 			href={filterHref('digital')}
 			aria-current={isChipActive('digital') ? 'true' : undefined}
-			class="rounded-full px-3 py-1 text-xs font-medium transition-colors
+			class="chip px-3 py-1 transition-colors
 				{isChipActive('digital')
 				? 'bg-orange-600 text-white'
 				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
@@ -162,7 +162,7 @@
 		<a
 			href={filterHref('cash')}
 			aria-current={isChipActive('cash') ? 'true' : undefined}
-			class="rounded-full px-3 py-1 text-xs font-medium transition-colors
+			class="chip px-3 py-1 transition-colors
 				{isChipActive('cash')
 				? 'bg-orange-600 text-white'
 				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
@@ -225,7 +225,12 @@
 
 	{#if data.transactions.length === 0}
 		<div class="card py-12 text-center">
-			<ReceiptText size={40} class="mx-auto mb-3 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+			<div
+				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+				aria-hidden="true"
+			>
+				<ReceiptText size={22} />
+			</div>
 			<p class="text-sm font-medium text-slate-900 dark:text-white">
 				Belum ada transaksi{data.month ? ` untuk ${monthLabel}` : ''}
 			</p>
@@ -259,11 +264,9 @@
 				Menghapus yang terpilih di halaman ini saja.
 			</p>
 		{/if}
-		<ul
-			class="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-		>
+		<ul class="list">
 			{#each data.transactions as tx (tx.id)}
-				<li class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+				<li class="list-row">
 					<input
 						type="checkbox"
 						checked={selected.has(tx.id)}
@@ -306,14 +309,14 @@
 						<button
 							onclick={() => openEdit(tx)}
 							aria-label="Edit {tx.description}"
-							class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+							class="btn btn-ghost rounded-lg p-1.5"
 						>
 							<Pencil size={15} />
 						</button>
 						<button
 							onclick={() => (deleteTarget = tx)}
 							aria-label="Hapus {tx.description}"
-							class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-600 dark:hover:bg-slate-800"
+							class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
 						>
 							<Trash2 size={15} />
 						</button>

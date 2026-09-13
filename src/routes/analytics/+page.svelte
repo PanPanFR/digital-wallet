@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { prefersReducedMotion } from 'svelte/motion';
+	import { BarChart, PieChart } from 'layerchart/svg';
 	import { formatIDR } from '$lib/format';
 
 	let { data } = $props();
@@ -8,20 +10,67 @@
 		expense: data.categoryTotals.filter((c) => c.type === 'expense').reduce((s, c) => s + c.total, 0),
 		income: data.categoryTotals.filter((c) => c.type === 'income').reduce((s, c) => s + c.total, 0)
 	});
-	// Wallet spend bars: width proportional to the largest wallet total.
-	const maxWallet = $derived(Math.max(...data.walletTotals.map((w) => w.total), 1));
-	// Vertical bars: 6-month trend, income + expense side by side.
-	const maxMonthly = $derived(
-		Math.max(...data.monthlyTotals.map((m) => Math.max(m.income, m.expense)), 1)
-	);
 	const monthLabel = $derived(
 		new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
 			new Date(`${data.month}-01T00:00:00`)
 		)
 	);
 
+	const reduceMotion = $derived(prefersReducedMotion.current);
+	const trendSeries = [
+		{ key: 'income', label: 'Pemasukan', color: 'var(--color-emerald-500)' },
+		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-red-500)' }
+	];
+	const hasMonthly = $derived(
+		Array.isArray(data.monthlyTotals) &&
+			data.monthlyTotals.some((m) => m.income > 0 || m.expense > 0)
+	);
+
+	const expenseChart = $derived(data.categoryTotals.filter((c) => c.type === 'expense'));
+	const categoryChart = $derived.by(() => {
+		const byCategory = new Map<string, { category: string; income: number; expense: number }>();
+		for (const c of data.categoryTotals) {
+			const cur = byCategory.get(c.category) ?? { category: c.category, income: 0, expense: 0 };
+			if (c.type === 'income') cur.income += c.total;
+			else cur.expense += c.total;
+			byCategory.set(c.category, cur);
+		}
+		return [...byCategory.values()];
+	});
+	const categoryChartHeight = $derived(
+		Math.min(520, Math.max(200, categoryChart.length * 36 + 80))
+	);
+
+	const walletChart = $derived(data.walletTotals.map((w) => ({ name: w.name, total: w.total })));
+	const walletChartHeight = $derived(
+		Math.min(380, Math.max(160, walletChart.length * 36 + 70))
+	);
+
+	const idrCompact = new Intl.NumberFormat('id-ID', {
+		style: 'currency',
+		currency: 'IDR',
+		notation: 'compact',
+		maximumFractionDigits: 1
+	});
+
+	function compactIDR(value: unknown): string {
+		const n = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(n) ? idrCompact.format(n) : '';
+	}
+
+	function shortLabel(value: unknown): string {
+		const s = String(value ?? '');
+		return s.length > 16 ? `${s.slice(0, 15)}…` : s;
+	}
+
 	function monthShort(ym: string) {
 		return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(new Date(`${ym}-01T00:00:00`));
+	}
+
+	function monthLong(ym: string) {
+		return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
+			new Date(`${ym}-01T00:00:00`)
+		);
 	}
 
 	function onMonthChange(e: Event) {
@@ -34,10 +83,10 @@
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+	<div class="page-header flex-wrap">
 		<div>
-			<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Analitik</h1>
-			<p class="text-xs text-slate-500 dark:text-slate-400">{monthLabel}</p>
+			<h1 class="page-title">Analitik</h1>
+			<p class="page-subtitle">{monthLabel}</p>
 		</div>
 		<form method="GET" action="/analytics" class="flex items-center gap-2">
 			<label for="month" class="text-sm text-slate-600 dark:text-slate-400">Bulan</label>
@@ -48,7 +97,7 @@
 	<!-- Category breakdown (donut + horizontal bars) -->
 	<section aria-label="Pengeluaran per kategori" class="mb-6">
 		<div class="card p-5">
-			<h2 class="mb-4 font-semibold text-slate-900 dark:text-white">Per Kategori</h2>
+			<h2 class="section-title mb-4">Per Kategori</h2>
 			{#if data.categoryTotals.length === 0}
 				<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
 					Tidak ada data untuk {monthLabel}.
@@ -66,38 +115,28 @@
 						'var(--color-slate-500)'
 					]}
 					<div class="flex flex-col items-center gap-5 sm:flex-row">
-						<svg
-							viewBox="0 0 42 42"
-							class="h-36 w-36 shrink-0 -rotate-90"
+						<div
+							class="h-40 w-40 shrink-0"
 							role="img"
 							aria-label="Proporsi pengeluaran per kategori"
 						>
-							<title>Proporsi pengeluaran per kategori</title>
-							<circle
-								cx="21"
-								cy="21"
-								r="15.9155"
-								fill="none"
-								stroke-width="6"
-								class="stroke-slate-100 dark:stroke-slate-800"
-							></circle>
-							{#each expenseCats as cat, i (cat.category)}
-								{@const frac = cat.total / sumByType.expense}
-								{@const cum = expenseCats.slice(0, i).reduce((s, c) => s + c.total, 0) / sumByType.expense}
-								<circle
-									cx="21"
-									cy="21"
-									r="15.9155"
-									fill="none"
-									stroke-width="6"
-									stroke={palette[i % palette.length]}
-									stroke-dasharray="{frac * 100} {100 - frac * 100}"
-									stroke-dashoffset={-cum * 100}
-									pathLength="100"
-									class="transition-[stroke-dasharray] duration-300"
-								></circle>
-							{/each}
-						</svg>
+							<PieChart
+								data={expenseCats}
+								key="category"
+								label="category"
+								value="total"
+								c="category"
+								cRange={palette}
+								innerRadius={0.65}
+								motion={reduceMotion ? 'none' : undefined}
+								props={{
+									tooltip: {
+										root: { motion: reduceMotion ? 'none' : 'spring' },
+										item: { format: (v: unknown) => formatIDR(Number(v) || 0) }
+									}
+								}}
+							/>
+						</div>
 						<ul class="w-full space-y-1.5 text-sm" aria-label="Legenda proporsi pengeluaran">
 							{#each expenseCats as cat, i (cat.category)}
 								{@const pct = Math.round((cat.total / sumByType.expense) * 100)}
@@ -117,6 +156,32 @@
 						</ul>
 					</div>
 				{/if}
+				<div
+					class="mt-5"
+					style="height: {categoryChartHeight}px"
+					role="img"
+					aria-label="Perbandingan pemasukan dan pengeluaran per kategori"
+				>
+					<BarChart
+						orientation="horizontal"
+						data={categoryChart}
+						y="category"
+						series={trendSeries}
+						seriesLayout="group"
+						height={categoryChartHeight}
+						xDomain={[0, null]}
+						motion={reduceMotion ? 'none' : undefined}
+						props={{
+							yAxis: { format: (v: unknown) => shortLabel(v) },
+							xAxis: { format: (v: unknown) => compactIDR(v) },
+							tooltip: {
+								root: { motion: reduceMotion ? 'none' : 'spring' },
+								item: { format: (v: unknown) => formatIDR(Number(v) || 0) },
+								hideTotal: true
+							}
+						}}
+					/>
+				</div>
 				<ul class="mt-5 space-y-3">
 					{#each data.categoryTotals as cat (cat.category + cat.type)}
 						{@const pct = Math.round((cat.total / (sumByType[cat.type] || 1)) * 100)}
@@ -133,20 +198,6 @@
 									{formatIDR(cat.total)}
 								</span>
 							</div>
-							<div
-								class="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
-								role="progressbar"
-								aria-valuenow={pct}
-								aria-valuemin={0}
-								aria-valuemax={100}
-								aria-label="{cat.category}: {pct}%"
-							>
-								<div
-									class="h-full rounded-full
-									{cat.type === 'income' ? 'bg-emerald-500' : 'bg-red-500'}"
-									style="width: {pct}%"
-								></div>
-							</div>
 						</li>
 					{/each}
 				</ul>
@@ -157,31 +208,44 @@
 	<!-- Wallet spend breakdown (horizontal bars, neutral color) -->
 	<section aria-label="Pengeluaran per dompet" class="mb-6">
 		<div class="card p-5">
-			<h2 class="mb-4 font-semibold text-slate-900 dark:text-white">Pengeluaran per Dompet</h2>
+			<h2 class="section-title mb-4">Pengeluaran per Dompet</h2>
 			{#if data.walletTotals.length === 0 || data.walletTotals.every((w) => w.total === 0)}
 				<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
 					Belum ada pengeluaran bulan ini.
 				</p>
 			{:else}
-				<ul class="space-y-3">
+				<div
+					style="height: {walletChartHeight}px"
+					role="img"
+					aria-label="Pengeluaran per dompet"
+				>
+					<BarChart
+						orientation="horizontal"
+						data={walletChart}
+						x="total"
+						y="name"
+						series={[{ key: 'total', label: 'Pengeluaran', color: 'var(--color-slate-400)' }]}
+						height={walletChartHeight}
+						xDomain={[0, null]}
+						motion={reduceMotion ? 'none' : undefined}
+						props={{
+							yAxis: { format: (v: unknown) => shortLabel(v) },
+							xAxis: { format: (v: unknown) => compactIDR(v) },
+							tooltip: {
+								root: { motion: reduceMotion ? 'none' : 'spring' },
+								item: { format: (v: unknown) => formatIDR(Number(v) || 0) }
+							}
+						}}
+					/>
+				</div>
+				<ul class="mt-5 space-y-3">
 					{#each data.walletTotals as w (w.id)}
-						{@const pct = Math.round((w.total / maxWallet) * 100)}
 						<li>
 							<div class="mb-1 flex items-baseline justify-between gap-2 text-sm">
 								<span class="font-medium text-slate-900 dark:text-white">{w.name}</span>
 								<span class="ml-auto font-semibold tabular-nums text-slate-900 dark:text-white">
 									{formatIDR(w.total)}
 								</span>
-							</div>
-							<div
-								class="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
-								role="progressbar"
-								aria-valuenow={pct}
-								aria-valuemin={0}
-								aria-valuemax={100}
-								aria-label="{w.name}: {pct}%"
-							>
-								<div class="h-full rounded-full bg-slate-400 dark:bg-slate-500" style="width: {pct}%"></div>
 							</div>
 						</li>
 					{/each}
@@ -193,25 +257,31 @@
 	<!-- 6-month trend (vertical bars, income + expense side by side) -->
 	<section aria-label="Tren 6 bulan terakhir">
 		<div class="card p-5">
-			<h2 class="mb-4 font-semibold text-slate-900 dark:text-white">Tren 6 Bulan</h2>
-			<div class="flex items-end justify-between gap-3">
-				{#each data.monthlyTotals as m (m.month)}
-					<div class="flex flex-1 flex-col items-center gap-1.5">
-						<div class="flex h-32 w-full items-end justify-center gap-1" aria-hidden="true">
-							<div
-								class="w-3 rounded-t-md bg-emerald-500"
-								style="height: {Math.max((m.income / maxMonthly) * 100, 2)}%"
-								title="Pemasukan {formatIDR(m.income)}"
-							></div>
-							<div
-								class="w-3 rounded-t-md bg-red-500"
-								style="height: {Math.max((m.expense / maxMonthly) * 100, 2)}%"
-								title="Pengeluaran {formatIDR(m.expense)}"
-							></div>
-						</div>
-						<span class="text-xs text-slate-500 dark:text-slate-400">{monthShort(m.month)}</span>
-					</div>
-				{/each}
+			<h2 class="section-title mb-4">Tren 6 Bulan</h2>
+			<div
+				class="h-60"
+				role="img"
+				aria-label="Grafik batang tren pemasukan dan pengeluaran enam bulan terakhir"
+			>
+				<BarChart
+					data={data.monthlyTotals}
+					x="month"
+					series={trendSeries}
+					seriesLayout="group"
+					height={240}
+					yDomain={hasMonthly ? [0, null] : [0, 1]}
+					motion={reduceMotion ? 'none' : undefined}
+					props={{
+						xAxis: { format: (v: unknown) => monthShort(String(v)) },
+						yAxis: { format: (v: unknown) => compactIDR(v) },
+						tooltip: {
+							root: { motion: reduceMotion ? 'none' : 'spring' },
+							header: { format: (v: unknown) => monthLong(String(v)) },
+							item: { format: (v: unknown) => formatIDR(Number(v) || 0) },
+							hideTotal: true
+						}
+					}}
+				/>
 			</div>
 			<div class="mt-3 flex justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
 				<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Pemasukan</span>
