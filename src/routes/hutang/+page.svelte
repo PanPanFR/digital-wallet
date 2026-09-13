@@ -193,8 +193,8 @@
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<div class="mb-4 flex items-center justify-between gap-3">
-		<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Hutang</h1>
+	<div class="page-header">
+		<h1 class="page-title">Hutang</h1>
 		<button onclick={openCreate} class="btn btn-primary px-3 py-2">
 			<Plus size={16} /> Catat
 		</button>
@@ -203,7 +203,7 @@
 	<section class="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan hutang">
 		<div class="card p-4">
 			<div class="flex items-center gap-2.5">
-				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.owe}">
+				<span class="tile {kpiTiles.owe}">
 					<TrendingDown size={16} />
 				</span>
 				<div>
@@ -217,7 +217,7 @@
 
 		<div class="card p-4">
 			<div class="flex items-center gap-2.5">
-				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.owed}">
+				<span class="tile {kpiTiles.owed}">
 					<TrendingUp size={16} />
 				</span>
 				<div>
@@ -231,7 +231,7 @@
 
 		<div class="card p-4">
 			<div class="flex items-center gap-2.5">
-				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {kpiTiles.diff}">
+				<span class="tile {kpiTiles.diff}">
 					<ArrowLeftRight size={16} />
 				</span>
 				<div>
@@ -249,10 +249,15 @@
 
 	<section class="mt-6" aria-label="Daftar hutang">
 		{#if data.debts.length === 0}
-			<div class="card flex flex-col items-center justify-center gap-1 border-dashed py-10 text-center">
-				<TrendingDown size={24} class="text-slate-300 dark:text-slate-600" aria-hidden="true" />
-				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada catatan hutang.</p>
-				<p class="text-xs text-slate-400 dark:text-slate-500">Catat utang atau piutang dengan tombol Catat.</p>
+			<div class="card py-12 text-center">
+				<div
+					class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+					aria-hidden="true"
+				>
+					<TrendingDown size={22} />
+				</div>
+				<p class="text-sm font-medium text-slate-900 dark:text-white">Belum ada catatan hutang.</p>
+				<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Catat utang atau piutang dengan tombol Catat.</p>
 			</div>
 		{:else}
 			<div class="mb-2 flex items-center justify-between gap-3">
@@ -282,11 +287,9 @@
 					</div>
 				{/if}
 			</div>
-			<ul
-				class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
-			>
+		<ul class="list">
 				{#each data.debts as d (d.id)}
-					<li class="px-4 py-3 {d.remaining === 0 ? 'opacity-60' : ''}">
+					<li class="list-row {d.remaining === 0 ? 'opacity-60' : ''}">
 						<div class="flex items-center gap-3">
 							<input
 								type="checkbox"
@@ -349,7 +352,7 @@
 							</div>
 							<div class="flex flex-col items-end gap-1.5">
 								<div class="text-right">
-									<p class="text-[10px] text-slate-400 dark:text-slate-500">Sisa</p>
+									<p class="text-xs text-slate-500 dark:text-slate-400">Sisa</p>
 									<span
 										class="whitespace-nowrap text-sm font-bold tabular-nums
 										{d.remaining === 0
@@ -368,7 +371,7 @@
 									<button
 										onclick={() => (deleteTarget = d)}
 										aria-label="Hapus catatan hutang {d.person}"
-										class="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50"
+										class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
 									>
 										<Trash2 size={15} />
 									</button>
@@ -422,7 +425,7 @@
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owe'
 								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'border-slate-200 text-slate-500 dark:border-slate-700'}"
+								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
 						>
 							<TrendingDown size={14} /> Saya Berhutang
 						</button>
@@ -433,7 +436,7 @@
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owed'
 								? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
-								: 'border-slate-200 text-slate-500 dark:border-slate-700'}"
+								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
 						>
 							<TrendingUp size={14} /> Saya Meminjamkan
 						</button>
@@ -443,7 +446,7 @@
 
 				<div>
 					<div class="mb-1 flex items-center justify-between">
-						<label for="debt-amount" class="text-sm">Jumlah (IDR)</label>
+						<label for="debt-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
 						{#if amount && Number(amount) > 0}
 							<span class="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
 								Rp {Number(amount).toLocaleString('id-ID')}
@@ -557,7 +560,7 @@
 
 				<div>
 					<div class="mb-1 flex items-center justify-between">
-						<label for="pay-amount" class="text-sm">Jumlah (IDR)</label>
+						<label for="pay-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
 						<span class="text-xs tabular-nums text-slate-500 dark:text-slate-400">Sisa: {formatIDR(payTarget.remaining)}</span>
 					</div>
 					<input

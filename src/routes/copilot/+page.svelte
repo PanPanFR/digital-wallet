@@ -80,7 +80,7 @@
 </svelte:head>
 
 <main class="mx-auto flex h-[calc(100dvh-7rem)] max-w-2xl flex-col px-4 pb-4 pt-6">
-	<h1 class="mb-1 flex items-center gap-2 text-xl font-semibold text-slate-900 dark:text-white">
+	<h1 class="page-title mb-1 flex items-center gap-2">
 		<Sparkles size={20} class="text-orange-600 dark:text-orange-400" /> Copilot
 	</h1>
 
@@ -91,7 +91,7 @@
 				<select
 					bind:value={providerId}
 					disabled={asking || providers.length < 2}
-					class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+					class="input w-auto px-2 py-1 disabled:opacity-50"
 				>
 					{#each providers as p (p.id)}
 						<option value={p.id}>{p.name}</option>
@@ -104,7 +104,7 @@
 					<select
 						bind:value={model}
 						disabled={asking || provider.models.length < 2}
-						class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+						class="input w-auto px-2 py-1 disabled:opacity-50"
 					>
 						{#each provider.models as m (m)}
 							<option value={m}>{m}</option>

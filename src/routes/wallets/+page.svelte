@@ -141,7 +141,7 @@
 			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'digital'
 				? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
+				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
 		>
 			<Smartphone size={14} /> Digital
 		</button>
@@ -152,7 +152,7 @@
 			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'cash'
 				? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
-				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
+				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
 		>
 			<Banknote size={14} /> Tunai
 		</button>
@@ -200,14 +200,14 @@
 	{#if editingId === w.id}
 		{@render editRow(w)}
 	{:else}
-		<div class="flex items-center gap-3 px-4 py-3">
-			<div
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg
-				{w.kind === 'digital'
-					? 'bg-sky-50 text-sky-500 dark:bg-sky-950'
-					: 'bg-amber-50 text-amber-500 dark:bg-amber-950'}"
-				aria-hidden="true"
-			>
+		<div class="list-row">
+		<div
+			class="tile h-9 w-9
+			{w.kind === 'digital'
+				? 'bg-sky-50 text-sky-500 dark:bg-sky-950'
+				: 'bg-amber-50 text-amber-500 dark:bg-amber-950'}"
+			aria-hidden="true"
+		>
 				{#if w.kind === 'digital'}
 					<Smartphone size={18} />
 				{:else}
@@ -238,7 +238,7 @@
 				<button
 					onclick={() => (deleteTarget = w)}
 					aria-label="Hapus {w.name}"
-					class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600"
+					class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
 				>
 					<Trash2 size={15} />
 				</button>
@@ -248,7 +248,7 @@
 {/snippet}
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<h1 class="mb-4 text-xl font-semibold text-slate-900 dark:text-white">Dompet</h1>
+	<h1 class="page-title mb-4">Dompet</h1>
 
 	<!-- Add form -->
 	<form
@@ -284,7 +284,7 @@
 			{#each PRESETS as p (p.name)}
 				<button
 					type="button"
-					class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors
+					class="chip py-1 transition-colors
 						{name === p.name && kind === p.kind
 						? 'bg-orange-600 text-white'
 						: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
@@ -316,7 +316,12 @@
 
 	{#if wallets.length === 0}
 		<div class="card py-12 text-center">
-			<WalletIcon size={40} class="mx-auto mb-3 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+			<div
+				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+				aria-hidden="true"
+			>
+				<WalletIcon size={22} />
+			</div>
 			<p class="text-sm font-medium text-slate-900 dark:text-white">Belum ada dompet</p>
 			<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
 				Tambahkan dompet pertama lewat formulir di atas.
@@ -325,11 +330,11 @@
 	{:else}
 		{#if digital.length > 0}
 			<section class="mb-6" aria-label="Dompet digital">
-				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+				<h2 class="section-title mb-2 flex items-center gap-1.5">
 					<span class="text-sky-500"><Smartphone size={16} /></span> Digital
 				</h2>
 				<ul
-					class="card divide-y divide-slate-100 dark:divide-slate-800"
+					class="list"
 				>
 					{#each digital as w (w.id)}
 						<li>{@render walletRow(w)}</li>
@@ -340,11 +345,11 @@
 
 		{#if cash.length > 0}
 			<section aria-label="Dompet tunai">
-				<h2 class="mb-2 flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white">
+				<h2 class="section-title mb-2 flex items-center gap-1.5">
 					<span class="text-amber-500"><Banknote size={16} /></span> Tunai
 				</h2>
 				<ul
-					class="card divide-y divide-slate-100 dark:divide-slate-800"
+					class="list"
 				>
 					{#each cash as w (w.id)}
 						<li>{@render walletRow(w)}</li>

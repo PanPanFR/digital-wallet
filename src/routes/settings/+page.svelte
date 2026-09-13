@@ -114,17 +114,22 @@
 	<title>Pengaturan · Digital Wallet</title>
 </svelte:head>
 
-<main class="min-h-screen p-4 max-w-md mx-auto space-y-6">
+<main class="mx-auto max-w-md space-y-6 px-4 py-6">
 	<header>
-		<h1 class="text-2xl font-semibold">Pengaturan</h1>
-		<p class="text-sm text-slate-500 dark:text-slate-400">Ubah password &amp; kelola penyedia AI.</p>
+		<h1 class="page-title">Pengaturan</h1>
+		<p class="page-subtitle mt-0.5">Ubah password &amp; kelola penyedia AI.</p>
 	</header>
 
-	<section class="card space-y-4 p-5">
-		<h2 class="font-semibold">Ubah Password</h2>
+	<section class="card space-y-4 p-4">
+		<h2 class="section-title">Ubah Password</h2>
 
 		{#if changed && !form?.error}
-			<p class="text-sm text-emerald-600 dark:text-emerald-400">Password berhasil diubah.</p>
+			<p
+			class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
+			role="status"
+		>
+			Password berhasil diubah.
+		</p>
 		{/if}
 
 		<form
@@ -172,9 +177,14 @@
 				/>
 			</label>
 
-			{#if form?.error}
-				<p class="text-sm text-red-600 dark:text-red-400">{form.error}</p>
-			{/if}
+		{#if form?.error}
+			<p
+				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+				role="alert"
+			>
+				{form.error}
+			</p>
+		{/if}
 
 			<button
 				type="submit"
@@ -186,8 +196,8 @@
 		</form>
 	</section>
 
-	<section class="card space-y-4 p-5">
-		<h2 class="flex items-center gap-1.5 font-semibold">
+	<section class="card space-y-4 p-4">
+		<h2 class="section-title flex items-center gap-1.5">
 			<Sparkles size={16} class="text-orange-600 dark:text-orange-400" /> AI / Copilot
 		</h2>
 		<p class="text-sm text-slate-500 dark:text-slate-400">
@@ -195,9 +205,14 @@
 			konfigurasi server (GOOGLE_API_KEY). API key disimpan di database — jangan bagikan akun ini.
 		</p>
 
-		{#if listError}
-			<p class="text-sm text-red-600 dark:text-red-400">{listError}</p>
-		{/if}
+	{#if listError}
+		<p
+			class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+			role="alert"
+		>
+			{listError}
+		</p>
+	{/if}
 
 		{#if providers.length === 0}
 			<p class="text-sm text-slate-500 dark:text-slate-400">
@@ -211,8 +226,8 @@
 							<form
 								method="POST"
 								action="?/save-provider"
-								use:enhance={handleUpdate}
-								class="space-y-2"
+							use:enhance={handleUpdate}
+							class="space-y-3"
 							>
 								<input type="hidden" name="id" value={p.id} />
 								<label class="block text-sm">
@@ -278,7 +293,7 @@
 								</div>
 							</form>
 						{:else}
-							<div class="flex items-center gap-2">
+							<div class="flex items-center gap-3">
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-sm font-medium">
 										{p.name}
@@ -300,7 +315,7 @@
 										<button
 											type="submit"
 											title="Jadikan aktif"
-											class="rounded px-2 py-1.5 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-950"
+											class="rounded-lg px-2 py-1.5 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-950"
 										>
 											Aktifkan
 										</button>
@@ -310,7 +325,7 @@
 									type="button"
 									onclick={() => openEdit(p)}
 									title="Edit"
-									class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-orange-700 dark:hover:bg-slate-800 dark:hover:text-orange-400"
+									class="btn btn-ghost rounded-lg p-1.5"
 								>
 									<Pencil size={15} />
 								</button>
@@ -318,7 +333,7 @@
 									type="button"
 									onclick={() => (deleteTarget = p)}
 									title="Hapus"
-									class="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+									class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
 								>
 									<Trash2 size={15} />
 								</button>
@@ -333,7 +348,7 @@
 			method="POST"
 			action="?/save-provider"
 			use:enhance={handleAdd}
-			class="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800"
+			class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800"
 		>
 			<p class="text-sm font-medium">Tambah penyedia</p>
 			<label class="block text-sm">
@@ -393,8 +408,8 @@
 		</form>
 	</section>
 
-	<section class="card space-y-4 p-5">
-		<h2 class="font-semibold">Sesi</h2>
+	<section class="card space-y-4 p-4">
+		<h2 class="section-title">Sesi</h2>
 		<form method="POST" action="/?/logout">
 			<button
 				type="submit"
