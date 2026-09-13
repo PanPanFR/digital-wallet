@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { navigating } from '$app/state';
+	import { prefersReducedMotion } from 'svelte/motion';
 	import {
 		Plus,
 		ArrowUpRight,
@@ -8,6 +9,7 @@
 		Banknote,
 		HandCoins
 	} from '@lucide/svelte';
+	import { BarChart } from 'layerchart/svg';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
 	import Skeleton from '$lib/components/Skeleton.svelte';
 	import { formatIDR, formatDate } from '$lib/format';
@@ -15,6 +17,39 @@
 	let { data } = $props();
 
 	let showForm = $state(false);
+
+	const reduceMotion = $derived(prefersReducedMotion.current);
+	const trendSeries = [
+		{ key: 'income', label: 'Pemasukan', color: 'var(--color-emerald-500)' },
+		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-red-500)' }
+	];
+	const hasTrend = $derived(
+		Array.isArray(data.trend) && data.trend.some((t) => t.income > 0 || t.expense > 0)
+	);
+
+	const idrCompact = new Intl.NumberFormat('id-ID', {
+		style: 'currency',
+		currency: 'IDR',
+		notation: 'compact',
+		maximumFractionDigits: 1
+	});
+
+	function compactIDR(value: unknown): string {
+		const n = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(n) ? idrCompact.format(n) : '';
+	}
+
+	function monthShort(ym: string): string {
+		return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(
+			new Date(`${ym}-01T00:00:00`)
+		);
+	}
+
+	function monthLong(ym: string): string {
+		return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
+			new Date(`${ym}-01T00:00:00`)
+		);
+	}
 
 	function onMonthChange(e: Event) {
 		(e.currentTarget as HTMLFormElement).requestSubmit();
@@ -31,10 +66,10 @@
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-6">
-	<div class="mb-4 flex items-center justify-between gap-3">
+	<div class="page-header">
 		<div>
-			<h1 class="text-xl font-semibold text-slate-900 dark:text-white">Beranda</h1>
-			<p class="text-xs text-slate-500 dark:text-slate-400">
+			<h1 class="page-title">Beranda</h1>
+			<p class="page-subtitle">
 				{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
 					new Date(`${data.month}-01T00:00:00`)
 				)}
@@ -48,7 +83,7 @@
 				type="month"
 				value={data.month}
 				onchange={onMonthChange}
-				class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+				class="input w-auto px-2.5 py-1.5"
 			/>
 		</form>
 		<button
@@ -75,7 +110,7 @@
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
 		<div class="card p-4">
 			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-				<span class="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400"><Smartphone size={14} /></span>
+				<span class="tile h-6 w-6 bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400"><Smartphone size={14} /></span>
 				Digital
 			</div>
 			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
@@ -85,13 +120,60 @@
 
 		<div class="card p-4">
 			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-				<span class="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"><Banknote size={14} /></span>
+				<span class="tile h-6 w-6 bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"><Banknote size={14} /></span>
 				Tunai
 			</div>
 			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
 				{formatIDR(data.totals.cash)}
 			</p>
 		</div>
+	</section>
+
+	<section class="card mt-3 p-4" aria-label="Tren 6 bulan terakhir">
+		<div class="section-header">
+			<h2 class="section-title">Tren 6 Bulan</h2>
+			<div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+				<span class="flex items-center gap-1">
+					<span class="h-2.5 w-2.5 rounded-sm bg-emerald-500" aria-hidden="true"></span>
+					Pemasukan
+				</span>
+				<span class="flex items-center gap-1">
+					<span class="h-2.5 w-2.5 rounded-sm bg-red-500" aria-hidden="true"></span>
+					Pengeluaran
+				</span>
+			</div>
+		</div>
+		{#if hasTrend}
+			<div
+				class="h-56"
+				role="img"
+				aria-label="Grafik batang tren pemasukan dan pengeluaran enam bulan terakhir"
+			>
+				<BarChart
+					data={data.trend}
+					x="month"
+					series={trendSeries}
+					seriesLayout="group"
+					height={224}
+					yDomain={[0, null]}
+					motion={reduceMotion ? 'none' : undefined}
+					props={{
+						xAxis: { format: (v: unknown) => monthShort(String(v)) },
+						yAxis: { format: (v: unknown) => compactIDR(v) },
+						tooltip: {
+							root: { motion: reduceMotion ? 'none' : 'spring' },
+							header: { format: (v: unknown) => monthLong(String(v)) },
+							item: { format: (v: unknown) => formatIDR(Number(v) || 0) },
+							hideTotal: true
+						}
+					}}
+				/>
+			</div>
+		{:else}
+			<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+				Belum ada data tren enam bulan terakhir.
+			</p>
+		{/if}
 	</section>
 
 	<section class="mt-6" aria-label="Ringkasan">
@@ -137,7 +219,7 @@
 	{/if}
 
 	<section class="mt-6" aria-label="Daftar dompet">
-		<h2 class="mb-2 font-semibold text-slate-900 dark:text-white">Dompet</h2>
+		<h2 class="section-title mb-2">Dompet</h2>
 
 		{#if data.wallets.length === 0}
 			<div
@@ -154,17 +236,12 @@
 				{#each groups as group (group.label)}
 					{#if group.wallets.length > 0}
 						<h3 class="text-xs font-medium text-slate-500 dark:text-slate-400">{group.label}</h3>
-						<ul
-							class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
-						>
+						<ul class="list">
 							{#each group.wallets as w (w.id)}
-								<li class="flex items-center">
-									<a
-										href="/transactions?wallet={w.id}"
-										class="flex flex-1 items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
-									>
+								<li>
+									<a href="/transactions?wallet={w.id}" class="list-row">
 										<span
-											class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+											class="tile
 											{w.kind === 'digital'
 												? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
 												: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
@@ -193,8 +270,8 @@
 	</section>
 
 	<section class="mt-6" aria-label="Transaksi terakhir">
-		<div class="mb-2 flex items-center justify-between">
-			<h2 class="font-semibold text-slate-900 dark:text-white">Transaksi Terakhir</h2>
+		<div class="section-header">
+			<h2 class="section-title">Transaksi Terakhir</h2>
 			<a
 				href="/transactions"
 				class="flex items-center gap-0.5 text-sm text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
@@ -214,13 +291,11 @@
 				</p>
 			</div>
 		{:else}
-			<ul
-				class="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
-			>
+			<ul class="list">
 				{#each data.recent as tx (tx.id)}
 					<li class="flex items-center gap-3 px-4 py-3">
 						<span
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+							class="tile
 							{tx.wallet_kind === 'digital'
 								? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
 								: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
