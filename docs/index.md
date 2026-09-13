@@ -20,6 +20,6 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-None right now — all approved plans are merged.
+- `plan/ui-deslop-pages.md` — Catppuccin content sweep of all routes (requires foundation in `main`; branch `feature/ui-deslop-pages` from updated `main`).
 
-Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
+Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore, catppuccin-foundation) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
