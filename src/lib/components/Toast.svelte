@@ -9,8 +9,8 @@
 	{#each toasts as toast (toast.id)}
 		<div
 			role="status"
-			class="flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg text-sm text-white max-w-xs
-				{toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}"
+			class="flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg text-sm text-white dark:text-ctp-crust max-w-xs
+				{toast.type === 'success' ? 'bg-ctp-green' : 'bg-ctp-red'}"
 			in:fly={{ x: 24, duration: prefersReducedMotion.current ? 0 : 150 }}
 			out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
 		>

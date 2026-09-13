@@ -28,7 +28,7 @@
 	<div
 		class="fixed inset-0 z-50 flex justify-center {variant === 'sheet'
 			? 'items-end'
-			: 'items-center p-4'} bg-slate-950/50"
+			: 'items-center p-4'} bg-ctp-crust/70"
 		transition:fade={{ duration: prefersReducedMotion.current ? 0 : 120 }}
 		onclick={onClose}
 	>
