@@ -64,13 +64,14 @@ The 8 fixed transaction categories in `src/lib/constants.ts` drive the form/cate
 ## Frontend layering
 
 - Routes are file-based; each page pairs `+page.server.ts` (load + actions) with `+page.svelte` (Svelte 5 runes, `$props`/`$state`/`$derived`). Mutations never hand-roll `fetch` — form actions + `invalidateAll()` refresh the data.
-- Shared components in `src/lib/components/`: `TransactionForm` (create/edit modal, wallet select grouped by kind), `ConfirmModal` (deletes), `Toast`, `Skeleton`, `Navigation` (desktop sidebar + mobile bottom nav), `ThemeToggle`.
+- Shared components in `src/lib/components/`: `TransactionForm` (create/edit modal), `ConfirmModal` (deletes), `ModalShell` (accessible dialogs with `center` modal and `sheet` bottom drawer variants, reduced-motion aware), `Toast`, `Skeleton`, `Navigation` (desktop sidebar + 5-slot mobile bottom navigation with "Lainnya" sheet menu), `ThemeToggle`, `WalletSelect` (grouped by kind).
+- Charts: rendered via LayerChart (`layerchart/svg` — `BarChart`, `PieChart`) on `/` (6-month monthly trend) and `/analytics` (category distribution and monthly trends). Themed via unlayered `.lc-root-container` CSS variable overrides in `src/app.css` without importing external library CSS.
 - Client state is minimal: toast list in `src/lib/stores.svelte.ts`; modal focus-trap/ESC in `src/lib/modalAccessibility.ts`.
 - Formatting/locale helpers centralized in `src/lib/format.ts` (IDR currency, WIB dates). UI strings are Indonesian throughout; identifiers and comments are English.
 
 ## Styling & theme
 
-Tailwind CSS v4 via `@tailwindcss/vite` (no config file; `src/app.css` imports `tailwindcss` and defines a class-based `dark` variant). Before first paint, an inline script in `src/app.html` reads `localStorage['ft-theme']` and sets `class="dark|light"` on `<html>`, defaulting to the system preference. `ThemeToggle.svelte` flips the class and persists the choice.
+Tailwind CSS v4 via `@tailwindcss/vite` (no config file; `src/app.css` imports `tailwindcss` and defines a class-based `dark` variant). Before first paint, an inline script in `src/app.html` reads `localStorage['ft-theme']` and sets `class="dark|light"` on `<html>`, defaulting to the system preference. `ThemeToggle.svelte` flips the class and persists the choice. Safe-area inset bottom padding (`pb-[env(safe-area-inset-bottom)]`) ensures mobile bars stay above system navigation indicators.
 
 ## PWA status: manifest yes, service worker no
 
@@ -94,7 +95,7 @@ App icon is `static/icon.svg` only.
 │   │   ├── stores.svelte.ts   # toast state (runes)
 │   │   └── modalAccessibility.ts
 │   └── routes/
-│       ├── +page.svelte|.server.ts        # dashboard: totals, balances, recent, quick-add, logout action
+│       ├── +page.svelte|.server.ts        # dashboard: totals, balances, 6-month trend, recent, quick-add, logout action
 │       ├── login/ wallets/ transactions/ hutang/ analytics/ copilot/ settings/
 │       └── api/ai/report/+server.ts       # copilot chatbox JSON endpoint
 ├── static/                    # manifest.json, icon.svg, sw.js (cleanup stub only)
@@ -112,4 +113,12 @@ Full rationale lives in the specs — summaries above, details in:
 - `docs/specs/2026-09-03-svelte-rewrite-design.md` — framework/hosting/styling/PWA choices of the rewrite.
 - `docs/specs/2026-09-08-digital-wallet-design.md` — wallet model, clean-start D1 (no data migration), kind CHECK constraint, seed wallets, rebrand checklist, Workers Builds over manual deploys.
 
-Visual layer (merged `ui-redesign`): design tokens + component utilities (`.card`, `.btn*`, `.input`, `.chip`, `.label`) live in `src/app.css`; single orange-600 brand accent, semantic palette (emerald income, red expense, sky digital kind, amber cash kind, neutral slate transfers), Plus Jakarta Sans, `tabular-nums` money. New UI work should reuse those utilities instead of raw utility strings — see [index.md](index.md).
+Visual layer (merged `ui-redesign` and `ui-visual-overhaul`): design tokens and component utilities live in `src/app.css`:
+- Surfaces & depth: `.card` (solid fills only; light mode border + subtle shadow, dark mode hairline ring `dark:ring-1 dark:ring-white/5` — no gradients).
+- Buttons: `.btn`, `.btn-primary`, `.btn-outline`, `.btn-danger`, `.btn-ghost`.
+- Form inputs: `.input`, `.label`, `.chip`.
+- Layout & headers: `.page-header`, `.page-title`, `.page-subtitle`, `.section-header`, `.section-title`.
+- Lists: `.list`, `.list-row` (grouped surface with dividers and 150ms interactive feedback).
+- Icons & media: `.tile` (fixed 8x8 box geometry for icon backgrounds).
+- Navigation: 5-slot mobile bottom bar with "Lainnya" bottom sheet drawer (`ModalShell variant="sheet"`) and safe-area inset padding `pb-[env(safe-area-inset-bottom)]`.
+- Brand & typography: single orange-600 brand accent, semantic palette (emerald income, red expense, sky digital kind, amber cash kind, neutral slate transfers), Plus Jakarta Sans font, `tabular-nums` on monetary figures, and global `prefers-reduced-motion` collapse.

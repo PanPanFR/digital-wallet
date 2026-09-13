@@ -7,12 +7,12 @@ A single-user personal finance tracker built around **wallets**: every income an
 - **Wallets** (`/wallets`): CRUD named wallets of kind `digital` or `cash`, quick presets (GoPay, OVO, DANA, ShopeePay), two seeded defaults. Duplicate names (case-insensitive) are rejected. A wallet referenced by transactions cannot be deleted. "Atur Saldo" edits a wallet's balance by posting one automatic adjustment transaction (`Penyesuaian saldo`) — balances stay computed.
 - **Balances** — always computed from transactions (`SUM(income) − SUM(expense)`, transfers signed per side), never stored: per wallet, digital/cash subtotals, and a combined total on the dashboard.
 - **Transactions** (`/transactions`): create/edit/delete via form actions with zod validation and inline errors; income/expense/**transfer** (wallet→wallet, excluded from income/expense aggregates) with an explicit `date`; filter by month, wallet/kind, description search, and category; 50 per page with offset paging; bulk select + delete; quick-add on the dashboard.
-- **Debts / Hutang** (`/hutang`): two-way records (`owe`/`owed`) with partial payments; each payment atomically writes a matching transaction and touches the chosen wallet. Debts with payments cannot be deleted (bulk delete skips and reports them). Open totals show on the dashboard.
-- **Dashboard** (`/`): month picker with net balance for the month, combined + per-kind totals, hutang/piutang summary, per-wallet balances, 5 latest transactions.
-- **Analytics** (`/analytics`): per-category bars for a chosen month, per-wallet expense totals, and a 6-month income/expense trend — pure CSS bars over SQL aggregates, no chart library.
+- **Debts / Hutang** (`/hutang`): two-way records (`owe`/`owed`) with partial payments; each payment atomically writes a matching transaction and touches the chosen wallet. Deleting a debt cascades to remove its payment records while preserving paired wallet transactions (the money already moved). Open totals show on the dashboard.
+- **Dashboard** (`/`): month picker with net balance for the month, combined + per-kind totals, 6-month monthly trend bar chart, hutang/piutang summary, per-wallet balances, 5 latest transactions.
+- **Analytics** (`/analytics`): interactive SVG charts (powered by LayerChart) showing category expense distribution, per-wallet expense totals, and a 6-month income/expense comparison over SQL aggregates.
 - **AI copilot** (`/copilot`): chatbox answering questions about your finances (month summaries, categories, trends, wallet balances, open debts injected as a JSON snapshot; read-only, never writes). Providers (base URL, API key, models) are managed in `/settings`; with no stored provider the app falls back to `GOOGLE_API_KEY`/`AI_BASE_URL`/`AI_MODEL` env, and with neither configured the endpoint returns 503.
 - **Auth**: single master password (PBKDF2-SHA256), HMAC-signed session cookie (`dw_session`, 7 days), login rate-limited to 5 attempts / 15 min. `/settings` holds change-password and the AI provider CRUD.
-- **UI**: dark/light theme (system default, persisted in `localStorage`), desktop sidebar + mobile bottom nav, toasts, confirm modals, focus-trapped dialogs.
+- **UI**: dark/light theme (system default, persisted in `localStorage`), desktop sidebar + 5-slot mobile bottom navigation with sheet drawer (`ModalShell variant="sheet"`), toasts, confirm modals, focus-trapped dialogs, solid surface tokens (no gradients), and reduced-motion support.
 
 > No offline support: the app needs network. The old service worker was removed (a cache-first SW served stale page data after deletes); `static/sw.js` now only unregisters stale workers left over from old deploys. Details: [docs/architecture.md](docs/architecture.md).
 
@@ -22,6 +22,7 @@ A single-user personal finance tracker built around **wallets**: every income an
 |---|---|
 | Framework | SvelteKit 2, Svelte 5 (runes), TypeScript strict |
 | Styling | Tailwind CSS 4 (class-based dark mode) |
+| Charts | LayerChart 2 (SVG) |
 | Runtime | Cloudflare Worker (`@sveltejs/adapter-cloudflare` 7, `nodejs_compat`) |
 | Database | Cloudflare D1 (`digital-wallet-db`), schema in [`schema.sql`](schema.sql) |
 | Validation | zod 3 |
