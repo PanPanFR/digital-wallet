@@ -4,6 +4,9 @@
  * load functions / actions pass `locals.platform.env.DB`.
  */
 
+import { getActiveProviderId, getProviders } from './aiProviders';
+import type { BackupData } from './validation';
+
 export interface WalletRow {
 	id: string;
 	name: string;
@@ -681,4 +684,49 @@ export async function getDebtDirectionTotals(db: D1Database): Promise<{ owe: num
 	const totals = { owe: 0, owed: 0 };
 	for (const d of open) totals[d.direction] += d.remaining;
 	return totals;
+}
+
+// ---------- Backup & restore ----------
+
+// Export selects are unbounded (full-table) with a deterministic
+// ORDER BY created_at, id: created_at alone is not unique (rows written in
+// one batch share a timestamp), so id breaks ties for stable file output.
+const EXPORT_WALLETS_SQL = 'SELECT id, name, kind, created_at FROM wallets ORDER BY created_at, id';
+const EXPORT_TRANSACTIONS_SQL = `SELECT id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at, updated_at
+	FROM transactions ORDER BY created_at, id`;
+const EXPORT_DEBTS_SQL = `SELECT id, person, direction, amount, paid, wallet_id, date, created_at, updated_at
+	FROM debts ORDER BY created_at, id`;
+const EXPORT_PAYMENTS_SQL = `SELECT id, debt_id, amount, wallet_id, date, created_at
+	FROM debt_payments ORDER BY created_at, id`;
+
+/**
+ * Full-database export for the versioned JSON backup file. Raw columns only
+ * (no joined display names — the importer needs IDs). `master_password_hash`
+ * and `rate_limits` are never selected (account key + ephemeral infra state).
+ * Providers (including API keys) are included by explicit user request — the
+ * settings UI warns the file must be kept safe.
+ */
+export async function exportAllData(db: D1Database): Promise<BackupData> {
+	const [wallets, transactions, debts, payments, providers, ai_active_provider] = await Promise.all([
+		db.prepare(EXPORT_WALLETS_SQL).all<BackupData['wallets'][number]>(),
+		db.prepare(EXPORT_TRANSACTIONS_SQL).all<BackupData['transactions'][number]>(),
+		db.prepare(EXPORT_DEBTS_SQL).all<BackupData['debts'][number]>(),
+		db.prepare(EXPORT_PAYMENTS_SQL).all<BackupData['debt_payments'][number]>(),
+		getProviders(db),
+		getActiveProviderId(db)
+	]);
+	return {
+		version: 1,
+		exportedAt: new Date().toISOString(),
+		wallets: (wallets.results ?? []).map((w) => ({ ...w, created_at: w.created_at ?? '' })),
+		transactions: (transactions.results ?? []).map((t) => ({ ...t, amount: Number(t.amount) || 0 })),
+		debts: (debts.results ?? []).map((d) => ({
+			...d,
+			amount: Number(d.amount) || 0,
+			paid: Number(d.paid) || 0
+		})),
+		debt_payments: (payments.results ?? []).map((p) => ({ ...p, amount: Number(p.amount) || 0 })),
+		ai_providers: providers,
+		ai_active_provider
+	};
 }

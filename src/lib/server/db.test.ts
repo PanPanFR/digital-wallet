@@ -19,7 +19,9 @@ import {
 	deleteDebt,
 	getDebtDirectionTotals,
 	deleteTransactions,
-	deleteDebts
+	deleteDebts,
+	exportAllData,
+	importBackupData
 } from './db';
 
 function fakeDb(rows: unknown[]) {
@@ -487,5 +489,148 @@ describe('deleteDebts', () => {
 		const { db, batched } = batchDb();
 		expect(await deleteDebts(db, [])).toEqual({ deleted: 0 });
 		expect(batched).toHaveLength(0);
+	});
+});
+
+/**
+ * Fake D1 routing per-table rows for backup export/import. Records every
+ * prepared SQL + binds (calls) and every db.batch call separately (batches).
+ * Mirrors fakeDb: all/first/run on both the prepared and the bound statement.
+ */
+function backupDb(
+	tables: Record<string, Record<string, unknown>[]>,
+	settings: Record<string, string> = {}
+) {
+	const calls: { sql: string; binds: unknown[] }[] = [];
+	const batches: { sql: string; binds: unknown[] }[][] = [];
+	const tableFor = (sql: string) => {
+		if (sql.includes('FROM debt_payments')) return tables.debt_payments ?? [];
+		if (sql.includes('FROM transactions')) return tables.transactions ?? [];
+		if (sql.includes('FROM debts')) return tables.debts ?? [];
+		if (sql.includes('FROM wallets')) return tables.wallets ?? [];
+		return [];
+	};
+	const db = {
+		prepare: (sql: string) => {
+			const entry: { sql: string; binds: unknown[] } = { sql, binds: [] };
+			calls.push(entry);
+			const stmt = {
+				all: async () => ({ results: tableFor(sql) }),
+				first: async () => {
+					if (sql.includes('FROM app_settings')) {
+						const v = settings[String(entry.binds[0])];
+						return v === undefined ? null : { value: v };
+					}
+					return tableFor(sql)[0] ?? null;
+				},
+				run: async () => ({ meta: { changes: 1 } })
+			};
+			return {
+				...stmt,
+				bind: (...b: unknown[]) => ((entry.binds = b), { ...stmt, sql, binds: b })
+			};
+		},
+		batch: async (stmts: { sql: string; binds: unknown[] }[]) => {
+			batches.push([...stmts]);
+			return stmts.map(() => ({ meta: { changes: 1 } }));
+		}
+	};
+	return { db: db as unknown as D1Database, calls, batches };
+}
+
+const backupTables = {
+	wallets: [{ id: 'w1', name: 'Tunai', kind: 'cash', created_at: '2026-09-01T00:00:00.000Z' }],
+	transactions: [
+		{
+			id: 't1',
+			wallet_id: 'w1',
+			to_wallet_id: null,
+			description: 'Nasi',
+			amount: 25000,
+			category: 'Makanan',
+			type: 'expense',
+			date: '2026-09-13',
+			created_at: 'x',
+			updated_at: 'x'
+		}
+	],
+	debts: [
+		{
+			id: 'd1',
+			person: 'Budi',
+			direction: 'owe',
+			amount: 100000,
+			paid: 0,
+			wallet_id: null,
+			date: '2026-09-13',
+			created_at: 'x',
+			updated_at: 'x'
+		}
+	],
+	debt_payments: [
+		{ id: 'p1', debt_id: 'd1', amount: 50000, wallet_id: 'w1', date: '2026-09-13', created_at: 'x' }
+	]
+};
+
+const backupSettings = {
+	ai_providers: JSON.stringify([
+		{ id: 'pr1', name: 'X', baseUrl: 'https://x/v1', apiKey: 'k', model: 'm', models: ['m'] }
+	]),
+	ai_active_provider: 'pr1'
+};
+
+describe('exportAllData', () => {
+	it('returns the versioned envelope with raw rows and providers', async () => {
+		const { db } = backupDb(backupTables, backupSettings);
+		const out = await exportAllData(db);
+		expect(out.version).toBe(1);
+		expect(out.exportedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+		expect(out.wallets).toEqual(backupTables.wallets);
+		expect(out.transactions).toEqual(backupTables.transactions);
+		expect(out.debts).toEqual(backupTables.debts);
+		expect(out.debt_payments).toEqual(backupTables.debt_payments);
+		expect(out.ai_providers).toHaveLength(1);
+		expect(out.ai_providers[0].id).toBe('pr1');
+		expect(out.ai_active_provider).toBe('pr1');
+	});
+	it('uses unbounded deterministic selects and never touches secrets/infra state', async () => {
+		const { db, calls } = backupDb(backupTables, backupSettings);
+		await exportAllData(db);
+		const sql = calls.map((c) => c.sql).join('\n');
+		expect(sql).not.toContain('LIMIT');
+		expect(sql).not.toContain('master_password_hash');
+		expect(sql).not.toContain('rate_limits');
+		for (const t of ['wallets', 'transactions', 'debts', 'debt_payments']) {
+			const sel = calls.find((c) => c.sql.includes(`FROM ${t}`));
+			expect(sel?.sql).toContain('ORDER BY created_at, id');
+		}
+	});
+	it('coerces numeric strings to numbers', async () => {
+		const { db } = backupDb(
+			{
+				wallets: [],
+				transactions: [],
+				debts: [
+					{
+						id: 'd1',
+						person: 'Budi',
+						direction: 'owe',
+						amount: '100000',
+						paid: '20000',
+						wallet_id: null,
+						date: '2026-09-13',
+						created_at: 'x',
+						updated_at: 'x'
+					}
+				],
+				debt_payments: []
+			},
+			{}
+		);
+		const out = await exportAllData(db);
+		expect(out.debts[0].amount).toBe(100000);
+		expect(out.debts[0].paid).toBe(20000);
+		expect(out.ai_providers).toEqual([]);
+		expect(out.ai_active_provider).toBe('');
 	});
 });
