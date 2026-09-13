@@ -35,8 +35,10 @@
 }
 
 @layer components {
+	/* Depth with solid fills only: light mode = border + tinted soft shadow;
+	   dark mode = layered border (hairline ring) since shadows die on slate-950. */
 	.card {
-		@apply rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900;
+		@apply rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-white/5;
 	}
 	.btn,
 	.btn-primary,
@@ -66,4 +68,57 @@
 	.label {
 		@apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300;
 	}
+
+	/* Page rhythm: header block at the top of every route. */
+	.page-header {
+		@apply mb-4 flex items-center justify-between gap-3;
+	}
+	.page-title {
+		@apply text-xl font-semibold text-slate-900 dark:text-white;
+	}
+	.page-subtitle {
+		@apply text-xs text-slate-500 dark:text-slate-400;
+	}
+
+	/* Section rhythm: heading row inside a page section. */
+	.section-header {
+		@apply mb-2 flex items-center justify-between gap-3;
+	}
+	.section-title {
+		@apply font-semibold text-slate-900 dark:text-white;
+	}
+
+	/* Grouped list surface (mirrors .card + row dividers; @apply cannot reference
+	   custom classes) and its interactive row. Motion is 150ms, matching
+	   Toast/nav transitions, and collapses under the global reduced-motion rule. */
+	.list {
+		@apply divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-white/5;
+	}
+	.list-row {
+		@apply flex w-full items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800 dark:active:bg-slate-700;
+	}
+
+	/* Icon tile: geometry only; compose size/color with utilities
+	   (e.g. class="tile h-6 w-6 bg-sky-50 text-sky-600"). */
+	.tile {
+		@apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg;
+	}
+}
+
+/* LayerChart theme: map library CSS vars onto the existing palette.
+   Deliberately unlayered so it wins over any library-layered defaults.
+   No layerchart theme CSS is imported. */
+.lc-root-container {
+	--color-primary: var(--color-orange-600);
+	--color-surface-100: var(--color-white);
+	--color-surface-200: var(--color-slate-100);
+	--color-surface-300: var(--color-slate-300);
+	--color-surface-content: var(--color-slate-900);
+}
+html.dark .lc-root-container {
+	--color-primary: var(--color-orange-400);
+	--color-surface-100: var(--color-slate-900);
+	--color-surface-200: var(--color-slate-800);
+	--color-surface-300: var(--color-slate-700);
+	--color-surface-content: var(--color-slate-100);
 }
