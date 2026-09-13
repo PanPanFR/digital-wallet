@@ -20,6 +20,6 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-(none — all approved plans are merged.)
+- [backup-restore](../plan/backup-restore.md) — JSON backup/restore (merge import) + CSV transaction export in Settings.
 
 Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
