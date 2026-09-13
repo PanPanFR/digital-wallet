@@ -3,14 +3,21 @@
 
 	let dark = $state(false);
 
+	function syncThemeColor(isDark: boolean) {
+		const meta = document.querySelector('meta[name="theme-color"]');
+		if (meta) meta.setAttribute('content', isDark ? '#11111b' : '#eff1f5');
+	}
+
 	$effect(() => {
 		// Script in app.html already applied the class before paint; just read it.
 		dark = document.documentElement.classList.contains('dark');
+		syncThemeColor(dark);
 	});
 
 	function toggle() {
 		dark = !dark;
 		document.documentElement.classList.toggle('dark', dark);
+		syncThemeColor(dark);
 		try {
 			localStorage.setItem('ft-theme', dark ? 'dark' : 'light');
 		} catch {

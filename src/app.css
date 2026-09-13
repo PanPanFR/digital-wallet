@@ -5,21 +5,74 @@
 
 @theme {
 	--font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+	/* Catppuccin Latte (light, default) — source: catppuccin.com/palette */
+	--color-ctp-rosewater: #dc8a78;
+	--color-ctp-flamingo: #dd7878;
+	--color-ctp-pink: #ea76cb;
+	--color-ctp-mauve: #8839ef;
+	--color-ctp-red: #d20f39;
+	--color-ctp-maroon: #e64553;
+	--color-ctp-peach: #fe640b;
+	--color-ctp-yellow: #df8e1d;
+	--color-ctp-green: #40a02b;
+	--color-ctp-teal: #179299;
+	--color-ctp-sky: #04a5e5;
+	--color-ctp-sapphire: #209fb5;
+	--color-ctp-blue: #1e66f5;
+	--color-ctp-lavender: #7287fd;
+	--color-ctp-text: #4c4f69;
+	--color-ctp-subtext1: #5c5f77;
+	--color-ctp-subtext0: #6c6f85;
+	--color-ctp-overlay2: #7c7f93;
+	--color-ctp-overlay1: #8c8fa1;
+	--color-ctp-overlay0: #9ca0b0;
+	--color-ctp-surface2: #acb0be;
+	--color-ctp-surface1: #bcc0cc;
+	--color-ctp-surface0: #ccd0da;
+	--color-ctp-base: #eff1f5;
+	--color-ctp-mantle: #e6e9ef;
+	--color-ctp-crust: #dce0e8;
+}
+
+/* Catppuccin Mocha (dark) — overrides Latte defaults when html.dark is set */
+html.dark {
+	--color-ctp-rosewater: #f5e0dc;
+	--color-ctp-flamingo: #f2cdcd;
+	--color-ctp-pink: #f5c2e7;
+	--color-ctp-mauve: #cba6f7;
+	--color-ctp-red: #f38ba8;
+	--color-ctp-maroon: #eba0ac;
+	--color-ctp-peach: #fab387;
+	--color-ctp-yellow: #f9e2af;
+	--color-ctp-green: #a6e3a1;
+	--color-ctp-teal: #94e2d5;
+	--color-ctp-sky: #89dceb;
+	--color-ctp-sapphire: #74c7ec;
+	--color-ctp-blue: #89b4fa;
+	--color-ctp-lavender: #b4befe;
+	--color-ctp-text: #cdd6f4;
+	--color-ctp-subtext1: #bac2de;
+	--color-ctp-subtext0: #a6adc8;
+	--color-ctp-overlay2: #9399b2;
+	--color-ctp-overlay1: #7f849c;
+	--color-ctp-overlay0: #6c7086;
+	--color-ctp-surface2: #585b70;
+	--color-ctp-surface1: #45475a;
+	--color-ctp-surface0: #313244;
+	--color-ctp-base: #1e1e2e;
+	--color-ctp-mantle: #181825;
+	--color-ctp-crust: #11111b;
 }
 
 @layer base {
 	:focus-visible {
-		outline: 2px solid var(--color-orange-500);
+		outline: 2px solid var(--color-ctp-peach);
 		outline-offset: 2px;
 	}
 
 	::selection {
-		background-color: var(--color-orange-100);
-	}
-
-	html.dark ::selection {
-		background-color: var(--color-orange-900);
-		color: var(--color-orange-50);
+		background-color: color-mix(in srgb, var(--color-ctp-peach) 30%, transparent);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -36,37 +89,37 @@
 
 @layer components {
 	/* Depth with solid fills only: light mode = border + tinted soft shadow;
-	   dark mode = layered border (hairline ring) since shadows die on slate-950. */
+	   dark mode = layered border (hairline ring) since shadows die on Crust. */
 	.card {
-		@apply rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-white/5;
+		@apply rounded-xl border border-ctp-surface0 bg-ctp-mantle shadow-sm shadow-black/5 dark:border-ctp-surface0 dark:bg-ctp-base dark:shadow-none dark:ring-1 dark:ring-ctp-surface1;
 	}
 	.btn,
 	.btn-primary,
 	.btn-outline,
 	.btn-danger,
 	.btn-ghost {
-		@apply inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600;
+		@apply inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ctp-peach;
 	}
 	.btn-primary {
-		@apply bg-orange-600 text-white hover:bg-orange-700;
+		@apply bg-ctp-peach text-white hover:bg-ctp-maroon dark:text-ctp-crust;
 	}
 	.btn-outline {
-		@apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800;
+		@apply border border-ctp-surface0 bg-ctp-base text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:bg-transparent dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
 	}
 	.btn-danger {
-		@apply bg-red-600 text-white hover:bg-red-700;
+		@apply bg-ctp-red text-white hover:bg-ctp-maroon dark:text-ctp-crust;
 	}
 	.btn-ghost {
-		@apply text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800;
+		@apply text-ctp-subtext1 hover:bg-ctp-surface0 dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
 	}
 	.input {
-		@apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-2 focus:outline-offset-1 focus:outline-orange-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500;
+		@apply w-full rounded-lg border border-ctp-surface0 bg-ctp-base px-3 py-2 text-sm text-ctp-text placeholder:text-ctp-subtext0 focus:outline-2 focus:outline-offset-1 focus:outline-ctp-peach dark:border-ctp-surface1 dark:bg-ctp-surface0 dark:text-ctp-text dark:placeholder:text-ctp-subtext0;
 	}
 	.chip {
 		@apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
 	}
 	.label {
-		@apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300;
+		@apply mb-1 block text-sm font-medium text-ctp-text;
 	}
 
 	/* Page rhythm: header block at the top of every route. */
@@ -74,10 +127,10 @@
 		@apply mb-4 flex items-center justify-between gap-3;
 	}
 	.page-title {
-		@apply text-xl font-semibold text-slate-900 dark:text-white;
+		@apply text-xl font-semibold text-ctp-text;
 	}
 	.page-subtitle {
-		@apply text-xs text-slate-500 dark:text-slate-400;
+		@apply text-xs text-ctp-subtext0;
 	}
 
 	/* Section rhythm: heading row inside a page section. */
@@ -85,40 +138,40 @@
 		@apply mb-2 flex items-center justify-between gap-3;
 	}
 	.section-title {
-		@apply font-semibold text-slate-900 dark:text-white;
+		@apply font-semibold text-ctp-text;
 	}
 
 	/* Grouped list surface (mirrors .card + row dividers; @apply cannot reference
 	   custom classes) and its interactive row. Motion is 150ms, matching
 	   Toast/nav transitions, and collapses under the global reduced-motion rule. */
 	.list {
-		@apply divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm shadow-slate-900/5 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-white/5;
+		@apply divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle shadow-sm shadow-black/5 dark:divide-ctp-surface0 dark:border-ctp-surface0 dark:bg-ctp-base dark:shadow-none dark:ring-1 dark:ring-ctp-surface1;
 	}
 	.list-row {
-		@apply flex w-full items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800 dark:active:bg-slate-700;
+		@apply flex w-full items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ctp-surface0 active:bg-ctp-surface1;
 	}
 
 	/* Icon tile: geometry only; compose size/color with utilities
-	   (e.g. class="tile h-6 w-6 bg-sky-50 text-sky-600"). */
+	   (e.g. class="tile h-6 w-6 bg-ctp-sky/15 text-ctp-sky"). */
 	.tile {
 		@apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg;
 	}
 }
 
-/* LayerChart theme: map library CSS vars onto the existing palette.
+/* LayerChart theme: map library CSS vars onto Catppuccin.
    Deliberately unlayered so it wins over any library-layered defaults.
    No layerchart theme CSS is imported. */
 .lc-root-container {
-	--color-primary: var(--color-orange-600);
-	--color-surface-100: var(--color-white);
-	--color-surface-200: var(--color-slate-100);
-	--color-surface-300: var(--color-slate-300);
-	--color-surface-content: var(--color-slate-900);
+	--color-primary: var(--color-ctp-peach);
+	--color-surface-100: var(--color-ctp-mantle);
+	--color-surface-200: var(--color-ctp-surface0);
+	--color-surface-300: var(--color-ctp-surface2);
+	--color-surface-content: var(--color-ctp-text);
 }
 html.dark .lc-root-container {
-	--color-primary: var(--color-orange-400);
-	--color-surface-100: var(--color-slate-900);
-	--color-surface-200: var(--color-slate-800);
-	--color-surface-300: var(--color-slate-700);
-	--color-surface-content: var(--color-slate-100);
+	--color-primary: var(--color-ctp-peach);
+	--color-surface-100: var(--color-ctp-base);
+	--color-surface-200: var(--color-ctp-surface0);
+	--color-surface-300: var(--color-ctp-surface2);
+	--color-surface-content: var(--color-ctp-text);
 }

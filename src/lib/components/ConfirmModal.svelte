@@ -30,7 +30,7 @@
 			<X size={18} />
 		</button>
 	</div>
-	<p class="text-sm text-slate-600 dark:text-slate-300">{message}</p>
+	<p class="text-sm text-ctp-subtext1">{message}</p>
 	<div class="flex justify-end gap-2">
 		<button class="btn btn-outline px-3 py-2" onclick={onCancel}>
 			{cancelText}

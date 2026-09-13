@@ -39,13 +39,13 @@
 
 <!-- Desktop sidebar -->
 <aside
-	class="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 md:flex"
+	class="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-ctp-surface0 bg-ctp-mantle md:flex"
 >
-	<a href="/" class="flex items-center gap-2 border-b border-slate-200 px-4 py-4 dark:border-slate-800">
-		<span class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white">
+	<a href="/" class="flex items-center gap-2 border-b border-ctp-surface0 px-4 py-4">
+		<span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ctp-peach text-ctp-crust">
 			<Wallet size={17} />
 		</span>
-		<span class="font-semibold text-slate-900 dark:text-white">Digital Wallet</span>
+		<span class="font-semibold text-ctp-text">Digital Wallet</span>
 	</a>
 
 	<nav aria-label="Navigasi utama" class="flex-1 space-y-1 overflow-y-auto p-3">
@@ -56,8 +56,8 @@
 				aria-current={active ? 'page' : undefined}
 				class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors
 					{active
-					? 'bg-orange-50 font-medium text-orange-700 dark:bg-orange-950 dark:text-orange-400'
-					: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'}"
+					? 'bg-ctp-surface0 font-medium text-ctp-peach'
+					: 'text-ctp-subtext1 hover:bg-ctp-surface0 hover:text-ctp-text'}"
 			>
 				<item.icon size={17} />
 				{item.label}
@@ -65,12 +65,12 @@
 		{/each}
 	</nav>
 
-	<div class="flex items-center justify-between border-t border-slate-200 p-3 dark:border-slate-800">
+	<div class="flex items-center justify-between border-t border-ctp-surface0 p-3">
 		<ThemeToggle />
 		<form method="POST" action="/?/logout" class="flex-1">
 			<button
 				type="submit"
-				class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-950 dark:hover:text-red-400"
+				class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ctp-subtext1 transition-colors hover:bg-ctp-red/10 hover:text-ctp-red"
 			>
 				<LogOut size={17} /> Keluar
 			</button>
@@ -81,7 +81,7 @@
 <!-- Mobile bottom nav -->
 <nav
 	aria-label="Navigasi utama"
-	class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900 md:hidden"
+	class="fixed inset-x-0 bottom-0 z-40 border-t border-ctp-surface0 bg-ctp-mantle pb-[env(safe-area-inset-bottom)] md:hidden"
 >
 	<div class="grid grid-cols-5">
 		{#each primaryMobileItems as item (item.href)}
@@ -91,8 +91,8 @@
 				aria-current={active ? 'page' : undefined}
 				class="flex flex-col items-center gap-0.5 py-3 text-[11px] transition-colors
 					{active
-					? 'font-semibold text-orange-600 dark:text-orange-400'
-					: 'text-slate-500 dark:text-slate-400'}"
+					? 'font-semibold text-ctp-peach'
+					: 'text-ctp-subtext1'}"
 			>
 				<item.icon size={20} />
 				{item.label}
@@ -105,8 +105,8 @@
 			aria-expanded={isMoreOpen}
 			class="flex flex-col items-center gap-0.5 py-3 text-[11px] transition-colors
 				{isMoreActive
-				? 'font-semibold text-orange-600 dark:text-orange-400'
-				: 'text-slate-500 dark:text-slate-400'}"
+				? 'font-semibold text-ctp-peach'
+				: 'text-ctp-subtext1'}"
 		>
 			<Ellipsis size={20} />
 			Lainnya
@@ -128,25 +128,25 @@
 				href={item.href}
 				aria-current={active ? 'page' : undefined}
 				class="flex items-center gap-3 rounded-lg px-3 py-2.5 {active
-					? 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-400'
-					: 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}"
+					? 'bg-ctp-surface0 text-ctp-peach'
+					: 'text-ctp-subtext1 hover:bg-ctp-surface0 hover:text-ctp-text'}"
 			>
 				<item.icon size={20} />
 				<span class="flex flex-col">
 					<span class="text-sm font-medium">{item.label}</span>
-					<span class="text-xs text-slate-500 dark:text-slate-400">
+					<span class="text-xs text-ctp-subtext1">
 						{'subtitle' in item ? item.subtitle : ''}
 					</span>
 				</span>
 			</a>
 		{/each}
 	</nav>
-	<div class="flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-800">
+	<div class="flex items-center justify-between border-t border-ctp-surface0 pt-3">
 		<ThemeToggle />
 		<form method="POST" action="/?/logout" class="flex-1">
 			<button
 				type="submit"
-				class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-950 dark:hover:text-red-400"
+				class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ctp-subtext1 transition-colors hover:bg-ctp-red/10 hover:text-ctp-red"
 			>
 				<LogOut size={17} /> Keluar
 			</button>
