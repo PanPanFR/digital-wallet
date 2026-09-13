@@ -178,11 +178,9 @@
 			showBulkConfirm = false;
 			await update();
 			if (result.type === 'success') {
-				const res = result.data as { deleted?: number; rejected?: number };
+				const res = result.data as { deleted?: number };
 				selected = new Set();
-				if (res.rejected && res.rejected > 0)
-					notify('error', `${res.rejected} catatan punya pembayaran dan tidak dihapus`);
-				else notify('success', 'Utang dihapus');
+				notify('success', `${res.deleted ?? 0} catatan hutang dihapus`);
 			} else if (result.type === 'failure' && result.data) {
 				notify('error', (result.data as { error?: string }).error ?? 'Gagal menghapus catatan hutang');
 			} else notify('error', 'Gagal menghapus catatan hutang');
@@ -619,7 +617,9 @@
 	open={!!deleteTarget}
 	title="Hapus Catatan Hutang"
 	message={deleteTarget
-		? `Hapus catatan hutang "${deleteTarget.person}" (${formatIDR(deleteTarget.amount)})? Tindakan ini tidak bisa dibatalkan.`
+		? deleteTarget.paid > 0
+			? `Hapus catatan hutang "${deleteTarget.person}" (${formatIDR(deleteTarget.amount)})? Catatan ini punya pembayaran tercatat ${formatIDR(deleteTarget.paid)}. Riwayat hutang dihapus, tapi transaksi dompet yang sudah tercatat tetap tersimpan.`
+			: `Hapus catatan hutang "${deleteTarget.person}" (${formatIDR(deleteTarget.amount)})? Tindakan ini tidak bisa dibatalkan.`
 		: ''}
 	confirmText={deleting ? 'Menghapus…' : 'Hapus'}
 	onConfirm={() => deleteForm?.requestSubmit()}
@@ -633,7 +633,7 @@
 <ConfirmModal
 	open={showBulkConfirm}
 	title="Hapus Catatan Terpilih"
-	message={`Hapus ${selectedCount} catatan hutang terpilih? Catatan yang sudah punya pembayaran tidak akan dihapus. Tindakan ini tidak bisa dibatalkan.`}
+	message={`Hapus ${selectedCount} catatan hutang terpilih? Riwayat hutang dihapus, tapi transaksi dompet yang sudah tercatat tetap tersimpan.`}
 	confirmText={bulkDeleting ? 'Menghapus…' : 'Hapus'}
 	onConfirm={() => bulkForm?.requestSubmit()}
 	onCancel={() => (showBulkConfirm = false)}

@@ -250,7 +250,7 @@ describe('getWalletTotals', () => {
 });
 
 /** Fake D1 that records batched statements (sql + binds) for money-path assertions. */
-function batchDb(rows: unknown[] = []) {
+function batchDb(rows: unknown[] = [], changes = 1) {
 	const batched: { sql: string; binds: unknown[] }[] = [];
 	const db = {
 		prepare: (sql: string) => {
@@ -267,7 +267,7 @@ function batchDb(rows: unknown[] = []) {
 		},
 		batch: async (stmts: { sql: string; binds: unknown[] }[]) => {
 			batched.push(...stmts);
-			return stmts.map(() => ({ meta: {} }));
+			return stmts.map(() => ({ meta: { changes } }));
 		}
 	};
 	return { db: db as unknown as D1Database, batched };
@@ -379,37 +379,18 @@ describe('addDebtPayment', () => {
 });
 
 describe('deleteDebt', () => {
-	it('refuses when payments exist', async () => {
-		const db = {
-			prepare: () => ({
-				bind: () => ({
-					first: async () => ({ n: 1 }),
-					run: async () => ({ meta: { changes: 0 } })
-				})
-			})
-		} as unknown as D1Database;
-		expect(await deleteDebt(db, 'x')).toBe('has-payments');
-	});
-	it('deletes when clean', async () => {
-		const db = {
-			prepare: () => ({
-				bind: () => ({
-					first: async () => ({ n: 0 }),
-					run: async () => ({ meta: { changes: 1 } })
-				})
-			})
-		} as unknown as D1Database;
+	it('cascades payments then debt in one batch and returns deleted', async () => {
+		const { db, batched } = batchDb([], 1);
 		expect(await deleteDebt(db, 'x')).toBe('deleted');
+		expect(batched.map((b) => b.sql)).toEqual([
+			'DELETE FROM debt_payments WHERE debt_id = ?',
+			'DELETE FROM debts WHERE id = ?'
+		]);
+		expect(batched[0].binds).toEqual(['x']);
+		expect(batched[1].binds).toEqual(['x']);
 	});
-	it('returns not-found when no row', async () => {
-		const db = {
-			prepare: () => ({
-				bind: () => ({
-					first: async () => ({ n: 0 }),
-					run: async () => ({ meta: { changes: 0 } })
-				})
-			})
-		} as unknown as D1Database;
+	it('returns not-found when the debt delete changes nothing', async () => {
+		const { db } = batchDb([], 0);
 		expect(await deleteDebt(db, 'x')).toBe('not-found');
 	});
 });
@@ -460,14 +441,10 @@ describe('getDebtDirectionTotals', () => {
 
 /** Fake D1 with a live row store so bulk DELETEs actually mutate rows. Mirrors
  *  fakeDb: all/first/run exposed on the prepared statement AND the bound one. */
-function storeDb<T extends { id: string }>(rows: T[], payments: { debt_id: string }[] = []) {
+function storeDb<T extends { id: string }>(rows: T[]) {
 	const live = [...rows];
 	const stmt = (sql: string, binds: unknown[]) => ({
-		all: async () => ({
-			results: sql.includes('debt_payments')
-				? payments.filter((p) => binds.includes(p.debt_id))
-				: [...live]
-		}),
+		all: async () => ({ results: [...live] }),
 		first: async () => live[0] ?? null,
 		run: async () => {
 			const before = live.length;
@@ -498,22 +475,17 @@ describe('deleteTransactions', () => {
 });
 
 describe('deleteDebts', () => {
-	it('deletes debts without payments and returns the deleted count', async () => {
-		const { db, live } = storeDb([{ id: 'd1' }, { id: 'd2' }]);
-		expect(await deleteDebts(db, ['d1', 'd2'])).toEqual({ deleted: 2, rejected: 0 });
-		expect(live).toHaveLength(0);
+	it('cascades payments and debts in one batch and returns the deleted count', async () => {
+		const { db, batched } = batchDb([], 2);
+		expect(await deleteDebts(db, ['d1', 'd2'])).toEqual({ deleted: 2 });
+		expect(batched[0].sql).toBe('DELETE FROM debt_payments WHERE debt_id IN (?,?)');
+		expect(batched[0].binds).toEqual(['d1', 'd2']);
+		expect(batched[1].sql).toBe('DELETE FROM debts WHERE id IN (?,?)');
+		expect(batched[1].binds).toEqual(['d1', 'd2']);
 	});
-	it('rejects debts that have payments and keeps them intact', async () => {
-		const { db, live } = storeDb(
-			[{ id: 'd1' }, { id: 'd2' }, { id: 'd3' }],
-			[{ debt_id: 'd2' }, { debt_id: 'd2' }]
-		);
-		expect(await deleteDebts(db, ['d1', 'd2', 'd3'])).toEqual({ deleted: 2, rejected: 1 });
-		expect(live.map((r) => r.id)).toEqual(['d2']);
-	});
-	it('rejects everything without deleting when all ids have payments', async () => {
-		const { db, live } = storeDb([{ id: 'd1' }], [{ debt_id: 'd1' }]);
-		expect(await deleteDebts(db, ['d1'])).toEqual({ deleted: 0, rejected: 1 });
-		expect(live).toHaveLength(1);
+	it('empty ids is a no-op', async () => {
+		const { db, batched } = batchDb();
+		expect(await deleteDebts(db, [])).toEqual({ deleted: 0 });
+		expect(batched).toHaveLength(0);
 	});
 });

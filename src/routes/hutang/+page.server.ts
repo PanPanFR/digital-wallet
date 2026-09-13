@@ -53,7 +53,6 @@ export const actions: Actions = {
 	delete: async ({ request, platform }: RequestEvent) => {
 		const id = String((await request.formData()).get('id') ?? '');
 		const res = await deleteDebt(platform!.env.DB, id);
-		if (res === 'has-payments') return fail(400, { error: 'Tidak bisa dihapus: sudah ada pembayaran' });
 		if (res === 'not-found') return fail(400, { error: 'Utang tidak ditemukan' });
 		return { success: true };
 	},
@@ -66,7 +65,7 @@ export const actions: Actions = {
 				.filter(Boolean)
 		)];
 		if (ids.length === 0) return fail(400, { error: 'Pilih catatan utang dulu' });
-		const { deleted, rejected } = await deleteDebts(platform!.env.DB, ids);
-		return { success: true, deleted, rejected };
+		const { deleted } = await deleteDebts(platform!.env.DB, ids);
+		return { success: true, deleted };
 	}
 };
