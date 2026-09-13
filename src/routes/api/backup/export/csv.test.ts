@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toCsvField } from './+server';
+import { _toCsvField as toCsvField } from './+server';
 
 describe('toCsvField', () => {
 	it('leaves plain values unquoted', () => {

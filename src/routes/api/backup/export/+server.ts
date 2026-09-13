@@ -5,7 +5,8 @@ const CSV_COLUMNS = ['date', 'description', 'category', 'type', 'amount', 'walle
 
 /** Quote a CSV field when it contains a comma, quote, or newline. */
 // ponytail: single-route helper, extract to lib/ only if a second CSV consumer appears.
-export function toCsvField(v: string | number | null): string {
+// Underscore prefix: SvelteKit only allows GET/POST/... or _-prefixed exports in +server files.
+export function _toCsvField(v: string | number | null): string {
 	const s = v === null ? '' : String(v);
 	return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
@@ -43,7 +44,7 @@ export const GET: RequestHandler = async ({ url, platform }) => {
 		});
 		const lines = [
 			CSV_COLUMNS.join(','),
-			...rows.map((t) => CSV_COLUMNS.map((c) => toCsvField(t[c])).join(','))
+			...rows.map((t) => CSV_COLUMNS.map((c) => _toCsvField(t[c])).join(','))
 		];
 		return new Response(lines.join('\n'), {
 			headers: {
