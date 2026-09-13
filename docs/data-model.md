@@ -133,7 +133,9 @@ Two-way debt tracking (`/hutang`), independent of the income/expense aggregates:
 
 Indexes (schema.sql:52-53): `debt_payments(debt_id)`, `debts(direction)`.
 
-Code: `db.ts:526-719` — `listDebts` / `listOpenDebts` (`amount > paid`, feeds the dashboard summary and the AI context) / `getDebt` / `createDebt` (optional `reduceBalance` mode creates the debt fully paid in one batch: debt + payment row + transaction) / `addDebtPayment` (batch: payment row + transaction + `paid` increment) / `deleteDebt` (`'has-payments'` guard) / `deleteDebts` (bulk: debts with payments are rejected, intact) / `getDebtDirectionTotals`. UI copy: "Hutang Saya" / "Piutang Saya".
+> Deleting a debt removes its `debt_payments` rows (explicit batch delete, not reliant on `ON DELETE CASCADE`) but leaves the paired `transactions` rows in place: the money already moved, only the debt record disappears.
+
+Code: `db.ts:526-719` — `listDebts` / `listOpenDebts` (`amount > paid`, feeds the dashboard summary and the AI context) / `getDebt` / `createDebt` (optional `reduceBalance` mode creates the debt fully paid in one batch: debt + payment row + transaction) / `addDebtPayment` (batch: payment row + transaction + `paid` increment) / `deleteDebt` (atomic batch: child `debt_payments` then `debts`) / `deleteDebts` (same, bulk; returns `{ deleted }`) / `getDebtDirectionTotals`. UI copy: "Hutang Saya" / "Piutang Saya".
 
 ## `app_settings` (schema.sql:55-59)
 

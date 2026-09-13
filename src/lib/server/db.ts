@@ -640,41 +640,39 @@ export async function addDebtPayment(
 	return { id: debt.id };
 }
 
-/** Delete a debt. Refuses ('has-payments') if any payment exists. */
+/**
+ * Delete a debt and its payment rows in one atomic batch.
+ *
+ * The wallet `transactions` written by those payments are intentionally kept:
+ * they record real money movement, and nothing links them back to the debt.
+ * The explicit child delete does not rely on the schema's ON DELETE CASCADE.
+ */
 export async function deleteDebt(
 	db: D1Database,
 	id: string
-): Promise<'deleted' | 'has-payments' | 'not-found'> {
-	const usage = await db
-		.prepare('SELECT COUNT(*) AS n FROM debt_payments WHERE debt_id = ?')
-		.bind(id)
-		.first<{ n: number }>();
-	if ((usage?.n ?? 0) > 0) return 'has-payments';
-	const r = await db.prepare('DELETE FROM debts WHERE id = ?').bind(id).run();
-	return (r.meta?.changes ?? 0) > 0 ? 'deleted' : 'not-found';
+): Promise<'deleted' | 'not-found'> {
+	const [, debtRes] = await db.batch([
+		db.prepare('DELETE FROM debt_payments WHERE debt_id = ?').bind(id),
+		db.prepare('DELETE FROM debts WHERE id = ?').bind(id)
+	]);
+	return (debtRes.meta?.changes ?? 0) > 0 ? 'deleted' : 'not-found';
 }
 
 /**
- * Delete multiple debts. Debts that have payments are rejected (left intact).
- * Returns how many were deleted and how many were rejected.
+ * Delete many debts and their payment rows in one atomic batch.
+ * Same transaction-preservation rules as `deleteDebt`.
  */
 export async function deleteDebts(
 	db: D1Database,
 	ids: string[]
-): Promise<{ deleted: number; rejected: number }> {
-	if (ids.length === 0) return { deleted: 0, rejected: 0 };
-	const { results } = await db
-		.prepare(`SELECT debt_id FROM debt_payments WHERE debt_id IN (${ids.map(() => '?').join(',')})`)
-		.bind(...ids)
-		.all<{ debt_id: string }>();
-	const blocked = new Set((results ?? []).map((r) => r.debt_id));
-	const deletable = ids.filter((id) => !blocked.has(id));
-	if (deletable.length === 0) return { deleted: 0, rejected: blocked.size };
-	const r = await db
-		.prepare(`DELETE FROM debts WHERE id IN (${deletable.map(() => '?').join(',')})`)
-		.bind(...deletable)
-		.run();
-	return { deleted: r.meta?.changes ?? 0, rejected: blocked.size };
+): Promise<{ deleted: number }> {
+	if (ids.length === 0) return { deleted: 0 };
+	const placeholders = ids.map(() => '?').join(',');
+	const [, debtRes] = await db.batch([
+		db.prepare(`DELETE FROM debt_payments WHERE debt_id IN (${placeholders})`).bind(...ids),
+		db.prepare(`DELETE FROM debts WHERE id IN (${placeholders})`).bind(...ids)
+	]);
+	return { deleted: debtRes.meta?.changes ?? 0 };
 }
 
 /** Sum of remaining per direction across open debts. */
