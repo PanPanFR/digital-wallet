@@ -79,3 +79,78 @@ export const DebtPaymentSchema = z.object({
 		z.string().regex(DATE_RE, 'Tanggal tidak valid')
 	)
 });
+
+/** Versioned JSON backup envelope (snake_case DB column names, no mapping layer). */
+const backupId = z.string().min(1);
+const backupTs = z.string().min(1);
+const backupDate = z.string().regex(DATE_RE, 'Tanggal tidak valid');
+const backupAmount = z
+	.number()
+	.int('Jumlah harus bilangan bulat')
+	.positive('Jumlah harus lebih dari 0')
+	.max(999_999_999, 'Jumlah terlalu besar');
+/** Worker safety: cap every backup array. */
+const backupList = <T extends z.ZodTypeAny>(item: T) => z.array(item).max(20000);
+
+const BackupWalletSchema = z.object({
+	id: backupId,
+	name: z.string().min(1).max(50),
+	kind: z.enum(['digital', 'cash']),
+	created_at: backupTs
+});
+
+const BackupTransactionSchema = z.object({
+	id: backupId,
+	wallet_id: backupId,
+	to_wallet_id: backupId.nullable(),
+	description: z.string().min(1),
+	amount: backupAmount,
+	category: z.string().min(1),
+	type: z.enum(['income', 'expense', 'transfer']),
+	date: backupDate,
+	created_at: backupTs,
+	updated_at: backupTs
+});
+
+const BackupDebtSchema = z.object({
+	id: backupId,
+	person: z.string().min(1),
+	direction: z.enum(['owe', 'owed']),
+	amount: backupAmount,
+	paid: z.number().min(0),
+	wallet_id: backupId.nullable(),
+	date: backupDate,
+	created_at: backupTs,
+	updated_at: backupTs
+});
+
+const BackupDebtPaymentSchema = z.object({
+	id: backupId,
+	debt_id: backupId,
+	amount: backupAmount,
+	wallet_id: backupId,
+	date: backupDate,
+	created_at: backupTs
+});
+
+const BackupAiProviderSchema = z.object({
+	id: backupId,
+	name: z.string().min(1).max(50),
+	baseUrl: z.string().url().max(300),
+	apiKey: z.string().min(1).max(500),
+	model: z.string().min(1),
+	models: z.array(z.string().min(1)).min(1)
+});
+
+export const BackupSchema = z.object({
+	version: z.literal(1, { errorMap: () => ({ message: 'Format backup tidak didukung' }) }),
+	exportedAt: z.string().min(1),
+	wallets: backupList(BackupWalletSchema),
+	transactions: backupList(BackupTransactionSchema),
+	debts: backupList(BackupDebtSchema),
+	debt_payments: backupList(BackupDebtPaymentSchema),
+	ai_providers: backupList(BackupAiProviderSchema),
+	ai_active_provider: z.string()
+});
+
+export type BackupData = z.infer<typeof BackupSchema>;
