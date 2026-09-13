@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { BackupData } from './validation';
 import {
 	getKindTotals,
 	getWalletBalances,
@@ -632,5 +633,129 @@ describe('exportAllData', () => {
 		expect(out.debts[0].paid).toBe(20000);
 		expect(out.ai_providers).toEqual([]);
 		expect(out.ai_active_provider).toBe('');
+	});
+});
+
+function backupFile(): BackupData {
+	return {
+		version: 1,
+		exportedAt: '2026-09-13T00:00:00.000Z',
+		wallets: backupTables.wallets as unknown as BackupData['wallets'],
+		transactions: backupTables.transactions as unknown as BackupData['transactions'],
+		debts: backupTables.debts as unknown as BackupData['debts'],
+		debt_payments: backupTables.debt_payments as unknown as BackupData['debt_payments'],
+		ai_providers: JSON.parse(backupSettings.ai_providers) as BackupData['ai_providers'],
+		ai_active_provider: 'pr1'
+	};
+}
+
+describe('importBackupData', () => {
+	it('empty DB: inserts everything, parents before children, no paid bump for fresh debts', async () => {
+		const { db, batches, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted).toEqual({ wallets: 1, transactions: 1, debts: 1, debt_payments: 1, providers: 1 });
+		expect(res.skipped).toEqual({ wallets: 0, transactions: 0, debts: 0, debt_payments: 0, providers: 0 });
+		const flat = batches.flat();
+		expect(batches).toHaveLength(1);
+		expect(flat.map((s) => s.sql)).toEqual([
+			expect.stringContaining('INSERT OR IGNORE INTO wallets'),
+			expect.stringContaining('INSERT OR IGNORE INTO transactions'),
+			expect.stringContaining('INSERT OR IGNORE INTO debts'),
+			expect.stringContaining('INSERT OR IGNORE INTO debt_payments')
+		]);
+		expect(flat.some((s) => s.sql.includes('UPDATE debts'))).toBe(false);
+		const settingsWrites = calls.filter((c) => c.sql.includes('INSERT INTO app_settings'));
+		expect(settingsWrites.map((c) => c.binds[0]).sort()).toEqual(['ai_active_provider', 'ai_providers']);
+	});
+	it('full overlap: idempotent, zero writes', async () => {
+		const { db, batches, calls } = backupDb(backupTables, backupSettings);
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted).toEqual({ wallets: 0, transactions: 0, debts: 0, debt_payments: 0, providers: 0 });
+		expect(res.skipped).toEqual({ wallets: 1, transactions: 1, debts: 1, debt_payments: 1, providers: 1 });
+		expect(batches).toHaveLength(0);
+		expect(calls.filter((c) => c.sql.includes('INSERT INTO app_settings'))).toHaveLength(0);
+	});
+	it('pre-existing debt + new payment: payment inserted and paid incremented', async () => {
+		const { db, batches } = backupDb({ ...backupTables, debt_payments: [] }, {});
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted.debts).toBe(0);
+		expect(res.skipped.debts).toBe(1);
+		expect(res.inserted.debt_payments).toBe(1);
+		const flat = batches.flat();
+		expect(flat.map((s) => s.sql)).toContainEqual(expect.stringContaining('INSERT OR IGNORE INTO debt_payments'));
+		const bump = flat.find((s) => s.sql.includes('UPDATE debts SET paid = paid + ?'));
+		expect(bump?.binds).toEqual([50000, 'd1']);
+	});
+	it('payment pointing at a missing debt aborts with zero writes', async () => {
+		const { db, batches, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const data = { ...backupFile(), debts: [] };
+		await expect(importBackupData(db, data)).rejects.toThrow('Data tidak konsisten');
+		expect(batches).toHaveLength(0);
+		expect(calls.filter((c) => c.sql.includes('INSERT INTO app_settings'))).toHaveLength(0);
+	});
+	it('chunks batches at 50 statements', async () => {
+		const many = Array.from({ length: 60 }, (_, i) => ({
+			id: `w${i}`,
+			name: `W${i}`,
+			kind: 'cash',
+			created_at: 'x'
+		}));
+		const data: BackupData = {
+			...backupFile(),
+			wallets: many as unknown as BackupData['wallets'],
+			transactions: [],
+			debts: [],
+			debt_payments: [],
+			ai_providers: [],
+			ai_active_provider: ''
+		};
+		const { db, batches } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const res = await importBackupData(db, data);
+		expect(res.inserted.wallets).toBe(60);
+		expect(batches).toHaveLength(2);
+		expect(batches[0]).toHaveLength(50);
+		expect(batches[1]).toHaveLength(10);
+	});
+	it('providers merge: existing rows win, active kept when already set', async () => {
+		const stored = [
+			{ id: 'pr0', name: 'Stored', baseUrl: 'https://s/v1', apiKey: 's', model: 'm', models: ['m'] }
+		];
+		const incoming = [
+			{ id: 'pr0', name: 'Changed', baseUrl: 'https://s/v1', apiKey: 'x', model: 'm', models: ['m'] },
+			{ id: 'pr1', name: 'New', baseUrl: 'https://n/v1', apiKey: 'n', model: 'm', models: ['m'] }
+		];
+		const { db, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{ ai_providers: JSON.stringify(stored), ai_active_provider: 'pr0' }
+		);
+		const data: BackupData = {
+			...backupFile(),
+			wallets: [],
+			transactions: [],
+			debts: [],
+			debt_payments: [],
+			ai_providers: incoming,
+			ai_active_provider: 'pr1'
+		};
+		const res = await importBackupData(db, data);
+		expect(res.inserted.providers).toBe(1);
+		expect(res.skipped.providers).toBe(1);
+		const write = calls.find(
+			(c) => c.sql.includes('INSERT INTO app_settings') && c.binds[0] === 'ai_providers'
+		);
+		expect(JSON.parse(String(write?.binds[1]))).toEqual([...stored, incoming[1]]);
+		const activeWrites = calls.filter(
+			(c) => c.sql.includes('INSERT INTO app_settings') && c.binds[0] === 'ai_active_provider'
+		);
+		expect(activeWrites).toHaveLength(0);
 	});
 });
