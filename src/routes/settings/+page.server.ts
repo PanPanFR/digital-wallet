@@ -10,9 +10,9 @@ import {
 	type AiProvider,
 	ProviderFormSchema
 } from '$lib/server/aiProviders';
-import { getSetting, setSetting } from '$lib/server/db';
+import { getSetting, setSetting, importBackupData } from '$lib/server/db';
 import { issueSessionCookie } from '$lib/server/session';
-import { fieldErrors } from '$lib/server/validation';
+import { BackupSchema, fieldErrors } from '$lib/server/validation';
 
 const NewPasswordSchema = z.string().min(8, 'Password baru minimal 8 karakter');
 
@@ -119,5 +119,31 @@ export const actions: Actions = {
 		if (!providers.some((p) => p.id === id)) return fail(400, { error: 'Provider tidak ditemukan' });
 		await setActiveProviderId(db, id);
 		return { success: true };
+	},
+
+	'import-backup': async ({ request, platform }: RequestEvent) => {
+		const db = platform!.env.DB;
+		const form = await request.formData();
+		const file = form.get('file');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { importError: 'Pilih file backup dulu' });
+		}
+		if (file.size > 5 * 1024 * 1024) {
+			return fail(400, { importError: 'File terlalu besar' });
+		}
+		let raw: unknown;
+		try {
+			raw = JSON.parse(await file.text());
+		} catch {
+			return fail(400, { importError: 'File bukan JSON yang valid' });
+		}
+		const parsed = BackupSchema.safeParse(raw);
+		if (!parsed.success) return fail(400, { importErrors: fieldErrors(parsed.error) });
+		try {
+			const { inserted, skipped } = await importBackupData(db, parsed.data);
+			return { importSuccess: true, inserted, skipped };
+		} catch (e) {
+			return fail(400, { importError: e instanceof Error ? e.message : 'Gagal mengimpor backup' });
+		}
 	}
 };

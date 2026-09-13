@@ -35,6 +35,14 @@
 	let deleting = $state(false);
 	let deleteForm: HTMLFormElement | null = null;
 
+	// Backup import state
+	let importError = $state('');
+	let importErrors = $state<Record<string, string>>({});
+	let importSummary = $state('');
+	let importing = $state(false);
+	let importConfirmOpen = $state(false);
+	let importForm: HTMLFormElement | null = null;
+
 	function resetAdd() {
 		addName = '';
 		addBaseUrl = '';
@@ -105,6 +113,38 @@
 			if (result.type === 'success') notify('success', 'Provider AI dihapus');
 			else if (result.type === 'failure' && result.data) {
 				listError = (result.data as { error?: string }).error ?? 'Gagal menghapus provider';
+			}
+		};
+	};
+
+	const handleImport: SubmitFunction = () => {
+		importing = true;
+		return async ({ result, update }) => {
+			importing = false;
+			importConfirmOpen = false;
+			if (result.type === 'failure' && result.data) {
+				const data = result.data as {
+					importError?: string;
+					importErrors?: Record<string, string>;
+				};
+				importError = data.importError ?? '';
+				importErrors = data.importErrors ?? {};
+				importSummary = '';
+				return;
+			}
+			await update();
+			if (result.type === 'success' && result.data) {
+				const data = result.data as {
+					inserted?: Record<string, number>;
+					skipped?: Record<string, number>;
+				};
+				const x = Object.values(data.inserted ?? {}).reduce((a, b) => a + b, 0);
+				const y = Object.values(data.skipped ?? {}).reduce((a, b) => a + b, 0);
+				importSummary = `Impor selesai: ${x} baru, ${y} dilewati.`;
+				importError = '';
+				importErrors = {};
+				importForm?.reset();
+				notify('success', importSummary);
 			}
 		};
 	};
@@ -409,6 +449,65 @@
 	</section>
 
 	<section class="card space-y-4 p-4">
+		<h2 class="section-title">Data</h2>
+		<div class="flex flex-wrap gap-2">
+			<a class="btn btn-outline" href="/api/backup/export?format=json">Unduh Backup (JSON)</a>
+			<a class="btn btn-outline" href="/api/backup/export?format=csv">Unduh Transaksi (CSV)</a>
+		</div>
+		<p class="text-sm text-slate-500 dark:text-slate-400">
+			File backup berisi API key — simpan baik-baik.
+		</p>
+
+		{#if importSummary}
+			<p
+				class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
+				role="status"
+			>
+				{importSummary}
+			</p>
+		{/if}
+		{#if importError}
+			<p
+				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+				role="alert"
+			>
+				{importError}
+			</p>
+		{/if}
+		{#if Object.keys(importErrors).length > 0}
+			<p class="text-xs text-red-600 dark:text-red-400">{Object.values(importErrors)[0]}</p>
+		{/if}
+
+		<form
+			method="POST"
+			action="?/import-backup"
+			enctype="multipart/form-data"
+			bind:this={importForm}
+			use:enhance={handleImport}
+			class="space-y-3"
+		>
+			<label class="block text-sm">
+				<span class="label">File backup (JSON)</span>
+				<input
+					name="file"
+					type="file"
+					accept="application/json"
+					required
+					class="input"
+				/>
+			</label>
+			<button
+				type="button"
+				onclick={() => (importConfirmOpen = true)}
+				disabled={importing}
+				class="btn btn-primary px-3 py-1.5"
+			>
+				{importing ? 'Mengimpor…' : 'Impor Backup'}
+			</button>
+		</form>
+	</section>
+
+	<section class="card space-y-4 p-4">
 		<h2 class="section-title">Sesi</h2>
 		<form method="POST" action="/?/logout">
 			<button
@@ -433,3 +532,13 @@
 <form method="POST" action="?/delete-provider" bind:this={deleteForm} use:enhance={handleDelete} class="hidden">
 	<input type="hidden" name="id" value={deleteTarget?.id ?? ''} />
 </form>
+
+<ConfirmModal
+	open={importConfirmOpen}
+	title="Impor Backup"
+	message="Impor backup? Data yang sudah ada tidak akan dihapus."
+	confirmText={importing ? 'Mengimpor…' : 'Impor'}
+	destructive={false}
+	onConfirm={() => importForm?.requestSubmit()}
+	onCancel={() => (importConfirmOpen = false)}
+/>

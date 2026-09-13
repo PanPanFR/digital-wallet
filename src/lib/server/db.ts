@@ -4,6 +4,9 @@
  * load functions / actions pass `locals.platform.env.DB`.
  */
 
+import { getActiveProviderId, getProviders, saveProviders, setActiveProviderId } from './aiProviders';
+import type { BackupData } from './validation';
+
 export interface WalletRow {
 	id: string;
 	name: string;
@@ -681,4 +684,169 @@ export async function getDebtDirectionTotals(db: D1Database): Promise<{ owe: num
 	const totals = { owe: 0, owed: 0 };
 	for (const d of open) totals[d.direction] += d.remaining;
 	return totals;
+}
+
+// ---------- Backup & restore ----------
+
+// Export selects are unbounded (full-table) with a deterministic
+// ORDER BY created_at, id: created_at alone is not unique (rows written in
+// one batch share a timestamp), so id breaks ties for stable file output.
+const EXPORT_WALLETS_SQL = 'SELECT id, name, kind, created_at FROM wallets ORDER BY created_at, id';
+const EXPORT_TRANSACTIONS_SQL = `SELECT id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at, updated_at
+	FROM transactions ORDER BY created_at, id`;
+const EXPORT_DEBTS_SQL = `SELECT id, person, direction, amount, paid, wallet_id, date, created_at, updated_at
+	FROM debts ORDER BY created_at, id`;
+const EXPORT_PAYMENTS_SQL = `SELECT id, debt_id, amount, wallet_id, date, created_at
+	FROM debt_payments ORDER BY created_at, id`;
+
+/**
+ * Full-database export for the versioned JSON backup file. Raw columns only
+ * (no joined display names — the importer needs IDs). `master_password_hash`
+ * and `rate_limits` are never selected (account key + ephemeral infra state).
+ * Providers (including API keys) are included by explicit user request — the
+ * settings UI warns the file must be kept safe.
+ */
+export async function exportAllData(db: D1Database): Promise<BackupData> {
+	const [wallets, transactions, debts, payments, providers, ai_active_provider] = await Promise.all([
+		db.prepare(EXPORT_WALLETS_SQL).all<BackupData['wallets'][number]>(),
+		db.prepare(EXPORT_TRANSACTIONS_SQL).all<BackupData['transactions'][number]>(),
+		db.prepare(EXPORT_DEBTS_SQL).all<BackupData['debts'][number]>(),
+		db.prepare(EXPORT_PAYMENTS_SQL).all<BackupData['debt_payments'][number]>(),
+		getProviders(db),
+		getActiveProviderId(db)
+	]);
+	return {
+		version: 1,
+		exportedAt: new Date().toISOString(),
+		wallets: (wallets.results ?? []).map((w) => ({ ...w, created_at: w.created_at ?? '' })),
+		transactions: (transactions.results ?? []).map((t) => ({ ...t, amount: Number(t.amount) || 0 })),
+		debts: (debts.results ?? []).map((d) => ({
+			...d,
+			amount: Number(d.amount) || 0,
+			paid: Number(d.paid) || 0
+		})),
+		debt_payments: (payments.results ?? []).map((p) => ({ ...p, amount: Number(p.amount) || 0 })),
+		ai_providers: providers,
+		ai_active_provider
+	};
+}
+
+export interface BackupCounts {
+	wallets: number;
+	transactions: number;
+	debts: number;
+	debt_payments: number;
+	providers: number;
+}
+
+export interface ImportBackupResult {
+	inserted: BackupCounts;
+	skipped: BackupCounts;
+}
+
+/** Max statements per db.batch call (D1/Worker limits). */
+const IMPORT_BATCH_SIZE = 50;
+
+const IMPORT_WALLETS_SQL =
+	'INSERT OR IGNORE INTO wallets (id, name, kind, created_at) VALUES (?, ?, ?, ?)';
+const IMPORT_TRANSACTIONS_SQL = `INSERT OR IGNORE INTO transactions
+	(id, wallet_id, to_wallet_id, description, amount, category, type, date, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+const IMPORT_DEBTS_SQL = `INSERT OR IGNORE INTO debts
+	(id, person, direction, amount, paid, wallet_id, date, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+const IMPORT_PAYMENTS_SQL = `INSERT OR IGNORE INTO debt_payments
+	(id, debt_id, amount, wallet_id, date, created_at)
+	VALUES (?, ?, ?, ?, ?, ?)`;
+const IMPORT_PAID_SQL = `UPDATE debts SET paid = paid + ?, updated_at = datetime('now') WHERE id = ?`;
+
+/**
+ * Merge a validated backup file into the DB: rows whose id already exists
+ * are skipped, the rest inserted with INSERT OR IGNORE (belt-and-braces
+ * against races), parents before children. A payment is only inserted when
+ * its debt was newly inserted in this same import or already exists;
+ * otherwise the whole import aborts before any batch runs. Providers union
+ * by id (existing rows win); the active provider is only set when the DB
+ * has none and the file has one.
+ */
+export async function importBackupData(db: D1Database, data: BackupData): Promise<ImportBackupResult> {
+	const [wallets, transactions, debts, payments] = await Promise.all([
+		db.prepare('SELECT id FROM wallets').all<{ id: string }>(),
+		db.prepare('SELECT id FROM transactions').all<{ id: string }>(),
+		db.prepare('SELECT id FROM debts').all<{ id: string }>(),
+		db.prepare('SELECT id FROM debt_payments').all<{ id: string }>()
+	]);
+	const have = {
+		wallets: new Set((wallets.results ?? []).map((r) => r.id)),
+		transactions: new Set((transactions.results ?? []).map((r) => r.id)),
+		debts: new Set((debts.results ?? []).map((r) => r.id)),
+		debt_payments: new Set((payments.results ?? []).map((r) => r.id))
+	};
+
+	const fresh = {
+		wallets: data.wallets.filter((w) => !have.wallets.has(w.id)),
+		transactions: data.transactions.filter((t) => !have.transactions.has(t.id)),
+		debts: data.debts.filter((d) => !have.debts.has(d.id)),
+		debt_payments: data.debt_payments.filter((p) => !have.debt_payments.has(p.id))
+	};
+
+	// Fail before any write: every payment must resolve to a debt that is
+	// either already in the DB or imported alongside it.
+	const knownDebts = new Set([...have.debts, ...fresh.debts.map((d) => d.id)]);
+	for (const p of fresh.debt_payments) {
+		if (!knownDebts.has(p.debt_id)) {
+			throw new Error(
+				`Data tidak konsisten: debt_payments ${p.id} menunjuk ke utang yang tidak ada`
+			);
+		}
+	}
+
+	const stmts = [
+		...fresh.wallets.map((w) => db.prepare(IMPORT_WALLETS_SQL).bind(w.id, w.name, w.kind, w.created_at)),
+		...fresh.transactions.map((t) =>
+			db
+				.prepare(IMPORT_TRANSACTIONS_SQL)
+				.bind(t.id, t.wallet_id, t.to_wallet_id, t.description, t.amount, t.category, t.type, t.date, t.created_at, t.updated_at)
+		),
+		...fresh.debts.map((d) =>
+			db
+				.prepare(IMPORT_DEBTS_SQL)
+				.bind(d.id, d.person, d.direction, d.amount, d.paid, d.wallet_id, d.date, d.created_at, d.updated_at)
+		),
+		...fresh.debt_payments.flatMap((p) => {
+			const insert = db
+				.prepare(IMPORT_PAYMENTS_SQL)
+				.bind(p.id, p.debt_id, p.amount, p.wallet_id, p.date, p.created_at);
+			// Debt pre-existed but the payment is new: keep paid == SUM(debt_payments).
+			return have.debts.has(p.debt_id) ? [insert, db.prepare(IMPORT_PAID_SQL).bind(p.amount, p.debt_id)] : [insert];
+		})
+	];
+	for (let i = 0; i < stmts.length; i += IMPORT_BATCH_SIZE) {
+		await db.batch(stmts.slice(i, i + IMPORT_BATCH_SIZE));
+	}
+
+	const current = await getProviders(db);
+	const currentIds = new Set(current.map((p) => p.id));
+	const freshProviders = data.ai_providers.filter((p) => !currentIds.has(p.id));
+	if (freshProviders.length > 0) await saveProviders(db, [...current, ...freshProviders]);
+	if ((await getActiveProviderId(db)) === '' && data.ai_active_provider !== '') {
+		await setActiveProviderId(db, data.ai_active_provider);
+	}
+
+	return {
+		inserted: {
+			wallets: fresh.wallets.length,
+			transactions: fresh.transactions.length,
+			debts: fresh.debts.length,
+			debt_payments: fresh.debt_payments.length,
+			providers: freshProviders.length
+		},
+		skipped: {
+			wallets: data.wallets.length - fresh.wallets.length,
+			transactions: data.transactions.length - fresh.transactions.length,
+			debts: data.debts.length - fresh.debts.length,
+			debt_payments: data.debt_payments.length - fresh.debt_payments.length,
+			providers: data.ai_providers.length - freshProviders.length
+		}
+	};
 }
