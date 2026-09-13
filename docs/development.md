@@ -81,8 +81,8 @@ npx wrangler d1 execute digital-wallet-db --local --command "SELECT * FROM walle
 | File | Covers |
 |---|---|
 | `src/lib/server/auth.test.ts` | password hash/verify round-trip, token create/verify, expiry |
-| `src/lib/server/db.test.ts` | wallet CRUD (duplicate-name guard, balance adjustment), transaction filters/bulk delete, debt CRUD + payment batching/overpay guard + cascade delete with payments (keeping wallet transactions), computed balances (empty wallet = 0, per-kind subtotals) |
-| `src/lib/server/validation.test.ts` | `TxSchema`/`WalletSchema`/debt schemas — money-path rules |
+| `src/lib/server/db.test.ts` | wallet CRUD (duplicate-name guard, balance adjustment), transaction filters/bulk delete, debt CRUD + payment batching/overpay guard + cascade delete with payments (keeping wallet transactions), backup export selects + merge import (partitioning, chunking, paid-invariant, provider union), computed balances (empty wallet = 0, per-kind subtotals) |
+| `src/lib/server/validation.test.ts` | `TxSchema`/`WalletSchema`/debt schemas — money-path rules; `BackupSchema` envelope accept/reject matrix |
 | `src/lib/server/ai.test.ts` | `chatAnswer`: request shape, history/context injection, OpenAI/Gemini response unwrapping, friendly 429/5xx errors |
 | `src/lib/server/aiProviders.test.ts` | provider JSON round-trip, defensive corrupt-JSON parse, config precedence, `toSummary` key stripping |
 

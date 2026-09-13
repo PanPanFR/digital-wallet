@@ -98,6 +98,7 @@ App icon is `static/icon.svg` only.
 │       ├── +page.svelte|.server.ts        # dashboard: totals, balances, 6-month trend, recent, quick-add, logout action
 │       ├── login/ wallets/ transactions/ hutang/ analytics/ copilot/ settings/
 │       └── api/ai/report/+server.ts       # copilot chatbox JSON endpoint
+│       └── api/backup/export/+server.ts   # JSON backup + CSV transaction downloads
 ├── static/                    # manifest.json, icon.svg, sw.js (cleanup stub only)
 ├── schema.sql                 # full D1 schema, idempotent (see data-model.md)
 ├── migrations/                # one-off structural migrations (NNN-*.sql), applied manually
