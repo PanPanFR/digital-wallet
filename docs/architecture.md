@@ -114,12 +114,9 @@ Full rationale lives in the specs — summaries above, details in:
 - `docs/specs/2026-09-03-svelte-rewrite-design.md` — framework/hosting/styling/PWA choices of the rewrite.
 - `docs/specs/2026-09-08-digital-wallet-design.md` — wallet model, clean-start D1 (no data migration), kind CHECK constraint, seed wallets, rebrand checklist, Workers Builds over manual deploys.
 
-Visual layer (merged `ui-redesign` and `ui-visual-overhaul`): design tokens and component utilities live in `src/app.css`:
-- Surfaces & depth: `.card` (solid fills only; light mode border + subtle shadow, dark mode hairline ring `dark:ring-1 dark:ring-white/5` — no gradients).
-- Buttons: `.btn`, `.btn-primary`, `.btn-outline`, `.btn-danger`, `.btn-ghost`.
-- Form inputs: `.input`, `.label`, `.chip`.
-- Layout & headers: `.page-header`, `.page-title`, `.page-subtitle`, `.section-header`, `.section-title`.
-- Lists: `.list`, `.list-row` (grouped surface with dividers and 150ms interactive feedback).
-- Icons & media: `.tile` (fixed 8x8 box geometry for icon backgrounds).
-- Navigation: 5-slot mobile bottom bar with "Lainnya" bottom sheet drawer (`ModalShell variant="sheet"`) and safe-area inset padding `pb-[env(safe-area-inset-bottom)]`.
-- Brand & typography: single orange-600 brand accent, semantic palette (emerald income, red expense, sky digital kind, amber cash kind, neutral slate transfers), Plus Jakarta Sans font, `tabular-nums` on monetary figures, and global `prefers-reduced-motion` collapse.
+Visual layer (template-driven Catppuccin, `template-design/catppuccin_latte_fintech/DESIGN.md` as brief, implemented by `plan/ui-catppuccin-operate.md`): design tokens and component utilities live in `src/app.css`:
+- Roles: peach `#fe640b` primary actions, blue `#1e66f5` transfers/links, green `#40a02b` income, red `#d20f39` expense, base `#eff1f5` canvas / mantle `#e6e9ef` cards / crust `#dce0e8` wells, text `#4c4f69`, muted overlay `#8c8fa1`, border surface0 `#ccd0da` (Mocha mirrors structure in dark mode). No gradients; solid fills only.
+- Type: Plus Jakarta Sans with `currency-display` (28px/22px mobile) + `tnum`/`cv05`/`ss01` tabular IDR (`Rp ` regular space, `+ Rp`/`− Rp` signs) via `.num` and `formatIDR`.
+- Shape & depth: cards 12px, controls 8px, icons circular (`.tile`); Layer 0 canvas → Layer 1 cards (border + soft shadow light, hairline ring dark) → Layer 2 modals; inputs 44px white (dark surface0) with peach border + `rgba(254,100,11,.15)` focus glow and pinned `Rp` prefix.
+- Components: `.btn` (primary peach + `#f75b02` hover + bevel, bold 14px+ white labels), `.input`, `.chip`/`.chip-active` (solid peach active), dark-pill segmented control, tinted circular txn icons (green/red/blue), `.card-dark` fixed `#2c2f47` summary card (dark both modes), LayerChart donut ≥4 distinct hues with matching legend swatches.
+- Navigation: desktop sidebar (structure kept, peach active) + dark floating mobile pill (`#2c2f47/95`) with orange Catat FAB opening the form via `open-transaction-form` event, "Lainnya" bottom sheet (`ModalShell variant="sheet"`) and safe-area inset padding `pb-[env(safe-area-inset-bottom)]`.

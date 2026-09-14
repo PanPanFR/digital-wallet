@@ -9,7 +9,8 @@
 		Wallet,
 		Smartphone,
 		Banknote,
-		HandCoins
+		HandCoins,
+		BarChart3
 	} from '@lucide/svelte';
 	import { BarChart } from 'layerchart/svg';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
@@ -61,52 +62,130 @@
 		{ label: 'Digital', wallets: data.wallets.filter((w: { kind: string }) => w.kind === 'digital') },
 		{ label: 'Tunai', wallets: data.wallets.filter((w: { kind: string }) => w.kind === 'cash') }
 	]);
+
+	// Opened by the mobile nav Catat FAB via window event (no shared state).
+	$effect(() => {
+		const open = () => {
+			showForm = true;
+		};
+		window.addEventListener('open-transaction-form', open);
+		return () => window.removeEventListener('open-transaction-form', open);
+	});
+
+	const monthLongLabel = $derived(monthLong(data.month));
+	const insightIncome = $derived(data.summary.income);
+	const insightExpense = $derived(data.summary.expense);
+	const insightPct = $derived(
+		insightIncome > 0
+			? Math.min(100, Math.round((insightExpense / insightIncome) * 100))
+			: insightExpense > 0
+				? 100
+				: 0
+	);
 </script>
 
 <svelte:head>
 	<title>Beranda · Digital Wallet</title>
 </svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-6">
+<main class="mx-auto max-w-3xl px-4 pt-6 pb-28 md:pb-6">
 	<div class="page-header">
 		<div>
-			<h1 class="page-title">Beranda</h1>
-			<p class="page-subtitle">
-				{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(
-					new Date(`${data.month}-01T00:00:00`)
-				)}
-			</p>
+			<h1 class="page-title">Halo</h1>
+			<p class="page-subtitle">{monthLongLabel}</p>
 		</div>
-		<form method="GET" action="/" class="flex items-center gap-2">
-			<label for="month" class="sr-only">Bulan</label>
-			<input
-				id="month"
-				name="month"
-				type="month"
-				value={data.month}
-				onchange={onMonthChange}
-				class="input w-auto px-2.5 py-1.5"
-			/>
-		</form>
-		<button
-			onclick={() => (showForm = true)}
-			class="btn btn-primary px-3 py-2"
-		>
-			<Plus size={16} /> Catat
-		</button>
+		<div class="flex items-center gap-2">
+			<form method="GET" action="/" class="flex items-center gap-2">
+				<label for="month" class="sr-only">Bulan</label>
+				<input
+					id="month"
+					name="month"
+					type="month"
+					value={data.month}
+					onchange={onMonthChange}
+					class="input w-auto px-2.5 py-1.5"
+				/>
+			</form>
+			<button
+				onclick={() => (showForm = true)}
+				class="btn btn-primary px-3 py-2"
+			>
+				<Plus size={16} /> Catat
+			</button>
+		</div>
 	</div>
 
 	<section
-		class="rounded-xl bg-ctp-peach p-5"
+		class="rounded-xl bg-ctp-blue p-5"
 		aria-label="Total saldo"
 	>
-		<div class="flex items-center gap-1.5 text-xs text-white dark:text-ctp-crust/80">
-			<span><Wallet size={14} /></span>
+		<div class="flex items-center gap-1.5 text-xs text-white/85">
+			<span aria-hidden="true"><Wallet size={14} /></span>
 			Total Saldo
 		</div>
-		<p class="num mt-1 text-3xl font-bold tabular-nums text-white dark:text-ctp-crust">
+		<p class="currency-display num mt-1 text-white">
 			{formatIDR(data.totals.total)}
 		</p>
+		<button
+			onclick={() => (showForm = true)}
+			class="btn btn-primary mt-3 px-4 py-2"
+		>
+			<Plus size={16} /> Catat
+		</button>
+	</section>
+
+	<section class="mt-3 grid grid-cols-4 gap-3" aria-label="Aksi cepat">
+		<button
+			onclick={() => (showForm = true)}
+			class="flex flex-col items-center gap-1.5"
+		>
+			<span class="tile h-12 w-12 bg-ctp-peach/15 text-ctp-peach" aria-hidden="true"><Plus size={20} /></span>
+			<span class="text-xs font-medium text-ctp-text">Catat</span>
+		</button>
+		<a href="/transactions" class="flex flex-col items-center gap-1.5">
+			<span class="tile h-12 w-12 bg-ctp-blue/15 text-ctp-blue" aria-hidden="true"><ArrowLeftRight size={20} /></span>
+			<span class="text-xs font-medium text-ctp-text">Transfer</span>
+		</a>
+		<a href="/wallets" class="flex flex-col items-center gap-1.5">
+			<span class="tile h-12 w-12 bg-ctp-lavender/15 text-ctp-lavender" aria-hidden="true"><Wallet size={20} /></span>
+			<span class="text-xs font-medium text-ctp-text">Dompet</span>
+		</a>
+		<a href="/analytics" class="flex flex-col items-center gap-1.5">
+			<span class="tile h-12 w-12 bg-ctp-teal/15 text-ctp-teal" aria-hidden="true"><BarChart3 size={20} /></span>
+			<span class="text-xs font-medium text-ctp-text">Analitik</span>
+		</a>
+	</section>
+
+	<section class="card mt-3 p-4" aria-label="Wawasan bulan ini">
+		<div class="section-header">
+			<h2 class="section-title">Wawasan {monthLongLabel}</h2>
+		</div>
+		{#if insightIncome === 0 && insightExpense === 0}
+			<p class="text-sm text-ctp-subtext0">Belum ada pemasukan maupun pengeluaran bulan ini.</p>
+		{:else}
+			<p class="text-sm text-ctp-text">
+				{#if insightIncome === 0}
+					Belum ada pemasukan bulan ini.
+				{:else}
+					Pengeluaran <strong class="num tabular-nums">{insightPct}%</strong> dari pemasukan.
+				{/if}
+			</p>
+			<div
+				class="mt-2 h-2 overflow-hidden rounded-full bg-ctp-crust"
+				role="img"
+				aria-label="Pengeluaran {insightPct}% dari pemasukan bulan ini"
+			>
+				<div
+					class="h-full rounded-full bg-ctp-peach"
+					style="width: {insightPct}%"
+				></div>
+			</div>
+			<p class="num mt-2 text-xs tabular-nums text-ctp-subtext0">
+				<span class="font-semibold text-ctp-green">+ {formatIDR(insightIncome)}</span>
+				<span aria-hidden="true"> · </span>
+				<span class="font-semibold text-ctp-red">− {formatIDR(insightExpense)}</span>
+			</p>
+		{/if}
 	</section>
 
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
@@ -182,24 +261,26 @@
 		<a
 			href="/hutang"
 			aria-label="Ringkasan hutang dan piutang"
-			class="card mt-3 flex items-center justify-between gap-3 p-4 transition-colors duration-150 hover:bg-ctp-surface0"
+			class="card mt-3 grid grid-cols-2 divide-x divide-ctp-surface0 overflow-hidden transition-colors duration-150 hover:bg-ctp-surface0"
 		>
-			<div>
+			<div class="p-4">
 				<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
-					<span class="text-ctp-overlay1"><HandCoins size={14} /></span>
-					Hutang &amp; Piutang
+					<span class="tile h-6 w-6 bg-ctp-red/15 text-ctp-red" aria-hidden="true"><HandCoins size={14} /></span>
+					Hutang Saya
 				</div>
-				<p class="mt-1 text-sm">
-					<span class="num font-bold tabular-nums text-ctp-red">
-						−Hutang {formatIDR(data.debtTotals.owe)}
-					</span>
-					<span class="text-ctp-overlay0"> · </span>
-					<span class="num font-bold tabular-nums text-ctp-green">
-						+Piutang {formatIDR(data.debtTotals.owed)}
-					</span>
+				<p class="num mt-1 text-sm font-bold tabular-nums text-ctp-red">
+					− {formatIDR(data.debtTotals.owe)}
 				</p>
 			</div>
-			<ArrowUpRight size={16} class="text-ctp-overlay1" />
+			<div class="p-4">
+				<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+					<span class="tile h-6 w-6 bg-ctp-green/15 text-ctp-green" aria-hidden="true"><HandCoins size={14} /></span>
+					Piutang Saya
+				</div>
+				<p class="num mt-1 text-sm font-bold tabular-nums text-ctp-green">
+					+ {formatIDR(data.debtTotals.owed)}
+				</p>
+			</div>
 		</a>
 	{/if}
 
@@ -279,7 +360,7 @@
 								? 'bg-ctp-green/15 text-ctp-green'
 								: tx.type === 'expense'
 									? 'bg-ctp-red/15 text-ctp-red'
-									: 'bg-ctp-surface0 text-ctp-subtext1'}"
+									: 'bg-ctp-blue/15 text-ctp-blue'}"
 						>
 							{#if tx.type === 'income'}<ArrowDownLeft size={16} />{:else if tx.type === 'expense'}<ArrowUpRight size={16} />{:else}<ArrowLeftRight size={16} />{/if}
 						</span>
@@ -290,15 +371,11 @@
 							<p class="flex flex-wrap items-center gap-1.5 text-xs text-ctp-subtext0">
 								<span>{tx.category} · {formatDate(tx.date)}</span>
 							{#if tx.type === 'transfer'}
-								<span
-									class="chip bg-ctp-surface0 text-ctp-subtext1"
-								>
+								<span class="chip">
 									→ {tx.dest_wallet_name}
 								</span>
 							{/if}
-								<span
-									class="chip bg-ctp-surface0 text-ctp-subtext1"
-								>
+								<span class="chip">
 									{tx.wallet_name}
 								</span>
 							</p>
@@ -306,12 +383,12 @@
 						<span
 							class="num whitespace-nowrap text-sm font-bold tabular-nums
 							{tx.type === 'transfer'
-								? 'text-ctp-subtext1'
+								? 'text-ctp-blue'
 								: tx.type === 'income'
 									? 'text-ctp-green'
 									: 'text-ctp-red'}"
 						>
-							{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
+							{tx.type === 'income' ? '+' : '−'} {formatIDR(tx.amount)}
 						</span>
 					</li>
 				{/each}

@@ -101,7 +101,16 @@ html.dark {
 		@apply inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ctp-peach;
 	}
 	.btn-primary {
-		@apply bg-ctp-peach text-white hover:bg-ctp-maroon dark:text-ctp-crust;
+		@apply bg-ctp-peach text-white dark:text-ctp-crust;
+		border: 1px solid rgba(0, 0, 0, 0.06);
+		box-shadow: 0 2px 0 #d95305;
+	}
+	.btn-primary:hover {
+		background-color: #f75b02;
+	}
+	.btn-primary:active {
+		box-shadow: none;
+		transform: translateY(1px);
 	}
 	.btn-outline {
 		@apply border border-ctp-surface0 bg-ctp-base text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:bg-transparent dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
@@ -113,10 +122,38 @@ html.dark {
 		@apply text-ctp-subtext1 hover:bg-ctp-surface0 dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
 	}
 	.input {
-		@apply w-full rounded-lg border border-ctp-surface0 bg-ctp-base px-3 py-2 text-sm text-ctp-text placeholder:text-ctp-subtext0 focus:outline-2 focus:outline-offset-1 focus:outline-ctp-peach dark:border-ctp-surface1 dark:bg-ctp-surface0 dark:text-ctp-text dark:placeholder:text-ctp-subtext0;
+		@apply w-full rounded-lg px-3 py-2 text-sm text-ctp-text placeholder:text-ctp-subtext0 dark:text-ctp-text dark:placeholder:text-ctp-subtext0;
+		background-color: #ffffff;
+		border: 1.5px solid var(--color-ctp-surface0);
+		min-height: 44px;
+	}
+	html.dark .input {
+		background-color: var(--color-ctp-surface0);
+		border-color: var(--color-ctp-surface1);
+	}
+	.input:focus {
+		border-color: var(--color-ctp-peach);
+		box-shadow: 0 0 0 3px rgba(254, 100, 11, 0.15);
+		outline: none;
+	}
+	/* Pinned Rp prefix inside currency inputs (DESIGN.md §Inputs). */
+	.input-prefix {
+		@apply pointer-events-none absolute left-3 text-sm text-ctp-subtext0;
 	}
 	.chip {
 		@apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
+		min-height: 32px;
+		background-color: var(--color-ctp-crust);
+		color: var(--color-ctp-text);
+	}
+	.chip-active {
+		@apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold;
+		min-height: 32px;
+		background-color: var(--color-ctp-peach);
+		color: #ffffff;
+	}
+	html.dark .chip-active {
+		color: var(--color-ctp-crust);
 	}
 	.label {
 		@apply mb-1 block text-sm font-medium text-ctp-text;
@@ -151,16 +188,56 @@ html.dark {
 		@apply flex w-full items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ctp-surface0 active:bg-ctp-surface1;
 	}
 
-	/* Icon tile: geometry only; compose size/color with utilities
+	/* Icon tile: circular 40px standard per DESIGN.md §Shapes (template
+	   circular txn icons); compose smaller sizes with utilities
 	   (e.g. class="tile h-6 w-6 bg-ctp-sky/15 text-ctp-sky"). */
 	.tile {
-		@apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg;
+		@apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full;
 	}
 }
 
-/* Tabular numerals for money amounts (sole app.css addition of ui-deslop-pages). */
+/* Tabular IDR per DESIGN.md §Typography: tnum + cv05 + ss01 in Plus Jakarta Sans.
+   Pair with `Rp ` (regular space) from formatIDR; signs render `+ Rp`/`− Rp`. */
 .num {
 	font-variant-numeric: tabular-nums;
+	font-feature-settings:
+		'tnum' on,
+		'cv05' on,
+		'ss01' on;
+}
+
+/* Display scale for hero balances (28px desktop / 22px mobile, 700). */
+.currency-display {
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 36px;
+	letter-spacing: -0.01em;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings:
+		'tnum' on,
+		'cv05' on,
+		'ss01' on;
+}
+@media (max-width: 768px) {
+	.currency-display {
+		font-size: 22px;
+		line-height: 28px;
+	}
+}
+
+/* Signature dark surfaces (fixed colors, dark in BOTH modes): dark
+   "Ringkasan" summary card + dark floating mobile nav per templates. */
+.card-dark {
+	background-color: #2c2f47;
+	color: #f0efff;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+}
+
+/* Checkboxes/radios per DESIGN.md §Components: 18px box, peach fill. */
+input[type='checkbox'],
+input[type='radio'] {
+	accent-color: var(--color-ctp-peach);
 }
 
 /* LayerChart theme: map library CSS vars onto Catppuccin.

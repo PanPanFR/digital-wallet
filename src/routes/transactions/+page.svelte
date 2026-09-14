@@ -24,9 +24,47 @@
 	let bulkDeleting = $state(false);
 	let bulkForm: HTMLFormElement | null = null;
 
+	// Client-side Pemasukan/Pengeluaran filter (server API untouched).
+	let typeFilter = $state<'all' | 'income' | 'expense'>('all');
+	const visible = $derived(
+		typeFilter === 'all'
+			? data.transactions
+			: data.transactions.filter((t) => t.type === typeFilter)
+	);
+
+	const monthIncome = $derived(
+		data.transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+	);
+	const monthExpense = $derived(
+		data.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+	);
+
+	// Mini day-bars: per-day income+expense volume, last 14 days, peak highlighted.
+	const dayTotals = $derived((() => {
+		const map = new Map<string, number>();
+		for (const t of data.transactions) {
+			if (t.type === 'transfer') continue;
+			const day = t.date.slice(0, 10);
+			map.set(day, (map.get(day) ?? 0) + t.amount);
+		}
+		const days = [...map.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-14);
+		const peak = days.reduce((m, [, v]) => Math.max(m, v), 0);
+		return { days, peak };
+	})());
+
+	// Opened by the mobile nav Catat FAB via window event (no shared state).
+	$effect(() => {
+		const open = () => {
+			editing = null;
+			showForm = true;
+		};
+		window.addEventListener('open-transaction-form', open);
+		return () => window.removeEventListener('open-transaction-form', open);
+	});
+
 	const selectedCount = $derived(selected.size);
 	const allSelected = $derived(
-		data.transactions.length > 0 && selectedCount === data.transactions.length
+		visible.length > 0 && selectedCount === visible.length
 	);
 	const indeterminate = $derived(selectedCount > 0 && !allSelected);
 
@@ -34,10 +72,11 @@
 		if (selectAllEl) selectAllEl.indeterminate = indeterminate;
 	});
 
-	// ponytail: clear selection whenever page data changes (filter/pagination/delete)
+	// ponytail: clear selection whenever page data or type filter changes
 	// so stale ids from another view can never reach bulkDelete
 	$effect(() => {
 		void data.transactions;
+		void typeFilter;
 		selected = new Set();
 	});
 
@@ -49,7 +88,7 @@
 	}
 
 	function toggleAll(checked: boolean) {
-		selected = checked ? new Set(data.transactions.map((t) => t.id)) : new Set();
+		selected = checked ? new Set(visible.map((t) => t.id)) : new Set();
 	}
 
 	const handleBulkDelete: SubmitFunction = () => {
@@ -127,7 +166,7 @@
 	<title>Transaksi · Digital Wallet</title>
 </svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-6">
+<main class="mx-auto max-w-3xl px-4 pt-6 pb-28 md:pb-6">
 	<div class="page-header">
 		<h1 class="page-title">Transaksi</h1>
 		<button
@@ -138,34 +177,110 @@
 		</button>
 	</div>
 
+	<div
+		class="mb-3 flex gap-1 rounded-full bg-ctp-crust p-1"
+		role="group"
+		aria-label="Filter jenis transaksi"
+	>
+		<button
+			type="button"
+			onclick={() => (typeFilter = 'income')}
+			aria-pressed={typeFilter === 'income'}
+			class="flex-1 rounded-full px-3 py-1.5 text-sm transition-colors
+				{typeFilter === 'income'
+				? 'bg-[#2c2f47] font-semibold text-white'
+				: 'bg-ctp-crust text-ctp-text hover:bg-ctp-surface0'}"
+		>
+			Pemasukan
+		</button>
+		<button
+			type="button"
+			onclick={() => (typeFilter = 'expense')}
+			aria-pressed={typeFilter === 'expense'}
+			class="flex-1 rounded-full px-3 py-1.5 text-sm transition-colors
+				{typeFilter === 'expense'
+				? 'bg-[#2c2f47] font-semibold text-white'
+				: 'bg-ctp-crust text-ctp-text hover:bg-ctp-surface0'}"
+		>
+			Pengeluaran
+		</button>
+		<button
+			type="button"
+			onclick={() => (typeFilter = 'all')}
+			aria-pressed={typeFilter === 'all'}
+			class="flex-1 rounded-full px-3 py-1.5 text-sm transition-colors
+				{typeFilter === 'all'
+				? 'bg-[#2c2f47] font-semibold text-white'
+				: 'bg-ctp-crust text-ctp-text hover:bg-ctp-surface0'}"
+		>
+			Semua
+		</button>
+	</div>
+
+	<section class="card mb-3 p-4" aria-label="Total transaksi">
+		<div class="section-header">
+			<h2 class="section-title">Total{data.month ? ` ${monthLabel}` : ''}</h2>
+		</div>
+		<p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+			<span class="num font-bold tabular-nums text-ctp-green">+ {formatIDR(monthIncome)}</span>
+			<span class="num font-bold tabular-nums text-ctp-red">− {formatIDR(monthExpense)}</span>
+			<span
+				class="num ml-auto font-bold tabular-nums
+				{monthIncome - monthExpense < 0 ? 'text-ctp-red' : 'text-ctp-text'}"
+			>
+				{monthIncome - monthExpense < 0 ? '−' : '+'} {formatIDR(Math.abs(monthIncome - monthExpense))}
+			</span>
+		</p>
+	</section>
+
+	<section class="card mb-3 p-4" aria-label="Aktivitas harian">
+		<div class="section-header">
+			<h2 class="section-title">Aktivitas Harian</h2>
+			{#if dayTotals.peak > 0}
+				<span class="chip">Puncak {formatIDR(dayTotals.peak)}</span>
+			{/if}
+		</div>
+		{#if dayTotals.days.length === 0}
+			<p class="py-2 text-center text-sm text-ctp-subtext0">
+				Belum ada data harian.
+			</p>
+		{:else}
+			<div
+				class="flex h-16 items-end gap-1"
+				role="img"
+				aria-label="Grafik batang aktivitas harian, puncak {formatIDR(dayTotals.peak)}"
+			>
+				{#each dayTotals.days as [day, total] (day)}
+					<div
+						title="{formatDate(day)} · {formatIDR(total)}"
+						style="height: {dayTotals.peak > 0 ? Math.max(8, Math.round((total / dayTotals.peak) * 100)) : 0}%"
+						class="flex-1 rounded-sm
+							{total === dayTotals.peak ? 'bg-ctp-peach' : 'bg-ctp-surface1'}"
+					></div>
+				{/each}
+			</div>
+		{/if}
+	</section>
+
 	<div class="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter jenis dompet">
 		<a
 			href={filterHref(null)}
 			aria-current={isChipActive(null) ? 'true' : undefined}
-			class="chip px-3 py-1 transition-colors
-				{isChipActive(null)
-				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
-				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
+			class="{isChipActive(null) ? 'chip-active' : 'chip'} px-3 py-1"
 		>
 			Semua
 		</a>
 		<a
 			href={filterHref('digital')}
 			aria-current={isChipActive('digital') ? 'true' : undefined}
-			class="chip px-3 py-1 transition-colors
-				{isChipActive('digital')
-				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
-				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
+			class="{isChipActive('digital') ? 'chip-active' : 'chip'} px-3 py-1"
 		>
 			Digital
 		</a>
 		<a
 			href={filterHref('cash')}
 			aria-current={isChipActive('cash') ? 'true' : undefined}
-			class="chip px-3 py-1 transition-colors
-				{isChipActive('cash')
-				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
-				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
+			class="{isChipActive('cash') ? 'chip-active' : 'chip'} px-3 py-1"
 		>
 			Tunai
 		</a>
@@ -264,8 +379,14 @@
 				Menghapus yang terpilih di halaman ini saja.
 			</p>
 		{/if}
+		{#if visible.length === 0}
+			<p class="card mt-2 px-4 py-8 text-center text-sm text-ctp-subtext0">
+				Tidak ada transaksi {typeFilter === 'income' ? 'pemasukan' : 'pengeluaran'} pada
+				tampilan ini.
+			</p>
+		{:else}
 		<ul class="list">
-			{#each data.transactions as tx (tx.id)}
+			{#each visible as tx (tx.id)}
 				<li class="list-row {selected.has(tx.id) ? 'bg-ctp-peach/10' : ''}">
 					<input
 						type="checkbox"
@@ -280,7 +401,7 @@
 							? 'bg-ctp-green/15 text-ctp-green'
 							: tx.type === 'expense'
 								? 'bg-ctp-red/15 text-ctp-red'
-								: 'bg-ctp-surface0 text-ctp-subtext0'}"
+								: 'bg-ctp-blue/15 text-ctp-blue'}"
 						aria-hidden="true"
 					>
 						{#if tx.type === 'income'}
@@ -298,24 +419,22 @@
 					</p>
 				</div>
 				{#if tx.type === 'transfer' && tx.dest_wallet_name}
-					<span
-						class="chip bg-ctp-surface0/60 text-ctp-subtext1"
-					>
+					<span class="chip">
 						→ {tx.dest_wallet_name}
 					</span>
 				{/if}
-				<span class="chip bg-ctp-surface0/60 text-ctp-subtext1">
+				<span class="chip">
 					{tx.wallet_name}
 				</span>
 					<span
 						class="num tabular-nums text-sm font-semibold whitespace-nowrap
 						{tx.type === 'transfer'
-							? 'text-ctp-subtext1'
+							? 'text-ctp-blue'
 							: tx.type === 'income'
 								? 'text-ctp-green'
 								: 'text-ctp-red'}"
 					>
-						{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
+						{tx.type === 'income' ? '+' : '−'} {formatIDR(tx.amount)}
 					</span>
 					<div class="flex gap-1">
 						<button
@@ -336,6 +455,7 @@
 				</li>
 			{/each}
 		</ul>
+		{/if}
 		{#if data.hasMore}
 			<div class="mt-3 text-center">
 				<a

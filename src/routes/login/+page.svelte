@@ -10,7 +10,7 @@
 	<title>{data.mode === 'setup' ? 'Atur Password' : 'Login'} · Digital Wallet</title>
 </svelte:head>
 
-<main class="flex min-h-screen items-center justify-center bg-ctp-crust px-4 dark:bg-ctp-crust">
+<main class="flex min-h-screen items-center justify-center bg-ctp-base px-4 dark:bg-ctp-crust">
 	<div class="card w-full max-w-sm space-y-4 p-6">
 		<div class="flex flex-col items-center gap-2 text-center">
 			<div class="tile h-10 w-10 bg-ctp-peach text-white shadow-xs dark:text-ctp-crust">

@@ -136,7 +136,7 @@
 							<button
 								onclick={() => ask(ex)}
 								disabled={asking}
-								class="rounded-full border border-ctp-peach/30 bg-ctp-peach/10 px-3 py-1.5 text-xs text-ctp-peach transition-colors hover:bg-ctp-peach/15 disabled:opacity-50"
+								class="chip transition-colors hover:bg-ctp-surface0 disabled:opacity-50"
 							>
 								{ex}
 							</button>
@@ -150,7 +150,7 @@
 					<div
 						class="max-w-[85%] whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm
 						{msg.role === 'user'
-							? 'bg-ctp-peach text-white dark:text-ctp-crust'
+							? 'bg-ctp-peach/15 text-ctp-text'
 							: msg.error
 								? 'bg-ctp-red/10 text-ctp-red'
 								: 'bg-ctp-surface0 text-ctp-text'}"

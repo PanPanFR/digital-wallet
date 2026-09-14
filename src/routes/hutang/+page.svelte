@@ -12,9 +12,9 @@
 
 	let { data } = $props();
 
-	// Avatar initial: neutral surface, direction meaning lives on the chip (icon + text)
+	// Avatar initial: tinted by direction (owe red / owed green)
 	function avatarTint(d: DebtRow) {
-		return 'bg-ctp-surface0 text-ctp-subtext0';
+		return d.direction === 'owe' ? 'bg-ctp-red/15 text-ctp-red' : 'bg-ctp-green/15 text-ctp-green';
 	}
 
 	function initials(name: string) {
@@ -323,7 +323,7 @@
 											<CircleCheck size={12} aria-hidden="true" /> Lunas
 										</span>
 									{:else}
-										<span class="chip bg-ctp-yellow/20 font-semibold text-ctp-yellow ring-1 ring-inset ring-ctp-yellow/40">
+										<span class="chip bg-ctp-yellow/20 font-semibold text-[#9a6b0f] ring-1 ring-inset ring-ctp-yellow/40">
 											<Clock size={12} aria-hidden="true" /> Belum
 										</span>
 									{/if}

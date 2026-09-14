@@ -117,7 +117,7 @@
 							onclick={() => (type = 'transfer')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'transfer'
-								? 'border-ctp-subtext0 bg-ctp-surface0 text-ctp-text'
+								? 'border-ctp-blue bg-ctp-blue/10 text-ctp-blue'
 								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
 						>
 							<ArrowLeftRight size={14} /> Transfer
@@ -178,24 +178,27 @@
 							</span>
 						{/if}
 					</div>
-					<input
-						id="tx-amount"
-						name="amount"
-						type="number"
-						min="1"
-						step="1"
-						required
-						placeholder="0"
-						bind:value={amount}
-						aria-invalid={!!errors.amount}
-						class="input num text-lg font-semibold tabular-nums {errors.amount ? 'border-ctp-red' : ''}"
-					/>
+					<div class="relative">
+						<span class="input-prefix top-1/2 -translate-y-1/2" aria-hidden="true">Rp</span>
+						<input
+							id="tx-amount"
+							name="amount"
+							type="number"
+							min="1"
+							step="1"
+							required
+							placeholder="0"
+							bind:value={amount}
+							aria-invalid={!!errors.amount}
+							class="input num pl-9 text-lg font-semibold tabular-nums {errors.amount ? 'border-ctp-red' : ''}"
+						/>
+					</div>
 					{#if errors.amount}<p class="text-xs text-ctp-red mt-1">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
 						{#each AMOUNT_PRESETS as [value, label] (label)}
 							<button
 								type="button"
-								class="chip bg-ctp-surface0 text-ctp-subtext1 transition-colors hover:bg-ctp-surface1"
+								class="chip transition-colors hover:bg-ctp-surface0"
 								onclick={() => addPreset(value)}
 							>
 								{label}
