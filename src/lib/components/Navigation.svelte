@@ -89,14 +89,14 @@
 	class="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden"
 >
 	<div
-		class="flex items-center justify-around rounded-full bg-[#2c2f47]/95 px-2 py-1.5 text-[#f0efff] shadow-lg backdrop-blur"
+		class="grid grid-cols-5 items-center rounded-full bg-[#2c2f47]/95 px-2 py-1.5 text-[#f0efff] shadow-lg backdrop-blur"
 	>
 		{#each primaryMobileItems.slice(0, 2) as item (item.href)}
 			{@const active = page.url.pathname === item.href}
 			<a
 				href={item.href}
 				aria-current={active ? 'page' : undefined}
-				class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
+				class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 					{active
 					? 'font-semibold text-ctp-peach'
 					: 'text-white/70'}"
@@ -105,20 +105,22 @@
 				{item.label}
 			</a>
 		{/each}
-		<button
-			type="button"
-			onclick={openTransactionForm}
-			aria-label="Catat transaksi"
-			class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ctp-peach text-white shadow-md transition-transform duration-150 active:scale-95"
-		>
-			<Plus size={22} />
-		</button>
-		{#each primaryMobileItems.slice(2) as item (item.href)}
+		<div class="flex justify-center">
+			<button
+				type="button"
+				onclick={openTransactionForm}
+				aria-label="Catat transaksi"
+				class="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-ctp-peach text-white shadow-md ring-4 ring-[#2c2f47] transition-transform duration-150 active:scale-95"
+			>
+				<Plus size={22} />
+			</button>
+		</div>
+		{#each primaryMobileItems.slice(2, 3) as item (item.href)}
 			{@const active = page.url.pathname === item.href}
 			<a
 				href={item.href}
 				aria-current={active ? 'page' : undefined}
-				class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
+				class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 					{active
 					? 'font-semibold text-ctp-peach'
 					: 'text-white/70'}"
@@ -132,7 +134,7 @@
 			onclick={() => (isMoreOpen = true)}
 			aria-haspopup="dialog"
 			aria-expanded={isMoreOpen}
-			class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
+			class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 				{isMoreActive
 				? 'font-semibold text-ctp-peach'
 				: 'text-white/70'}"
@@ -169,6 +171,19 @@
 				</span>
 			</a>
 		{/each}
+		<a
+			href="/analytics"
+			aria-current={page.url.pathname === '/analytics' ? 'page' : undefined}
+			class="flex items-center gap-3 rounded-lg px-3 py-2.5 {page.url.pathname === '/analytics'
+				? 'bg-ctp-surface0 text-ctp-peach'
+				: 'text-ctp-subtext1 hover:bg-ctp-surface0 hover:text-ctp-text'}"
+		>
+			<BarChart3 size={20} />
+			<span class="flex flex-col">
+				<span class="text-sm font-medium">Analitik</span>
+				<span class="text-xs text-ctp-subtext1">Tren & kategori</span>
+			</span>
+		</a>
 	</nav>
 	<div class="flex items-center justify-between border-t border-ctp-surface0 pt-3">
 		<ThemeToggle />
