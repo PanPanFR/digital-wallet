@@ -286,7 +286,7 @@
 		</a>
 	</div>
 
-	<form method="GET" action="/transactions" class="mb-4 flex flex-wrap items-center gap-2">
+	<form method="GET" action="/transactions" class="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
 		<label for="month" class="text-sm text-ctp-subtext1">Bulan</label>
 		<input
 			id="month"
@@ -294,7 +294,7 @@
 			type="month"
 			value={data.month ?? ''}
 			onchange={onMonthChange}
-			class="input w-auto"
+			class="input w-full sm:w-auto"
 		/>
 		<label for="wallet-filter" class="text-sm text-ctp-subtext1">Dompet</label>
 		<WalletSelect
@@ -303,7 +303,7 @@
 			value={selectedWalletId}
 			placeholder="Semua dompet"
 			placeholderDisabled={false}
-			className="w-auto"
+			className="w-full sm:w-auto"
 			wallets={data.wallets}
 		/>
 		<input
@@ -312,13 +312,13 @@
 			placeholder="Cari deskripsi…"
 			value={data.q}
 			aria-label="Cari deskripsi"
-			class="input w-auto"
+			class="input w-full sm:w-auto"
 		/>
 		<select
 			name="category"
 			aria-label="Kategori"
 			value={data.category}
-			class="input w-auto"
+			class="input w-full sm:w-auto"
 		>
 			<option value="">Semua kategori</option>
 			{#each CATEGORIES as c (c)}
@@ -327,12 +327,12 @@
 		</select>
 		<button
 			type="submit"
-			class="btn btn-outline px-3 py-1.5"
+			class="btn btn-outline col-span-2 px-3 py-2 sm:col-span-1 sm:py-1.5"
 		>
 			Terapkan
 		</button>
 		{#if data.month || data.wallet || data.q || data.category}
-			<a href="/transactions" class="text-sm text-ctp-peach hover:underline">
+			<a href="/transactions" class="col-span-2 text-sm text-ctp-peach hover:underline sm:col-span-1">
 				Reset
 			</a>
 		{/if}
@@ -387,7 +387,7 @@
 		{:else}
 		<ul class="list">
 			{#each visible as tx (tx.id)}
-				<li class="list-row {selected.has(tx.id) ? 'bg-ctp-peach/10' : ''}">
+				<li class="list-row min-w-0 {selected.has(tx.id) ? 'bg-ctp-peach/10' : ''}">
 					<input
 						type="checkbox"
 						checked={selected.has(tx.id)}
@@ -419,15 +419,15 @@
 					</p>
 				</div>
 				{#if tx.type === 'transfer' && tx.dest_wallet_name}
-					<span class="chip">
+					<span class="chip max-sm:sr-only">
 						→ {tx.dest_wallet_name}
 					</span>
 				{/if}
-				<span class="chip">
+				<span class="chip max-sm:sr-only">
 					{tx.wallet_name}
 				</span>
 					<span
-						class="num tabular-nums text-sm font-semibold whitespace-nowrap
+						class="num text-[13px] font-semibold whitespace-nowrap tabular-nums sm:text-sm
 						{tx.type === 'transfer'
 							? 'text-ctp-blue'
 							: tx.type === 'income'
@@ -436,18 +436,18 @@
 					>
 						{tx.type === 'income' ? '+' : '−'} {formatIDR(tx.amount)}
 					</span>
-					<div class="flex gap-1">
+					<div class="flex shrink-0 gap-0.5 sm:gap-1">
 						<button
 							onclick={() => openEdit(tx)}
 							aria-label="Edit {tx.description}"
-							class="btn btn-ghost rounded-lg p-1.5"
+							class="btn btn-ghost min-h-[40px] min-w-[40px] rounded-lg p-2 sm:min-h-0 sm:min-w-0 sm:p-1.5"
 						>
 							<Pencil size={15} />
 						</button>
 						<button
 							onclick={() => (deleteTarget = tx)}
 							aria-label="Hapus {tx.description}"
-							class="btn btn-ghost rounded-lg p-1.5 hover:text-ctp-red"
+							class="btn btn-ghost min-h-[40px] min-w-[40px] rounded-lg p-2 hover:text-ctp-red sm:min-h-0 sm:min-w-0 sm:p-1.5"
 						>
 							<Trash2 size={15} />
 						</button>

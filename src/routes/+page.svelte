@@ -89,13 +89,13 @@
 </svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 pt-6 pb-28 md:pb-6">
-	<div class="page-header">
+	<div class="page-header flex-wrap">
 		<div>
 			<h1 class="page-title">Halo</h1>
 			<p class="page-subtitle">{monthLongLabel}</p>
 		</div>
-		<div class="flex items-center gap-2">
-			<form method="GET" action="/" class="flex items-center gap-2">
+		<div class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+			<form method="GET" action="/" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
 				<label for="month" class="sr-only">Bulan</label>
 				<input
 					id="month"
@@ -103,12 +103,12 @@
 					type="month"
 					value={data.month}
 					onchange={onMonthChange}
-					class="input w-auto px-2.5 py-1.5"
+					class="input min-w-0 flex-1 px-2.5 py-1.5 sm:w-auto sm:flex-none"
 				/>
 			</form>
 			<button
 				onclick={() => (showForm = true)}
-				class="btn btn-primary px-3 py-2"
+				class="btn btn-primary shrink-0 px-3 py-2"
 			>
 				<Plus size={16} /> Catat
 			</button>
@@ -126,33 +126,27 @@
 		<p class="currency-display num mt-1 text-white">
 			{formatIDR(data.totals.total)}
 		</p>
-		<button
-			onclick={() => (showForm = true)}
-			class="btn btn-primary mt-3 px-4 py-2"
-		>
-			<Plus size={16} /> Catat
-		</button>
 	</section>
 
-	<section class="mt-3 grid grid-cols-4 gap-3" aria-label="Aksi cepat">
+	<section class="mt-3 grid grid-cols-4 gap-2 sm:gap-3" aria-label="Aksi cepat">
 		<button
 			onclick={() => (showForm = true)}
-			class="flex flex-col items-center gap-1.5"
+			class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight"
 		>
 			<span class="tile h-12 w-12 bg-ctp-peach/15 text-ctp-peach" aria-hidden="true"><Plus size={20} /></span>
-			<span class="text-xs font-medium text-ctp-text">Catat</span>
+			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Catat</span>
 		</button>
-		<a href="/transactions" class="flex flex-col items-center gap-1.5">
+		<a href="/transactions" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
 			<span class="tile h-12 w-12 bg-ctp-blue/15 text-ctp-blue" aria-hidden="true"><ArrowLeftRight size={20} /></span>
-			<span class="text-xs font-medium text-ctp-text">Transfer</span>
+			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Transfer</span>
 		</a>
-		<a href="/wallets" class="flex flex-col items-center gap-1.5">
+		<a href="/wallets" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
 			<span class="tile h-12 w-12 bg-ctp-lavender/15 text-ctp-lavender" aria-hidden="true"><Wallet size={20} /></span>
-			<span class="text-xs font-medium text-ctp-text">Dompet</span>
+			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Dompet</span>
 		</a>
-		<a href="/analytics" class="flex flex-col items-center gap-1.5">
+		<a href="/analytics" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
 			<span class="tile h-12 w-12 bg-ctp-teal/15 text-ctp-teal" aria-hidden="true"><BarChart3 size={20} /></span>
-			<span class="text-xs font-medium text-ctp-text">Analitik</span>
+			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Analitik</span>
 		</a>
 	</section>
 
@@ -189,28 +183,28 @@
 	</section>
 
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
-		<div class="card p-4">
-			<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+		<div class="card min-w-0 p-4">
+			<div class="flex items-center gap-1.5 truncate text-xs text-ctp-subtext1">
 				<span class="tile h-6 w-6 bg-ctp-surface0 text-ctp-subtext1"><Smartphone size={14} /></span>
 				Digital
 			</div>
-			<p class="num mt-1 text-lg font-bold tabular-nums text-ctp-text">
+			<p class="num mt-1 truncate text-base font-bold tabular-nums text-ctp-text sm:text-lg">
 				{formatIDR(data.totals.digital)}
 			</p>
 		</div>
 
-		<div class="card p-4">
-			<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+		<div class="card min-w-0 p-4">
+			<div class="flex items-center gap-1.5 truncate text-xs text-ctp-subtext1">
 				<span class="tile h-6 w-6 bg-ctp-surface0 text-ctp-subtext1"><Banknote size={14} /></span>
 				Tunai
 			</div>
-			<p class="num mt-1 text-lg font-bold tabular-nums text-ctp-text">
+			<p class="num mt-1 truncate text-base font-bold tabular-nums text-ctp-text sm:text-lg">
 				{formatIDR(data.totals.cash)}
 			</p>
 		</div>
 	</section>
 
-	<section class="card mt-3 p-4" aria-label="Tren 6 bulan terakhir">
+	<section class="card mt-3 min-w-0 p-4" aria-label="Tren 6 bulan terakhir">
 		<div class="section-header">
 			<h2 class="section-title">Tren 6 Bulan</h2>
 			<div class="flex items-center gap-3 text-xs text-ctp-subtext1">
@@ -226,7 +220,7 @@
 		</div>
 		{#if hasTrend}
 			<div
-				class="h-56"
+				class="h-56 w-full min-w-0"
 				role="img"
 				aria-label="Grafik batang tren pemasukan dan pengeluaran enam bulan terakhir"
 			>
