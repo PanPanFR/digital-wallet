@@ -158,6 +158,11 @@ html.dark {
 	}
 }
 
+/* Tabular numerals for money amounts (sole app.css addition of ui-deslop-pages). */
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
 /* LayerChart theme: map library CSS vars onto Catppuccin.
    Deliberately unlayered so it wins over any library-layered defaults.
    No layerchart theme CSS is imported. */

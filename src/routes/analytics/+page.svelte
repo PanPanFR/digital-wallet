@@ -18,8 +18,8 @@
 
 	const reduceMotion = $derived(prefersReducedMotion.current);
 	const trendSeries = [
-		{ key: 'income', label: 'Pemasukan', color: 'var(--color-emerald-500)' },
-		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-red-500)' }
+		{ key: 'income', label: 'Pemasukan', color: 'var(--color-ctp-green)' },
+		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-ctp-red)' }
 	];
 	const hasMonthly = $derived(
 		Array.isArray(data.monthlyTotals) &&
@@ -89,7 +89,7 @@
 			<p class="page-subtitle">{monthLabel}</p>
 		</div>
 		<form method="GET" action="/analytics" class="flex items-center gap-2">
-			<label for="month" class="text-sm text-slate-600 dark:text-slate-400">Bulan</label>
+			<label for="month" class="text-sm text-ctp-subtext0">Bulan</label>
 			<input id="month" name="month" type="month" value={data.month} onchange={onMonthChange} class="input w-auto px-2.5 py-1.5" />
 		</form>
 	</div>
@@ -99,21 +99,18 @@
 		<div class="card p-5">
 			<h2 class="section-title mb-4">Per Kategori</h2>
 			{#if data.categoryTotals.length === 0}
-				<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+				<p class="py-6 text-center text-sm text-ctp-subtext0">
 					Tidak ada data untuk {monthLabel}.
 				</p>
 			{:else}
 				{#if sumByType.expense > 0}
 					{@const expenseCats = data.categoryTotals.filter((c) => c.type === 'expense')}
-					<!-- ponytail: fixed 6-color muted palette cycles if >6 categories -->
-					{@const palette = [
-						'var(--color-sky-500)',
-						'var(--color-amber-500)',
-						'var(--color-emerald-500)',
-						'var(--color-red-500)',
-						'var(--color-violet-500)',
-						'var(--color-slate-500)'
-					]}
+			<!-- ponytail: fixed 3-color warm Catppuccin palette cycles if >3 categories -->
+			{@const palette = [
+				'var(--color-ctp-red)',
+				'var(--color-ctp-peach)',
+				'var(--color-ctp-maroon)'
+			]}
 					<div class="flex flex-col items-center gap-5 sm:flex-row">
 						<div
 							class="h-40 w-40 shrink-0"
@@ -146,9 +143,9 @@
 										style="background-color: {palette[i % palette.length]}"
 										aria-hidden="true"
 									></span>
-									<span class="truncate text-slate-700 dark:text-slate-300">{cat.category}</span>
-									<span class="ml-auto shrink-0 tabular-nums text-slate-500 dark:text-slate-400">{pct}%</span>
-									<span class="shrink-0 font-semibold tabular-nums text-slate-900 dark:text-white">
+									<span class="truncate text-ctp-text">{cat.category}</span>
+									<span class="num ml-auto shrink-0 tabular-nums text-ctp-subtext0">{pct}%</span>
+									<span class="num shrink-0 font-semibold tabular-nums text-ctp-text">
 										{formatIDR(cat.total)}
 									</span>
 								</li>
@@ -162,6 +159,10 @@
 					role="img"
 					aria-label="Perbandingan pemasukan dan pengeluaran per kategori"
 				>
+					<div class="mb-2 flex justify-center gap-4 text-xs text-ctp-subtext0" aria-hidden="true">
+						<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-ctp-green"></span> Pemasukan</span>
+						<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-ctp-red"></span> Pengeluaran</span>
+					</div>
 					<BarChart
 						orientation="horizontal"
 						data={categoryChart}
@@ -182,25 +183,6 @@
 						}}
 					/>
 				</div>
-				<ul class="mt-5 space-y-3">
-					{#each data.categoryTotals as cat (cat.category + cat.type)}
-						{@const pct = Math.round((cat.total / (sumByType[cat.type] || 1)) * 100)}
-						<li>
-							<div class="mb-1 flex items-baseline justify-between gap-2 text-sm">
-								<span class="font-medium text-slate-900 dark:text-white">{cat.category}</span>
-								<span class="tabular-nums text-slate-500 dark:text-slate-400">{pct}%</span>
-								<span
-									class="ml-auto font-semibold tabular-nums
-									{cat.type === 'income'
-										? 'text-emerald-600 dark:text-emerald-400'
-										: 'text-slate-900 dark:text-white'}"
-								>
-									{formatIDR(cat.total)}
-								</span>
-							</div>
-						</li>
-					{/each}
-				</ul>
 			{/if}
 		</div>
 	</section>
@@ -210,7 +192,7 @@
 		<div class="card p-5">
 			<h2 class="section-title mb-4">Pengeluaran per Dompet</h2>
 			{#if data.walletTotals.length === 0 || data.walletTotals.every((w) => w.total === 0)}
-				<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+				<p class="py-6 text-center text-sm text-ctp-subtext0">
 					Belum ada pengeluaran bulan ini.
 				</p>
 			{:else}
@@ -224,7 +206,7 @@
 						data={walletChart}
 						x="total"
 						y="name"
-						series={[{ key: 'total', label: 'Pengeluaran', color: 'var(--color-slate-400)' }]}
+						series={[{ key: 'total', label: 'Pengeluaran', color: 'var(--color-ctp-overlay0)' }]}
 						height={walletChartHeight}
 						xDomain={[0, null]}
 						motion={reduceMotion ? 'none' : undefined}
@@ -242,8 +224,8 @@
 					{#each data.walletTotals as w (w.id)}
 						<li>
 							<div class="mb-1 flex items-baseline justify-between gap-2 text-sm">
-								<span class="font-medium text-slate-900 dark:text-white">{w.name}</span>
-								<span class="ml-auto font-semibold tabular-nums text-slate-900 dark:text-white">
+								<span class="font-medium text-ctp-text">{w.name}</span>
+								<span class="num ml-auto font-semibold tabular-nums text-ctp-text">
 									{formatIDR(w.total)}
 								</span>
 							</div>
@@ -283,9 +265,9 @@
 					}}
 				/>
 			</div>
-			<div class="mt-3 flex justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-				<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> Pemasukan</span>
-				<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-red-500"></span> Pengeluaran</span>
+			<div class="mt-3 flex justify-center gap-4 text-xs text-ctp-subtext0">
+				<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-ctp-green"></span> Pemasukan</span>
+				<span class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-ctp-red"></span> Pengeluaran</span>
 			</div>
 		</div>
 	</section>

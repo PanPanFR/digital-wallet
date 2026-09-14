@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import { Pencil, Trash2, Plus, Sparkles, CheckCircle2 } from '@lucide/svelte';
+	import { Pencil, Trash2, Plus, Sparkles, CheckCircle2, TriangleAlert } from '@lucide/svelte';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import { notify } from '$lib/stores.svelte';
@@ -165,7 +165,7 @@
 
 		{#if changed && !form?.error}
 			<p
-			class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
+			class="rounded-lg border border-ctp-green/30 bg-ctp-green/10 px-3 py-2 text-sm text-ctp-green"
 			role="status"
 		>
 			Password berhasil diubah.
@@ -219,7 +219,7 @@
 
 		{#if form?.error}
 			<p
-				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+				class="rounded-lg border border-ctp-red/30 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 				role="alert"
 			>
 				{form.error}
@@ -238,16 +238,16 @@
 
 	<section class="card space-y-4 p-4">
 		<h2 class="section-title flex items-center gap-1.5">
-			<Sparkles size={16} class="text-orange-600 dark:text-orange-400" /> AI / Copilot
+			<Sparkles size={16} class="text-ctp-peach" /> AI / Copilot
 		</h2>
-		<p class="text-sm text-slate-500 dark:text-slate-400">
+		<p class="text-sm text-ctp-subtext0">
 			Tambahkan penyedia OpenAI-compatible (base URL + API key). Tanpa penyedia, Copilot memakai
 			konfigurasi server (GOOGLE_API_KEY). API key disimpan di database — jangan bagikan akun ini.
 		</p>
 
 	{#if listError}
 		<p
-			class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+			class="rounded-lg border border-ctp-red/30 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 			role="alert"
 		>
 			{listError}
@@ -255,11 +255,11 @@
 	{/if}
 
 		{#if providers.length === 0}
-			<p class="text-sm text-slate-500 dark:text-slate-400">
+			<p class="text-sm text-ctp-subtext0">
 				Belum ada penyedia. Tambahkan satu di bawah untuk memilih model dari halaman Copilot.
 			</p>
 		{:else}
-			<ul class="divide-y divide-slate-100 dark:divide-slate-800">
+			<ul class="divide-y divide-ctp-surface0 dark:divide-ctp-surface0">
 				{#each providers as p (p.id)}
 					<li class="py-3">
 						{#if editingId === p.id}
@@ -277,7 +277,7 @@
 										bind:value={editName}
 										required
 										maxlength="50"
-										class="input {editErrors.name ? 'border-red-400 dark:border-red-500' : ''}"
+										class="input {editErrors.name ? 'border-ctp-red' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -288,7 +288,7 @@
 										bind:value={editBaseUrl}
 										placeholder="https://…/v1"
 										required
-										class="input {editErrors.baseUrl ? 'border-red-400 dark:border-red-500' : ''}"
+										class="input {editErrors.baseUrl ? 'border-ctp-red' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -298,7 +298,7 @@
 										type="password"
 										bind:value={editApiKey}
 										autocomplete="new-password"
-										class="input {editErrors.apiKey ? 'border-red-400 dark:border-red-500' : ''}"
+										class="input {editErrors.apiKey ? 'border-ctp-red' : ''}"
 									/>
 								</label>
 								<label class="block text-sm">
@@ -308,11 +308,11 @@
 										bind:value={editModels}
 										required
 										rows="2"
-										class="input {editErrors.models ? 'border-red-400 dark:border-red-500' : ''}"
+										class="input {editErrors.models ? 'border-ctp-red' : ''}"
 									></textarea>
 								</label>
 								{#if Object.keys(editErrors).length > 0}
-									<p class="text-xs text-red-600 dark:text-red-400">
+									<p class="text-xs text-ctp-red">
 										{Object.values(editErrors)[0]}
 									</p>
 								{/if}
@@ -339,13 +339,13 @@
 										{p.name}
 										{#if p.id === activeId}
 											<span
-												class="ml-1 inline-flex items-center gap-0.5 text-xs text-emerald-600 dark:text-emerald-400"
+												class="ml-1 inline-flex items-center gap-0.5 text-xs text-ctp-green"
 											>
 												<CheckCircle2 size={12} /> aktif
 											</span>
 										{/if}
 									</p>
-									<p class="truncate text-xs text-slate-500 dark:text-slate-400">
+									<p class="truncate text-xs text-ctp-subtext0">
 										{p.baseUrl}
 									</p>
 								</div>
@@ -355,7 +355,7 @@
 										<button
 											type="submit"
 											title="Jadikan aktif"
-											class="rounded-lg px-2 py-1.5 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-950"
+											class="rounded-lg px-2 py-1.5 text-xs font-medium text-ctp-peach transition-colors hover:bg-ctp-peach/10"
 										>
 											Aktifkan
 										</button>
@@ -373,7 +373,7 @@
 									type="button"
 									onclick={() => (deleteTarget = p)}
 									title="Hapus"
-									class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
+									class="btn btn-ghost rounded-lg p-1.5 hover:text-ctp-red"
 								>
 									<Trash2 size={15} />
 								</button>
@@ -388,7 +388,7 @@
 			method="POST"
 			action="?/save-provider"
 			use:enhance={handleAdd}
-			class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800"
+			class="space-y-3 border-t border-ctp-surface0 pt-4 dark:border-ctp-surface1"
 		>
 			<p class="text-sm font-medium">Tambah penyedia</p>
 			<label class="block text-sm">
@@ -399,7 +399,7 @@
 					required
 					maxlength="50"
 					placeholder="cth. 9router, OpenAI, Groq"
-					class="input {addErrors.name ? 'border-red-400 dark:border-red-500' : ''}"
+					class="input {addErrors.name ? 'border-ctp-red' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -410,7 +410,7 @@
 					bind:value={addBaseUrl}
 					placeholder="https://…/v1"
 					required
-					class="input {addErrors.baseUrl ? 'border-red-400 dark:border-red-500' : ''}"
+					class="input {addErrors.baseUrl ? 'border-ctp-red' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -421,7 +421,7 @@
 					bind:value={addApiKey}
 					autocomplete="new-password"
 					required
-					class="input {addErrors.apiKey ? 'border-red-400 dark:border-red-500' : ''}"
+					class="input {addErrors.apiKey ? 'border-ctp-red' : ''}"
 				/>
 			</label>
 			<label class="block text-sm">
@@ -432,11 +432,11 @@
 					required
 					rows="2"
 					placeholder="gemini-2.5-flash, gpt-4o-mini"
-					class="input {addErrors.models ? 'border-red-400 dark:border-red-500' : ''}"
+					class="input {addErrors.models ? 'border-ctp-red' : ''}"
 				></textarea>
 			</label>
 			{#if Object.keys(addErrors).length > 0}
-				<p class="text-xs text-red-600 dark:text-red-400">{Object.values(addErrors)[0]}</p>
+				<p class="text-xs text-ctp-red">{Object.values(addErrors)[0]}</p>
 			{/if}
 			<button
 				type="submit"
@@ -454,13 +454,14 @@
 			<a class="btn btn-outline" href="/api/backup/export?format=json">Unduh Backup (JSON)</a>
 			<a class="btn btn-outline" href="/api/backup/export?format=csv">Unduh Transaksi (CSV)</a>
 		</div>
-		<p class="text-sm text-slate-500 dark:text-slate-400">
-			File backup berisi API key — simpan baik-baik.
+		<p class="flex items-start gap-2 rounded-lg border border-ctp-yellow/30 bg-ctp-yellow/15 px-3 py-2 text-sm text-ctp-yellow">
+			<TriangleAlert size={16} class="mt-0.5 shrink-0" aria-hidden="true" />
+			<span>File backup berisi API key — simpan baik-baik.</span>
 		</p>
 
 		{#if importSummary}
 			<p
-				class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
+				class="rounded-lg border border-ctp-green/30 bg-ctp-green/10 px-3 py-2 text-sm text-ctp-green"
 				role="status"
 			>
 				{importSummary}
@@ -468,14 +469,14 @@
 		{/if}
 		{#if importError}
 			<p
-				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+				class="rounded-lg border border-ctp-red/30 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 				role="alert"
 			>
 				{importError}
 			</p>
 		{/if}
 		{#if Object.keys(importErrors).length > 0}
-			<p class="text-xs text-red-600 dark:text-red-400">{Object.values(importErrors)[0]}</p>
+			<p class="text-xs text-ctp-red">{Object.values(importErrors)[0]}</p>
 		{/if}
 
 		<form
@@ -512,7 +513,7 @@
 		<form method="POST" action="/?/logout">
 			<button
 				type="submit"
-				class="btn w-full border border-red-300 py-2 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/50"
+				class="btn btn-danger w-full py-2"
 			>
 				Keluar
 			</button>

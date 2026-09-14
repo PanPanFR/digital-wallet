@@ -81,12 +81,12 @@
 
 <main class="mx-auto flex h-[calc(100dvh-7rem)] max-w-2xl flex-col px-4 pb-4 pt-6">
 	<h1 class="page-title mb-1 flex items-center gap-2">
-		<Sparkles size={20} class="text-orange-600 dark:text-orange-400" /> Copilot
+		<Sparkles size={20} class="text-ctp-peach" /> Copilot
 	</h1>
 
 	{#if providers.length > 0}
 		<div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
-			<label class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+			<label class="flex items-center gap-1.5 text-ctp-subtext1">
 				<span class="text-xs">AI</span>
 				<select
 					bind:value={providerId}
@@ -99,7 +99,7 @@
 				</select>
 			</label>
 			{#if provider}
-				<label class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+				<label class="flex items-center gap-1.5 text-ctp-subtext1">
 					<span class="text-xs">Model</span>
 					<select
 						bind:value={model}
@@ -120,11 +120,11 @@
 			{#if chat.length === 0}
 				<div class="flex flex-col items-center gap-4 py-10 text-center">
 					<div
-						class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+						class="flex h-12 w-12 items-center justify-center rounded-xl bg-ctp-peach/15 text-ctp-peach"
 					>
 						<Sparkles size={24} />
 					</div>
-					<p class="text-sm text-slate-500 dark:text-slate-400">
+					<p class="text-sm text-ctp-subtext0">
 						Tanya apa saja tentang keuanganmu.
 					</p>
 					<div class="flex flex-wrap justify-center gap-2">
@@ -136,7 +136,7 @@
 							<button
 								onclick={() => ask(ex)}
 								disabled={asking}
-								class="rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs text-orange-700 transition-colors hover:bg-orange-100 disabled:opacity-50 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-400 dark:hover:bg-orange-900"
+								class="rounded-full border border-ctp-peach/30 bg-ctp-peach/10 px-3 py-1.5 text-xs text-ctp-peach transition-colors hover:bg-ctp-peach/15 disabled:opacity-50"
 							>
 								{ex}
 							</button>
@@ -150,16 +150,16 @@
 					<div
 						class="max-w-[85%] whitespace-pre-wrap rounded-xl px-4 py-2.5 text-sm
 						{msg.role === 'user'
-							? 'bg-orange-600 text-white'
+							? 'bg-ctp-peach text-white dark:text-ctp-crust'
 							: msg.error
-								? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'}"
+								? 'bg-ctp-red/10 text-ctp-red'
+								: 'bg-ctp-surface0 text-ctp-text'}"
 					>
 						{msg.content}
 						{#if msg.error}
 							<div>
 								<button
-									class="mt-1 inline-flex items-center gap-1 text-xs font-medium underline text-orange-700 transition-colors hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+									class="mt-1 inline-flex items-center gap-1 text-xs font-medium underline text-ctp-peach transition-colors hover:text-ctp-maroon"
 									onclick={() => ask(lastQuestion)}
 									disabled={asking}
 								>
@@ -173,7 +173,7 @@
 
 			{#if asking}
 				<div class="flex justify-start">
-					<div class="rounded-xl bg-slate-100 px-4 py-2.5 text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+					<div class="rounded-xl bg-ctp-surface0 px-4 py-2.5 text-sm text-ctp-subtext0">
 						<Loader2 size={14} class="inline animate-spin" /> Sedang menganalisis...
 					</div>
 				</div>
@@ -181,7 +181,7 @@
 		</div>
 
 		<form
-			class="flex gap-2 border-t border-slate-200 pt-3 dark:border-slate-800"
+			class="flex gap-2 border-t border-ctp-surface0 pt-3 dark:border-ctp-surface1"
 			onsubmit={(e) => {
 				e.preventDefault();
 				ask();
@@ -200,7 +200,7 @@
 				type="submit"
 				disabled={asking || !question.trim()}
 				aria-label="Kirim pertanyaan"
-				class="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-orange-600 text-white transition-colors hover:bg-orange-700 disabled:pointer-events-none disabled:opacity-50"
+				class="btn btn-primary h-[38px] w-[38px] shrink-0 rounded-full"
 			>
 				<Send size={16} />
 			</button>

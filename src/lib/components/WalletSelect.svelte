@@ -38,7 +38,7 @@
 	bind:value
 	{required}
 	aria-invalid={invalid ? 'true' : undefined}
-	class="input {invalid ? 'border-red-400 dark:border-red-500' : ''} {className}"
+	class="input {invalid ? 'border-ctp-red' : ''} {className}"
 	{...restProps}
 >
 	{#if placeholder}

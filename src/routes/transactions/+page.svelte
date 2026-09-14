@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Plus, Pencil, Trash2, ReceiptText } from '@lucide/svelte';
+	import { Plus, Pencil, Trash2, ReceiptText, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from '@lucide/svelte';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import WalletSelect from '$lib/components/WalletSelect.svelte';
@@ -144,8 +144,8 @@
 			aria-current={isChipActive(null) ? 'true' : undefined}
 			class="chip px-3 py-1 transition-colors
 				{isChipActive(null)
-				? 'bg-orange-600 text-white'
-				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
+				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
+				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 		>
 			Semua
 		</a>
@@ -154,8 +154,8 @@
 			aria-current={isChipActive('digital') ? 'true' : undefined}
 			class="chip px-3 py-1 transition-colors
 				{isChipActive('digital')
-				? 'bg-orange-600 text-white'
-				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
+				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
+				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 		>
 			Digital
 		</a>
@@ -164,15 +164,15 @@
 			aria-current={isChipActive('cash') ? 'true' : undefined}
 			class="chip px-3 py-1 transition-colors
 				{isChipActive('cash')
-				? 'bg-orange-600 text-white'
-				: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
+				? 'bg-ctp-peach/25 font-semibold text-ctp-peach ring-1 ring-inset ring-ctp-peach'
+				: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 		>
 			Tunai
 		</a>
 	</div>
 
 	<form method="GET" action="/transactions" class="mb-4 flex flex-wrap items-center gap-2">
-		<label for="month" class="text-sm text-slate-600 dark:text-slate-400">Bulan</label>
+		<label for="month" class="text-sm text-ctp-subtext1">Bulan</label>
 		<input
 			id="month"
 			name="month"
@@ -181,7 +181,7 @@
 			onchange={onMonthChange}
 			class="input w-auto"
 		/>
-		<label for="wallet-filter" class="text-sm text-slate-600 dark:text-slate-400">Dompet</label>
+		<label for="wallet-filter" class="text-sm text-ctp-subtext1">Dompet</label>
 		<WalletSelect
 			id="wallet-filter"
 			name="wallet"
@@ -217,7 +217,7 @@
 			Terapkan
 		</button>
 		{#if data.month || data.wallet || data.q || data.category}
-			<a href="/transactions" class="text-sm text-orange-700 hover:underline dark:text-orange-400">
+			<a href="/transactions" class="text-sm text-ctp-peach hover:underline">
 				Reset
 			</a>
 		{/if}
@@ -226,27 +226,27 @@
 	{#if data.transactions.length === 0}
 		<div class="card py-12 text-center">
 			<div
-				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-ctp-surface0 text-ctp-subtext0"
 				aria-hidden="true"
 			>
 				<ReceiptText size={22} />
 			</div>
-			<p class="text-sm font-medium text-slate-900 dark:text-white">
+			<p class="text-sm font-medium text-ctp-text">
 				Belum ada transaksi{data.month ? ` untuk ${monthLabel}` : ''}
 			</p>
-			<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+			<p class="mt-1 text-xs text-ctp-subtext0">
 				Catat transaksi pertama dengan tombol "Catat" di atas.
 			</p>
 		</div>
 	{:else}
 		<div class="mb-2 flex items-center gap-3">
-			<label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+			<label class="flex items-center gap-2 text-sm text-ctp-subtext1">
 				<input
 					type="checkbox"
 					checked={allSelected}
 					onchange={(e) => toggleAll(e.currentTarget.checked)}
 					aria-label="Pilih semua transaksi di halaman ini"
-					class="h-4 w-4 rounded border-slate-300 dark:border-slate-700 accent-orange-600"
+					class="h-4 w-4 rounded border-ctp-surface1 accent-ctp-peach"
 				/>
 				Pilih semua
 			</label>
@@ -260,48 +260,60 @@
 			{/if}
 		</div>
 		{#if selectedCount > 0}
-			<p class="mb-2 text-xs text-slate-500 dark:text-slate-400">
+			<p class="mb-2 text-xs text-ctp-subtext0">
 				Menghapus yang terpilih di halaman ini saja.
 			</p>
 		{/if}
 		<ul class="list">
 			{#each data.transactions as tx (tx.id)}
-				<li class="list-row">
+				<li class="list-row {selected.has(tx.id) ? 'bg-ctp-peach/10' : ''}">
 					<input
 						type="checkbox"
 						checked={selected.has(tx.id)}
 						onchange={(e) => toggleRow(tx.id, e.currentTarget.checked)}
 						aria-label="Pilih transaksi {tx.description}"
-						class="h-4 w-4 shrink-0 rounded border-slate-300 dark:border-slate-700 accent-orange-600"
+						class="h-4 w-4 shrink-0 rounded border-ctp-surface1 accent-ctp-peach"
 					/>
+					<span
+						class="tile h-8 w-8
+						{tx.type === 'income'
+							? 'bg-ctp-green/15 text-ctp-green'
+							: tx.type === 'expense'
+								? 'bg-ctp-red/15 text-ctp-red'
+								: 'bg-ctp-surface0 text-ctp-subtext0'}"
+						aria-hidden="true"
+					>
+						{#if tx.type === 'income'}
+							<ArrowDownLeft size={16} />
+						{:else if tx.type === 'expense'}
+							<ArrowUpRight size={16} />
+						{:else}
+							<ArrowLeftRight size={16} />
+						{/if}
+					</span>
 					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm font-medium text-slate-900 dark:text-white">{tx.description}</p>
-					<p class="text-xs text-slate-500 dark:text-slate-400">
+						<p class="truncate text-sm font-medium text-ctp-text">{tx.description}</p>
+					<p class="text-xs text-ctp-subtext0">
 						{tx.category} · {formatDate(tx.date)}
 					</p>
 				</div>
 				{#if tx.type === 'transfer' && tx.dest_wallet_name}
 					<span
-						class="chip bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+						class="chip bg-ctp-surface0/60 text-ctp-subtext1"
 					>
 						→ {tx.dest_wallet_name}
 					</span>
 				{/if}
-				<span
-					class="chip
-					{tx.wallet_kind === 'digital'
-						? 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-						: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'}"
-				>
+				<span class="chip bg-ctp-surface0/60 text-ctp-subtext1">
 					{tx.wallet_name}
 				</span>
 					<span
-						class="tabular-nums text-sm font-semibold whitespace-nowrap
+						class="num tabular-nums text-sm font-semibold whitespace-nowrap
 						{tx.type === 'transfer'
-							? 'text-slate-600 dark:text-slate-300'
+							? 'text-ctp-subtext1'
 							: tx.type === 'income'
-								? 'text-emerald-600 dark:text-emerald-400'
-								: 'text-red-600 dark:text-red-400'}"
+								? 'text-ctp-green'
+								: 'text-ctp-red'}"
 					>
 						{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
 					</span>
@@ -316,7 +328,7 @@
 						<button
 							onclick={() => (deleteTarget = tx)}
 							aria-label="Hapus {tx.description}"
-							class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
+							class="btn btn-ghost rounded-lg p-1.5 hover:text-ctp-red"
 						>
 							<Trash2 size={15} />
 						</button>
