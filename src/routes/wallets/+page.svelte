@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon, X } from '@lucide/svelte';
+	import { Pencil, Trash2, Smartphone, Banknote, Wallet as WalletIcon, X, CircleAlert } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import ModalShell from '$lib/components/ModalShell.svelte';
 	import { notify } from '$lib/stores.svelte';
@@ -140,8 +140,8 @@
 			onclick={() => (kind = 'digital')}
 			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'digital'
-				? 'border-sky-400 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
+				? 'border-ctp-peach bg-ctp-peach/15 text-ctp-peach'
+				: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 		>
 			<Smartphone size={14} /> Digital
 		</button>
@@ -151,8 +151,8 @@
 			onclick={() => (kind = 'cash')}
 			class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm font-medium transition-colors
 				{kind === 'cash'
-				? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
-				: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
+				? 'border-ctp-peach bg-ctp-peach/15 text-ctp-peach'
+				: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 		>
 			<Banknote size={14} /> Tunai
 		</button>
@@ -172,12 +172,12 @@
 				required
 				bind:value={editName}
 				aria-invalid={!!editErrors.name}
-				class="input {editErrors.name ? 'border-red-400' : ''}"
+				class="input {editErrors.name ? 'border-ctp-red' : ''}"
 			/>
-			{#if editErrors.name}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{editErrors.name}</p>{/if}
+			{#if editErrors.name}<p class="mt-1 text-xs text-ctp-red">{editErrors.name}</p>{/if}
 		</div>
 		{@render kindToggle()}
-		{#if editErrors.kind}<p class="text-xs text-red-600 dark:text-red-400">{editErrors.kind}</p>{/if}
+		{#if editErrors.kind}<p class="text-xs text-ctp-red">{editErrors.kind}</p>{/if}
 		<div class="flex justify-end gap-2">
 			<button
 				type="button"
@@ -202,10 +202,7 @@
 	{:else}
 		<div class="list-row">
 		<div
-			class="tile h-9 w-9
-			{w.kind === 'digital'
-				? 'bg-sky-50 text-sky-500 dark:bg-sky-950'
-				: 'bg-amber-50 text-amber-500 dark:bg-amber-950'}"
+			class="tile h-9 w-9 bg-ctp-surface0 text-ctp-subtext0"
 			aria-hidden="true"
 		>
 				{#if w.kind === 'digital'}
@@ -215,8 +212,8 @@
 				{/if}
 			</div>
 			<div class="min-w-0 flex-1">
-				<p class="truncate text-sm font-medium text-slate-900 dark:text-white">{w.name}</p>
-				<p class="tabular-nums text-sm font-semibold {w.balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}">
+				<p class="truncate text-sm font-medium text-ctp-text">{w.name}</p>
+				<p class="num tabular-nums text-sm font-semibold {w.balance < 0 ? 'text-ctp-red' : 'text-ctp-text'}">
 					{formatIDR(w.balance)}
 				</p>
 			</div>
@@ -224,7 +221,7 @@
 				<button
 					onclick={() => openAdjust(w)}
 					aria-label="Atur saldo {w.name}"
-					class="btn btn-ghost rounded-lg p-1.5 hover:text-emerald-600"
+					class="btn btn-ghost rounded-lg p-1.5"
 				>
 					<WalletIcon size={15} />
 				</button>
@@ -238,7 +235,7 @@
 				<button
 					onclick={() => (deleteTarget = w)}
 					aria-label="Hapus {w.name}"
-					class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
+					class="btn btn-ghost rounded-lg p-1.5 hover:text-ctp-red"
 				>
 					<Trash2 size={15} />
 				</button>
@@ -268,15 +265,15 @@
 				placeholder="cth. GoPay, BCA, uang cash"
 				bind:value={name}
 				aria-invalid={!!errors.name}
-				class="input {errors.name ? 'border-red-400' : ''}"
+				class="input {errors.name ? 'border-ctp-red' : ''}"
 			/>
-			{#if errors.name}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>{/if}
+			{#if errors.name}<p class="mt-1 text-xs text-ctp-red">{errors.name}</p>{/if}
 		</div>
 
 		<div>
 			<span class="label">Jenis</span>
 			{@render kindToggle()}
-			{#if errors.kind}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.kind}</p>{/if}
+			{#if errors.kind}<p class="mt-1 text-xs text-ctp-red">{errors.kind}</p>{/if}
 			<input type="hidden" name="kind" value={kind} />
 		</div>
 
@@ -286,8 +283,8 @@
 					type="button"
 					class="chip py-1 transition-colors
 						{name === p.name && kind === p.kind
-						? 'bg-orange-600 text-white'
-						: 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'}"
+						? 'bg-ctp-peach/20 text-ctp-peach ring-1 ring-inset ring-ctp-peach'
+						: 'bg-ctp-surface0/60 text-ctp-subtext1 hover:bg-ctp-surface0'}"
 					onclick={() => applyPreset(p)}
 				>
 					{p.name}
@@ -307,9 +304,10 @@
 
 	{#if listError}
 		<p
-			class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+			class="mb-4 flex items-center gap-2 rounded-lg border border-ctp-red/30 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 			role="alert"
 		>
+			<CircleAlert size={16} aria-hidden="true" />
 			{listError}
 		</p>
 	{/if}
@@ -317,13 +315,13 @@
 	{#if wallets.length === 0}
 		<div class="card py-12 text-center">
 			<div
-				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+				class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-ctp-surface0 text-ctp-subtext0"
 				aria-hidden="true"
 			>
 				<WalletIcon size={22} />
 			</div>
-			<p class="text-sm font-medium text-slate-900 dark:text-white">Belum ada dompet</p>
-			<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+			<p class="text-sm font-medium text-ctp-text">Belum ada dompet</p>
+			<p class="mt-1 text-xs text-ctp-subtext0">
 				Tambahkan dompet pertama lewat formulir di atas.
 			</p>
 		</div>
@@ -331,7 +329,7 @@
 		{#if digital.length > 0}
 			<section class="mb-6" aria-label="Dompet digital">
 				<h2 class="section-title mb-2 flex items-center gap-1.5">
-					<span class="text-sky-500"><Smartphone size={16} /></span> Digital
+					<span class="text-ctp-subtext0"><Smartphone size={16} /></span> Digital
 				</h2>
 				<ul
 					class="list"
@@ -346,7 +344,7 @@
 		{#if cash.length > 0}
 			<section aria-label="Dompet tunai">
 				<h2 class="section-title mb-2 flex items-center gap-1.5">
-					<span class="text-amber-500"><Banknote size={16} /></span> Tunai
+					<span class="text-ctp-subtext0"><Banknote size={16} /></span> Tunai
 				</h2>
 				<ul
 					class="list"
@@ -381,7 +379,7 @@
 		<form method="POST" action="?/adjust" use:enhance={handleAdjust} novalidate class="space-y-4">
 			<input type="hidden" name="id" value={adjustTarget.id} />
 			<div class="flex items-center justify-between">
-				<h3 class="font-semibold text-slate-900 dark:text-white">Atur Saldo — {adjustTarget.name}</h3>
+				<h3 class="font-semibold text-ctp-text">Atur Saldo — {adjustTarget.name}</h3>
 				<button
 					type="button"
 					class="btn btn-ghost p-1.5"
@@ -401,13 +399,13 @@
 					required
 					bind:value={adjustValue}
 					aria-invalid={!!adjustErrors.newBalance}
-					class="input tabular-nums {adjustErrors.newBalance ? 'border-red-400' : ''}"
+					class="input num tabular-nums {adjustErrors.newBalance ? 'border-ctp-red' : ''}"
 				/>
 				{#if adjustErrors.newBalance}
-					<p class="mt-1 text-xs text-red-600 dark:text-red-400">{adjustErrors.newBalance}</p>
+					<p class="mt-1 text-xs text-ctp-red">{adjustErrors.newBalance}</p>
 				{/if}
 			</div>
-			<p class="text-xs text-slate-500 dark:text-slate-400">
+			<p class="text-xs text-ctp-subtext0">
 				Saldo saat ini {formatIDR(adjustTarget.balance)}. Perubahan dicatat sebagai transaksi "Penyesuaian saldo".
 			</p>
 			<div class="flex justify-end gap-2">

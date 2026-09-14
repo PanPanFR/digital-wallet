@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { Plus, Trash2, TrendingDown, TrendingUp, ArrowLeftRight, X } from '@lucide/svelte';
+	import { Plus, Trash2, TrendingDown, TrendingUp, ArrowLeftRight, X, CircleCheck, Clock } from '@lucide/svelte';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import ModalShell from '$lib/components/ModalShell.svelte';
 	import WalletSelect from '$lib/components/WalletSelect.svelte';
@@ -12,11 +12,9 @@
 
 	let { data } = $props();
 
-	// Avatar initial tint per row direction (owe=red, owed=emerald)
+	// Avatar initial: neutral surface, direction meaning lives on the chip (icon + text)
 	function avatarTint(d: DebtRow) {
-		return d.direction === 'owe'
-			? 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400'
-			: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400';
+		return 'bg-ctp-surface0 text-ctp-subtext0';
 	}
 
 	function initials(name: string) {
@@ -32,11 +30,11 @@
 		);
 	}
 
-	// KPI icon tiles: red hutang, emerald piutang, slate selisih
+	// KPI icon tiles: red hutang, green piutang, neutral selisih
 	const kpiTiles = {
-		owe: 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
-		owed: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
-		diff: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+		owe: 'bg-ctp-red/10 text-ctp-red',
+		owed: 'bg-ctp-green/10 text-ctp-green',
+		diff: 'bg-ctp-surface0 text-ctp-subtext0'
 	} as const;
 
 	// Create modal
@@ -207,8 +205,8 @@
 					<TrendingDown size={16} />
 				</span>
 				<div>
-					<p class="text-xs text-slate-500 dark:text-slate-400">Hutang Saya</p>
-					<p class="text-lg font-bold tabular-nums text-red-600 dark:text-red-400">
+					<p class="text-xs text-ctp-subtext0">Hutang Saya</p>
+					<p class="num text-lg font-bold tabular-nums text-ctp-red">
 						{formatIDR(data.totals.owe)}
 					</p>
 				</div>
@@ -221,8 +219,8 @@
 					<TrendingUp size={16} />
 				</span>
 				<div>
-					<p class="text-xs text-slate-500 dark:text-slate-400">Piutang Saya</p>
-					<p class="text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+					<p class="text-xs text-ctp-subtext0">Piutang Saya</p>
+					<p class="num text-lg font-bold tabular-nums text-ctp-green">
 						{formatIDR(data.totals.owed)}
 					</p>
 				</div>
@@ -235,10 +233,10 @@
 					<ArrowLeftRight size={16} />
 				</span>
 				<div>
-					<p class="text-xs text-slate-500 dark:text-slate-400">Selisih</p>
+					<p class="text-xs text-ctp-subtext0">Selisih</p>
 					<p
-						class="text-lg font-bold tabular-nums
-						{diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}"
+						class="num text-2xl font-extrabold tabular-nums
+						{diff < 0 ? 'text-ctp-red' : 'text-ctp-text'}"
 					>
 						{formatIDR(diff)}
 					</p>
@@ -251,17 +249,17 @@
 		{#if data.debts.length === 0}
 			<div class="card py-12 text-center">
 				<div
-					class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+					class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-ctp-surface0 text-ctp-subtext0"
 					aria-hidden="true"
 				>
 					<TrendingDown size={22} />
 				</div>
-				<p class="text-sm font-medium text-slate-900 dark:text-white">Belum ada catatan hutang.</p>
-				<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Catat utang atau piutang dengan tombol Catat.</p>
+				<p class="text-sm font-medium text-ctp-text">Belum ada catatan hutang.</p>
+				<p class="mt-1 text-xs text-ctp-subtext0">Catat utang atau piutang dengan tombol Catat.</p>
 			</div>
 		{:else}
 			<div class="mb-2 flex items-center justify-between gap-3">
-				<label for="select-all-debts" class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+				<label for="select-all-debts" class="flex items-center gap-2 text-sm text-ctp-subtext1">
 					<input
 						id="select-all-debts"
 						bind:this={selectAllEl}
@@ -269,13 +267,13 @@
 						checked={allSelected}
 						onchange={toggleAll}
 						aria-label="Pilih semua catatan hutang"
-						class="h-4 w-4 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
+						class="h-4 w-4 rounded border-ctp-surface0 accent-ctp-peach dark:border-ctp-surface1"
 					/>
 					Pilih semua
 				</label>
 				{#if selectedCount > 0}
 					<div class="flex items-center gap-2">
-						<span class="text-xs text-slate-400 dark:text-slate-500">Menghapus yang terpilih di halaman ini saja.</span>
+						<span class="text-xs text-ctp-subtext0">Menghapus yang terpilih di halaman ini saja.</span>
 						<button
 							type="button"
 							onclick={() => (showBulkConfirm = true)}
@@ -296,7 +294,7 @@
 								checked={selected.has(d.id)}
 								onchange={() => toggleRow(d.id)}
 								aria-label="Pilih catatan hutang {d.person}"
-								class="h-4 w-4 shrink-0 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
+								class="h-4 w-4 shrink-0 rounded border-ctp-surface0 accent-ctp-peach dark:border-ctp-surface1"
 							/>
 							<span
 								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold {avatarTint(
@@ -308,56 +306,59 @@
 							</span>
 							<div class="min-w-0 flex-1">
 								<div class="flex flex-wrap items-center gap-1.5">
-									<p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+									<p class="truncate text-sm font-medium text-ctp-text">
 										{d.person}
 									</p>
-									<span
-										class="chip
-										{d.direction === 'owe'
-										? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-										: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'}"
-									>
-										{d.direction === 'owe' ? 'Utang' : 'Piutang'}
-									</span>
+								<span
+									class="chip
+									{d.direction === 'owe'
+									? 'bg-ctp-red/10 text-ctp-red'
+									: 'bg-ctp-green/10 text-ctp-green'}"
+								>
+									{#if d.direction === 'owe'}<TrendingDown size={12} aria-hidden="true" />{:else}<TrendingUp size={12} aria-hidden="true" />{/if}
+									{d.direction === 'owe' ? 'Utang' : 'Piutang'}
+								</span>
 									{#if d.remaining === 0}
-										<span
-											class="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-										>
-											Lunas
+										<span class="chip bg-ctp-green/10 text-ctp-green">
+											<CircleCheck size={12} aria-hidden="true" /> Lunas
+										</span>
+									{:else}
+										<span class="chip bg-ctp-yellow/20 font-semibold text-ctp-yellow ring-1 ring-inset ring-ctp-yellow/40">
+											<Clock size={12} aria-hidden="true" /> Belum
 										</span>
 									{/if}
 								</div>
-								<p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+								<p class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-ctp-subtext0">
 									<span>{formatDate(d.date)}</span>
 									{#if d.wallet_name}
 										<!-- ponytail: DebtRow has no wallet_kind; neutral chip until load adds it -->
-										<span class="rounded-full bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+										<span class="rounded-full bg-ctp-surface0 px-1.5 py-0.5 font-medium text-ctp-subtext0">
 											{d.wallet_name}
 										</span>
 									{/if}
 								</p>
 								<div
-									class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+									class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ctp-surface0"
 									role="progressbar"
 									aria-valuenow={Math.round(pct(d))}
 									aria-valuemin={0}
 									aria-valuemax={100}
 									aria-label="Progress pelunasan {d.person}"
 								>
-									<div
-										class="h-full rounded-full {d.direction === 'owe' ? 'bg-red-500' : 'bg-emerald-500'}"
-										style="width: {pct(d)}%"
-									></div>
+								<div
+									class="h-full rounded-full bg-ctp-peach"
+									style="width: {pct(d)}%"
+								></div>
 								</div>
 							</div>
 							<div class="flex flex-col items-end gap-1.5">
 								<div class="text-right">
-									<p class="text-xs text-slate-500 dark:text-slate-400">Sisa</p>
+									<p class="text-xs text-ctp-subtext0">Sisa</p>
 									<span
-										class="whitespace-nowrap text-sm font-bold tabular-nums
+										class="num whitespace-nowrap text-sm font-bold tabular-nums
 										{d.remaining === 0
-										? 'text-emerald-600 dark:text-emerald-400'
-										: 'text-slate-900 dark:text-white'}"
+										? 'text-ctp-green'
+										: 'text-ctp-text'}"
 									>
 										{formatIDR(d.remaining)}
 									</span>
@@ -371,7 +372,7 @@
 									<button
 										onclick={() => (deleteTarget = d)}
 										aria-label="Hapus catatan hutang {d.person}"
-										class="btn btn-ghost rounded-lg p-1.5 hover:text-red-600 dark:hover:text-red-400"
+										class="btn btn-ghost rounded-lg p-1.5 hover:text-ctp-red"
 									>
 										<Trash2 size={15} />
 									</button>
@@ -390,7 +391,7 @@
 	<div class="flex items-center justify-between">
 		<div>
 			<h2 id="debt-form-title" class="font-semibold">Catat Utang</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-400">Catat utang kamu atau piutang orang lain</p>
+			<p class="text-xs text-ctp-subtext0">Catat utang kamu atau piutang orang lain</p>
 		</div>
 		<button class="btn btn-ghost p-1.5" aria-label="Tutup dialog" disabled={createSubmitting} onclick={() => (showCreate = false)}>
 			<X size={18} />
@@ -409,9 +410,9 @@
 						placeholder="cth. Budi, Ibu Sari"
 						bind:value={person}
 						aria-invalid={!!errors.person}
-						class="input {errors.person ? 'border-red-400' : ''}"
+						class="input {errors.person ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.person}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.person}</p>{/if}
+					{#if errors.person}<p class="mt-1 text-xs text-ctp-red">{errors.person}</p>{/if}
 				</div>
 
 				<div>
@@ -424,8 +425,8 @@
 							onclick={() => (direction = 'owe')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owe'
-								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
+								? 'border-ctp-red bg-ctp-red/10 text-ctp-red'
+								: 'border-ctp-surface0 text-ctp-subtext0 hover:bg-ctp-surface0 dark:border-ctp-surface1'}"
 						>
 							<TrendingDown size={14} /> Saya Berhutang
 						</button>
@@ -435,20 +436,20 @@
 							onclick={() => (direction = 'owed')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 text-sm transition-colors
 								{direction === 'owed'
-								? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
-								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'}"
+								? 'border-ctp-green bg-ctp-green/10 text-ctp-green'
+								: 'border-ctp-surface0 text-ctp-subtext0 hover:bg-ctp-surface0 dark:border-ctp-surface1'}"
 						>
 							<TrendingUp size={14} /> Saya Meminjamkan
 						</button>
 					</div>
-					{#if errors.direction}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.direction}</p>{/if}
+					{#if errors.direction}<p class="mt-1 text-xs text-ctp-red">{errors.direction}</p>{/if}
 				</div>
 
 				<div>
 					<div class="mb-1 flex items-center justify-between">
-						<label for="debt-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
+						<label for="debt-amount" class="text-sm font-medium text-ctp-text">Jumlah (IDR)</label>
 						{#if amount && Number(amount) > 0}
-							<span class="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+							<span class="num text-xs font-semibold tabular-nums text-ctp-subtext0">
 								Rp {Number(amount).toLocaleString('id-ID')}
 							</span>
 						{/if}
@@ -463,14 +464,14 @@
 						placeholder="0"
 						bind:value={amount}
 						aria-invalid={!!errors.amount}
-						class="input font-semibold tabular-nums {errors.amount ? 'border-red-400' : ''}"
+						class="input num font-semibold tabular-nums {errors.amount ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.amount}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount}</p>{/if}
+					{#if errors.amount}<p class="mt-1 text-xs text-ctp-red">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
 						{#each AMOUNT_PRESETS as [value, label] (label)}
 							<button
 								type="button"
-								class="chip bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+								class="chip bg-ctp-surface0 text-ctp-subtext1 transition-colors hover:bg-ctp-surface1"
 								onclick={() => addPreset(value)}
 							>
 								{label}
@@ -487,9 +488,9 @@
 						type="date"
 						bind:value={date}
 						aria-invalid={!!errors.date}
-						class="input {errors.date ? 'border-red-400' : ''}"
+						class="input {errors.date ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.date}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.date}</p>{/if}
+					{#if errors.date}<p class="mt-1 text-xs text-ctp-red">{errors.date}</p>{/if}
 				</div>
 
 				<div class="space-y-2">
@@ -499,7 +500,7 @@
 							type="checkbox"
 							name="reduceBalance"
 							bind:checked={reduceBalance}
-							class="mt-0.5 h-4 w-4 rounded border-slate-300 accent-orange-600 dark:border-slate-600"
+							class="mt-0.5 h-4 w-4 rounded border-ctp-surface0 accent-ctp-peach dark:border-ctp-surface1"
 						/>
 						<span>Langsung kurangi saldo dompet ini</span>
 					</label>
@@ -515,7 +516,7 @@
 								invalid={!!errors.walletId}
 								wallets={data.wallets}
 							/>
-							{#if errors.walletId}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{errors.walletId}</p>{/if}
+							{#if errors.walletId}<p class="mt-1 text-xs text-ctp-red">{errors.walletId}</p>{/if}
 						</div>
 					{/if}
 				</div>
@@ -536,7 +537,7 @@
 	<div class="flex items-center justify-between">
 		<div>
 			<h2 id="pay-form-title" class="font-semibold">Bayar — {payTarget?.person}</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-400">
+			<p class="text-xs text-ctp-subtext0">
 				{payTarget?.direction === 'owe' ? 'Utang' : 'Piutang'} · {payTarget ? formatDate(payTarget.date) : ''}
 			</p>
 		</div>
@@ -548,7 +549,7 @@
 	{#if payTarget}
 			{#if payError}
 				<p
-					class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+					class="rounded-lg border border-ctp-red/40 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 					role="alert"
 				>
 					{payError}
@@ -560,8 +561,8 @@
 
 				<div>
 					<div class="mb-1 flex items-center justify-between">
-						<label for="pay-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
-						<span class="text-xs tabular-nums text-slate-500 dark:text-slate-400">Sisa: {formatIDR(payTarget.remaining)}</span>
+						<label for="pay-amount" class="text-sm font-medium text-ctp-text">Jumlah (IDR)</label>
+						<span class="num text-xs tabular-nums text-ctp-subtext0">Sisa: {formatIDR(payTarget.remaining)}</span>
 					</div>
 					<input
 						id="pay-amount"
@@ -573,9 +574,9 @@
 						required
 						bind:value={payAmount}
 						aria-invalid={!!payErrors.amount}
-						class="input font-semibold tabular-nums {payErrors.amount ? 'border-red-400' : ''}"
+						class="input num font-semibold tabular-nums {payErrors.amount ? 'border-ctp-red' : ''}"
 					/>
-					{#if payErrors.amount}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.amount}</p>{/if}
+					{#if payErrors.amount}<p class="mt-1 text-xs text-ctp-red">{payErrors.amount}</p>{/if}
 				</div>
 
 				<div>
@@ -588,7 +589,7 @@
 						invalid={!!payErrors.walletId}
 						wallets={data.wallets}
 					/>
-					{#if payErrors.walletId}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.walletId}</p>{/if}
+					{#if payErrors.walletId}<p class="mt-1 text-xs text-ctp-red">{payErrors.walletId}</p>{/if}
 				</div>
 
 				<div>
@@ -599,9 +600,9 @@
 						type="date"
 						bind:value={payDate}
 						aria-invalid={!!payErrors.date}
-						class="input {payErrors.date ? 'border-red-400' : ''}"
+						class="input {payErrors.date ? 'border-ctp-red' : ''}"
 					/>
-					{#if payErrors.date}<p class="mt-1 text-xs text-red-600 dark:text-red-400">{payErrors.date}</p>{/if}
+					{#if payErrors.date}<p class="mt-1 text-xs text-ctp-red">{payErrors.date}</p>{/if}
 				</div>
 
 				<div class="flex justify-end gap-2">

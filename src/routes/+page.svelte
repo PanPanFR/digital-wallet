@@ -4,6 +4,8 @@
 	import {
 		Plus,
 		ArrowUpRight,
+		ArrowDownLeft,
+		ArrowLeftRight,
 		Wallet,
 		Smartphone,
 		Banknote,
@@ -20,8 +22,8 @@
 
 	const reduceMotion = $derived(prefersReducedMotion.current);
 	const trendSeries = [
-		{ key: 'income', label: 'Pemasukan', color: 'var(--color-emerald-500)' },
-		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-red-500)' }
+		{ key: 'income', label: 'Pemasukan', color: 'var(--color-ctp-green)' },
+		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-ctp-red)' }
 	];
 	const hasTrend = $derived(
 		Array.isArray(data.trend) && data.trend.some((t) => t.income > 0 || t.expense > 0)
@@ -95,35 +97,35 @@
 	</div>
 
 	<section
-		class="rounded-xl bg-orange-600 p-5"
+		class="rounded-xl bg-ctp-peach p-5"
 		aria-label="Total saldo"
 	>
-		<div class="flex items-center gap-1.5 text-xs text-white/80">
+		<div class="flex items-center gap-1.5 text-xs text-white dark:text-ctp-crust/80">
 			<span><Wallet size={14} /></span>
 			Total Saldo
 		</div>
-		<p class="mt-1 text-3xl font-bold tabular-nums text-white">
+		<p class="num mt-1 text-3xl font-bold tabular-nums text-white dark:text-ctp-crust">
 			{formatIDR(data.totals.total)}
 		</p>
 	</section>
 
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
 		<div class="card p-4">
-			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-				<span class="tile h-6 w-6 bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400"><Smartphone size={14} /></span>
+			<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+				<span class="tile h-6 w-6 bg-ctp-surface0 text-ctp-subtext1"><Smartphone size={14} /></span>
 				Digital
 			</div>
-			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+			<p class="num mt-1 text-lg font-bold tabular-nums text-ctp-text">
 				{formatIDR(data.totals.digital)}
 			</p>
 		</div>
 
 		<div class="card p-4">
-			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-				<span class="tile h-6 w-6 bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"><Banknote size={14} /></span>
+			<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+				<span class="tile h-6 w-6 bg-ctp-surface0 text-ctp-subtext1"><Banknote size={14} /></span>
 				Tunai
 			</div>
-			<p class="mt-1 text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+			<p class="num mt-1 text-lg font-bold tabular-nums text-ctp-text">
 				{formatIDR(data.totals.cash)}
 			</p>
 		</div>
@@ -132,13 +134,13 @@
 	<section class="card mt-3 p-4" aria-label="Tren 6 bulan terakhir">
 		<div class="section-header">
 			<h2 class="section-title">Tren 6 Bulan</h2>
-			<div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+			<div class="flex items-center gap-3 text-xs text-ctp-subtext1">
 				<span class="flex items-center gap-1">
-					<span class="h-2.5 w-2.5 rounded-sm bg-emerald-500" aria-hidden="true"></span>
+					<span class="h-2.5 w-2.5 rounded-sm bg-ctp-green" aria-hidden="true"></span>
 					Pemasukan
 				</span>
 				<span class="flex items-center gap-1">
-					<span class="h-2.5 w-2.5 rounded-sm bg-red-500" aria-hidden="true"></span>
+					<span class="h-2.5 w-2.5 rounded-sm bg-ctp-red" aria-hidden="true"></span>
 					Pengeluaran
 				</span>
 			</div>
@@ -170,51 +172,34 @@
 				/>
 			</div>
 		{:else}
-			<p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+			<p class="py-6 text-center text-sm text-ctp-subtext0">
 				Belum ada data tren enam bulan terakhir.
 			</p>
 		{/if}
-	</section>
-
-	<section class="mt-6" aria-label="Ringkasan">
-		<div class="card p-4">
-			<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-				<span class="text-slate-400"><Wallet size={14} /></span>
-				Saldo Bersih
-			</div>
-			<p
-				class="mt-1 text-lg font-bold tabular-nums
-				{data.summary.net < 0
-					? 'text-red-600 dark:text-red-400'
-					: 'text-slate-900 dark:text-white'}"
-			>
-				{formatIDR(data.summary.net)}
-			</p>
-		</div>
 	</section>
 
 	{#if data.debtTotals.owe > 0 || data.debtTotals.owed > 0}
 		<a
 			href="/hutang"
 			aria-label="Ringkasan hutang dan piutang"
-			class="card mt-3 flex items-center justify-between gap-3 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+			class="card mt-3 flex items-center justify-between gap-3 p-4 transition-colors duration-150 hover:bg-ctp-surface0"
 		>
 			<div>
-				<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-					<span class="text-slate-400"><HandCoins size={14} /></span>
+				<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
+					<span class="text-ctp-overlay1"><HandCoins size={14} /></span>
 					Hutang &amp; Piutang
 				</div>
 				<p class="mt-1 text-sm">
-					<span class="font-bold tabular-nums text-red-600 dark:text-red-400">
-						Hutang {formatIDR(data.debtTotals.owe)}
+					<span class="num font-bold tabular-nums text-ctp-red">
+						−Hutang {formatIDR(data.debtTotals.owe)}
 					</span>
-					<span class="text-slate-400"> · </span>
-					<span class="font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-						Piutang {formatIDR(data.debtTotals.owed)}
+					<span class="text-ctp-overlay0"> · </span>
+					<span class="num font-bold tabular-nums text-ctp-green">
+						+Piutang {formatIDR(data.debtTotals.owed)}
 					</span>
 				</p>
 			</div>
-			<ArrowUpRight size={16} class="text-slate-400" />
+			<ArrowUpRight size={16} class="text-ctp-overlay1" />
 		</a>
 	{/if}
 
@@ -225,9 +210,9 @@
 			<div
 				class="card flex flex-col items-center gap-1 py-10 text-center"
 			>
-				<Wallet size={28} class="text-slate-300 dark:text-slate-600" />
-				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada dompet.</p>
-				<p class="text-xs text-slate-400 dark:text-slate-500">
+				<Wallet size={28} class="text-ctp-overlay0" />
+				<p class="text-sm font-medium text-ctp-text">Belum ada dompet.</p>
+				<p class="text-xs text-ctp-subtext0">
 					Tambahkan dompet digital atau tunai untuk mulai mencatat.
 				</p>
 			</div>
@@ -235,27 +220,22 @@
 			<div class="space-y-4">
 				{#each groups as group (group.label)}
 					{#if group.wallets.length > 0}
-						<h3 class="text-xs font-medium text-slate-500 dark:text-slate-400">{group.label}</h3>
+						<h3 class="text-xs font-medium text-ctp-subtext0">{group.label}</h3>
 						<ul class="list">
 							{#each group.wallets as w (w.id)}
 								<li>
 									<a href="/transactions?wallet={w.id}" class="list-row">
-										<span
-											class="tile
-											{w.kind === 'digital'
-												? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
-												: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
-										>
+										<span class="tile bg-ctp-surface0 text-ctp-subtext1">
 											{#if w.kind === 'digital'}<Smartphone size={16} />{:else}<Banknote size={16} />{/if}
 										</span>
-										<span class="truncate text-sm font-medium text-slate-900 dark:text-white">
+										<span class="truncate text-sm font-medium text-ctp-text">
 											{w.name}
 										</span>
 										<span
-											class="ml-auto whitespace-nowrap text-sm font-bold tabular-nums
+											class="num ml-auto whitespace-nowrap text-sm font-bold tabular-nums
 											{w.balance < 0
-												? 'text-red-600 dark:text-red-400'
-												: 'text-slate-900 dark:text-white'}"
+												? 'text-ctp-red'
+												: 'text-ctp-text'}"
 										>
 											{formatIDR(w.balance)}
 										</span>
@@ -274,7 +254,7 @@
 			<h2 class="section-title">Transaksi Terakhir</h2>
 			<a
 				href="/transactions"
-				class="flex items-center gap-0.5 text-sm text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+				class="flex items-center gap-0.5 text-sm text-ctp-peach hover:text-ctp-maroon"
 			>
 				Lihat semua <ArrowUpRight size={14} />
 			</a>
@@ -284,9 +264,9 @@
 			<Skeleton rows={4} />
 		{:else if data.recent.length === 0}
 			<div class="card flex flex-col items-center gap-1 py-10 text-center">
-				<Plus size={28} class="text-slate-300 dark:text-slate-600" />
-				<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Belum ada transaksi.</p>
-				<p class="text-xs text-slate-400 dark:text-slate-500">
+				<Plus size={28} class="text-ctp-overlay0" />
+				<p class="text-sm font-medium text-ctp-text">Belum ada transaksi.</p>
+				<p class="text-xs text-ctp-subtext0">
 					Tekan Catat untuk menambahkan transaksi pertama.
 				</p>
 			</div>
@@ -295,43 +275,41 @@
 				{#each data.recent as tx (tx.id)}
 					<li class="flex items-center gap-3 px-4 py-3">
 						<span
-							class="tile
-							{tx.wallet_kind === 'digital'
-								? 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400'
-								: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'}"
+							class="tile {tx.type === 'income'
+								? 'bg-ctp-green/15 text-ctp-green'
+								: tx.type === 'expense'
+									? 'bg-ctp-red/15 text-ctp-red'
+									: 'bg-ctp-surface0 text-ctp-subtext1'}"
 						>
-							{#if tx.wallet_kind === 'digital'}<Smartphone size={16} />{:else}<Banknote size={16} />{/if}
+							{#if tx.type === 'income'}<ArrowDownLeft size={16} />{:else if tx.type === 'expense'}<ArrowUpRight size={16} />{:else}<ArrowLeftRight size={16} />{/if}
 						</span>
 						<div class="min-w-0 flex-1">
-							<p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+							<p class="truncate text-sm font-medium text-ctp-text">
 								{tx.description}
 							</p>
-							<p class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+							<p class="flex flex-wrap items-center gap-1.5 text-xs text-ctp-subtext0">
 								<span>{tx.category} · {formatDate(tx.date)}</span>
 							{#if tx.type === 'transfer'}
 								<span
-									class="chip bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+									class="chip bg-ctp-surface0 text-ctp-subtext1"
 								>
 									→ {tx.dest_wallet_name}
 								</span>
 							{/if}
 								<span
-									class="chip
-									{tx.wallet_kind === 'digital'
-										? 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
-										: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400'}"
+									class="chip bg-ctp-surface0 text-ctp-subtext1"
 								>
 									{tx.wallet_name}
 								</span>
 							</p>
 						</div>
 						<span
-							class="whitespace-nowrap text-sm font-bold tabular-nums
+							class="num whitespace-nowrap text-sm font-bold tabular-nums
 							{tx.type === 'transfer'
-								? 'text-slate-600 dark:text-slate-300'
+								? 'text-ctp-subtext1'
 								: tx.type === 'income'
-									? 'text-emerald-600 dark:text-emerald-400'
-									: 'text-red-600 dark:text-red-400'}"
+									? 'text-ctp-green'
+									: 'text-ctp-red'}"
 						>
 							{tx.type === 'income' ? '+' : '−'}{formatIDR(tx.amount)}
 						</span>

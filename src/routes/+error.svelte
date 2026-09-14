@@ -7,12 +7,12 @@
 </svelte:head>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-	<p class="text-5xl font-bold tabular-nums text-slate-400 dark:text-slate-500 sm:text-6xl">{page.status}</p>
-	<h1 class="text-xl font-semibold text-slate-900 dark:text-white">
+	<p class="num text-5xl font-bold tabular-nums text-ctp-overlay0 sm:text-6xl">{page.status}</p>
+	<h1 class="text-xl font-semibold text-ctp-text">
 		{page.status === 404 ? 'Halaman tidak ditemukan' : 'Terjadi kesalahan'}
 	</h1>
 	{#if page.error?.message}
-		<p class="max-w-md text-sm text-slate-500 dark:text-slate-400">{page.error.message}</p>
+		<p class="max-w-md text-sm text-ctp-subtext0">{page.error.message}</p>
 	{/if}
 	<a
 		href="/"

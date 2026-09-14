@@ -68,7 +68,7 @@
 			<h2 id="transaction-form-title" class="font-semibold">
 				{isEdit ? 'Edit Transaksi' : 'Catat Transaksi'}
 			</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-400">
+			<p class="text-xs text-ctp-subtext0">
 				{isEdit ? 'Ubah detail transaksi yang ada' : 'Tambahkan pengeluaran atau pemasukan'}
 			</p>
 		</div>
@@ -95,8 +95,8 @@
 							onclick={() => (type = 'expense')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'expense'
-								? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'
-								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
+								? 'border-ctp-red bg-ctp-red/10 text-ctp-red'
+								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
 						>
 							<TrendingDown size={14} /> Pengeluaran
 						</button>
@@ -106,8 +106,8 @@
 							onclick={() => (type = 'income')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'income'
-								? 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
-								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
+								? 'border-ctp-green bg-ctp-green/10 text-ctp-green'
+								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
 						>
 							<TrendingUp size={14} /> Pemasukan
 						</button>
@@ -117,13 +117,13 @@
 							onclick={() => (type = 'transfer')}
 							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'transfer'
-								? 'border-slate-400 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-								: 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}"
+								? 'border-ctp-subtext0 bg-ctp-surface0 text-ctp-text'
+								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
 						>
 							<ArrowLeftRight size={14} /> Transfer
 						</button>
 					</div>
-					{#if errors.type}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.type}</p>{/if}
+					{#if errors.type}<p class="text-xs text-ctp-red mt-1">{errors.type}</p>{/if}
 				</div>
 
 				<div>
@@ -134,9 +134,9 @@
 						type="date"
 						bind:value={date}
 						aria-invalid={!!errors.date}
-						class="input {errors.date ? 'border-red-400 dark:border-red-500' : ''}"
+						class="input {errors.date ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.date}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.date}</p>{/if}
+					{#if errors.date}<p class="text-xs text-ctp-red mt-1">{errors.date}</p>{/if}
 				</div>
 
 				<div>
@@ -149,7 +149,7 @@
 						invalid={!!errors.walletId}
 						{wallets}
 					/>
-					{#if errors.walletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.walletId}</p>{/if}
+					{#if errors.walletId}<p class="text-xs text-ctp-red mt-1">{errors.walletId}</p>{/if}
 				</div>
 
 				{#if type === 'transfer'}
@@ -165,15 +165,15 @@
 							placeholder="Pilih dompet tujuan"
 							{wallets}
 						/>
-						{#if errors.toWalletId}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.toWalletId}</p>{/if}
+						{#if errors.toWalletId}<p class="text-xs text-ctp-red mt-1">{errors.toWalletId}</p>{/if}
 					</div>
 				{/if}
 
 				<div>
 					<div class="flex items-center justify-between mb-1">
-						<label for="tx-amount" class="text-sm font-medium text-slate-700 dark:text-slate-300">Jumlah (IDR)</label>
+						<label for="tx-amount" class="label">Jumlah (IDR)</label>
 						{#if amount && Number(amount) > 0}
-							<span class="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+							<span class="num text-xs font-semibold tabular-nums text-ctp-subtext0">
 								Rp {Number(amount).toLocaleString('id-ID')}
 							</span>
 						{/if}
@@ -188,14 +188,14 @@
 						placeholder="0"
 						bind:value={amount}
 						aria-invalid={!!errors.amount}
-						class="input text-lg font-semibold tabular-nums {errors.amount ? 'border-red-400 dark:border-red-500' : ''}"
+						class="input num text-lg font-semibold tabular-nums {errors.amount ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.amount}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.amount}</p>{/if}
+					{#if errors.amount}<p class="text-xs text-ctp-red mt-1">{errors.amount}</p>{/if}
 					<div class="mt-2 flex flex-wrap gap-1.5">
 						{#each AMOUNT_PRESETS as [value, label] (label)}
 							<button
 								type="button"
-								class="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+								class="chip bg-ctp-surface0 text-ctp-subtext1 transition-colors hover:bg-ctp-surface1"
 								onclick={() => addPreset(value)}
 							>
 								{label}
@@ -214,9 +214,9 @@
 						placeholder="cth. Kopi susu, tiket KRL, gaji freelance"
 						bind:value={description}
 						aria-invalid={!!errors.description}
-						class="input {errors.description ? 'border-red-400 dark:border-red-500' : ''}"
+						class="input {errors.description ? 'border-ctp-red' : ''}"
 					/>
-					{#if errors.description}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.description}</p>{/if}
+					{#if errors.description}<p class="text-xs text-ctp-red mt-1">{errors.description}</p>{/if}
 				</div>
 
 				<div>
@@ -226,7 +226,7 @@
 							<option value={c}>{c}</option>
 						{/each}
 					</select>
-					{#if errors.category}<p class="text-xs text-red-600 dark:text-red-400 mt-1">{errors.category}</p>{/if}
+					{#if errors.category}<p class="text-xs text-ctp-red mt-1">{errors.category}</p>{/if}
 				</div>
 
 				<div class="flex justify-end gap-2">

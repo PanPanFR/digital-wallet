@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Wallet } from '@lucide/svelte';
+	import { Wallet, CircleAlert } from '@lucide/svelte';
 
 	let { data, form } = $props();
 	let submitting = $state(false);
@@ -10,20 +10,20 @@
 	<title>{data.mode === 'setup' ? 'Atur Password' : 'Login'} · Digital Wallet</title>
 </svelte:head>
 
-<main class="min-h-screen flex items-center justify-center px-4">
-	<div class="card w-full max-w-sm p-6 space-y-4">
+<main class="flex min-h-screen items-center justify-center bg-ctp-crust px-4 dark:bg-ctp-crust">
+	<div class="card w-full max-w-sm space-y-4 p-6">
 		<div class="flex flex-col items-center gap-2 text-center">
-			<div class="tile h-10 w-10 bg-orange-600 text-white shadow-xs">
+			<div class="tile h-10 w-10 bg-ctp-peach text-white shadow-xs dark:text-ctp-crust">
 				<Wallet size={22} />
 			</div>
 			<h1 class="page-title">Digital Wallet</h1>
-			<p class="text-sm text-slate-500 dark:text-slate-400">
+			<p class="text-sm text-ctp-subtext0">
 				{data.mode === 'setup' ? 'Atur master password' : 'Masuk untuk melanjutkan'}
 			</p>
 		</div>
 
 		{#if data.mode === 'setup'}
-			<p class="rounded-lg border border-slate-200 bg-slate-100 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+			<p class="rounded-lg border border-ctp-surface0 bg-ctp-surface0/50 p-3 text-xs text-ctp-subtext1 dark:border-ctp-surface1">
 				Ini pertama kalinya. Atur master password (min. 8 karakter). Password ini akan
 				digunakan untuk masuk ke aplikasi.
 			</p>
@@ -55,10 +55,11 @@
 
 		{#if form?.error}
 			<p
-				class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+				class="flex items-start gap-2 rounded-lg border border-ctp-red/30 bg-ctp-red/10 px-3 py-2 text-sm text-ctp-red"
 				role="alert"
 			>
-				{form.error}
+				<CircleAlert size={16} class="mt-0.5 shrink-0" aria-hidden="true" />
+				<span>{form.error}</span>
 			</p>
 		{/if}
 
