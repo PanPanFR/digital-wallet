@@ -202,7 +202,7 @@
 	{:else}
 		<div class="list-row">
 		<div
-			class="tile h-9 w-9 bg-ctp-surface0 text-ctp-subtext0"
+			class="tile h-9 w-9 {w.kind === 'digital' ? 'bg-ctp-blue/15 text-ctp-blue' : 'bg-ctp-peach/15 text-ctp-peach'}"
 			aria-hidden="true"
 		>
 				{#if w.kind === 'digital'}

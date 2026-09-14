@@ -11,6 +11,7 @@
 		Wallet,
 		HandCoins,
 		Ellipsis,
+		Plus,
 		X
 	} from '@lucide/svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
@@ -35,6 +36,10 @@
 	afterNavigate(() => {
 		isMoreOpen = false;
 	});
+
+	function openTransactionForm() {
+		window.dispatchEvent(new CustomEvent('open-transaction-form'));
+	}
 </script>
 
 <!-- Desktop sidebar -->
@@ -78,21 +83,45 @@
 	</div>
 </aside>
 
-<!-- Mobile bottom nav -->
+<!-- Mobile bottom nav: dark floating pill (fixed colors, dark in both modes) -->
 <nav
 	aria-label="Navigasi utama"
-	class="fixed inset-x-0 bottom-0 z-40 border-t border-ctp-surface0 bg-ctp-mantle pb-[env(safe-area-inset-bottom)] md:hidden"
+	class="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden"
 >
-	<div class="grid grid-cols-5">
-		{#each primaryMobileItems as item (item.href)}
+	<div
+		class="flex items-center justify-around rounded-full bg-[#2c2f47]/95 px-2 py-1.5 text-[#f0efff] shadow-lg backdrop-blur"
+	>
+		{#each primaryMobileItems.slice(0, 2) as item (item.href)}
 			{@const active = page.url.pathname === item.href}
 			<a
 				href={item.href}
 				aria-current={active ? 'page' : undefined}
-				class="flex flex-col items-center gap-0.5 py-3 text-[11px] transition-colors
+				class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 					{active
 					? 'font-semibold text-ctp-peach'
-					: 'text-ctp-subtext1'}"
+					: 'text-white/70'}"
+			>
+				<item.icon size={20} />
+				{item.label}
+			</a>
+		{/each}
+		<button
+			type="button"
+			onclick={openTransactionForm}
+			aria-label="Catat transaksi"
+			class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ctp-peach text-white shadow-md transition-transform duration-150 active:scale-95"
+		>
+			<Plus size={22} />
+		</button>
+		{#each primaryMobileItems.slice(2) as item (item.href)}
+			{@const active = page.url.pathname === item.href}
+			<a
+				href={item.href}
+				aria-current={active ? 'page' : undefined}
+				class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
+					{active
+					? 'font-semibold text-ctp-peach'
+					: 'text-white/70'}"
 			>
 				<item.icon size={20} />
 				{item.label}
@@ -103,10 +132,10 @@
 			onclick={() => (isMoreOpen = true)}
 			aria-haspopup="dialog"
 			aria-expanded={isMoreOpen}
-			class="flex flex-col items-center gap-0.5 py-3 text-[11px] transition-colors
+			class="flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 				{isMoreActive
 				? 'font-semibold text-ctp-peach'
-				: 'text-ctp-subtext1'}"
+				: 'text-white/70'}"
 		>
 			<Ellipsis size={20} />
 			Lainnya

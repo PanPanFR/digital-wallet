@@ -13,7 +13,8 @@ const dateTime = new Intl.DateTimeFormat('id-ID', {
 });
 
 export function formatIDR(amount: number): string {
-	return idr.format(amount);
+	// Intl id-ID emits `Rp` + NBSP; DESIGN.md wants `Rp ` with a regular space.
+	return idr.format(amount).replace(/ /g, ' ');
 }
 
 export function formatDate(iso: string): string {
