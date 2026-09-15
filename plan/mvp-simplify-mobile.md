@@ -118,3 +118,10 @@ Current pain (measured, not guessed):
 | 6 — Check + tests + manual mobile checklist | tester | B | Isolated run (`check`, `test`, 360px pass), compact report; parallel with reviewer, no shared mutable state |
 
 Dependencies: 3 needs 1 (data shape). 4 needs 3 (form preset wiring + wallet list contract). 5 + 6 need 1–4 green (Batch B in one message). Batch A (Steps 1 + 2) ships in one message; everything else sequential. If designer is unavailable, builder absorbs Steps 2–3 inline (same branch, same acceptance criteria).
+
+## Appendix: Global Stitch MCP (keyless record — secret never lands in repo)
+
+- Config lives at USER level only: `~/.config/opencode/opencode.json` (merge the `mcp` block, never create it inside the repo). Shape: `{"mcp": {"stitch": {"type": "remote", "url": "https://stitch.googleapis.com/mcp", "enabled": true, "headers": {"X-Goog-Api-Key": "<KEY_FROM_USER_IN_BUILDER_SESSION>"}}}}`.
+- Builder session order: (1) user pastes ONE Stitch key in the builder session, (2) builder writes the global config, restarts/loads MCP, verifies the Stitch tools respond (list tools or generate one probe screen), (3) builder executes this plan on `feature/mvp-simplify-mobile`.
+- Stitch visual pass runs AFTER this plan is green, as a separate pass/branch: generate dashboard-MVP + Catat-form screens, map output to Svelte 5 runes + Tailwind + existing Catppuccin tokens in `src/app.css`. Hard limits for that pass: no new CSS framework, no new npm dep, no gradients, keep `ModalShell`, keep Indonesian copy, keep server actions + validation untouched. On any conflict, this plan's Acceptance Criteria win.
+- Key hygiene: any key pasted in chat counts as exposed — user regenerates it at `stitch.withgoogle.com/settings` after the MCP is verified working.
