@@ -77,11 +77,11 @@
 		class="rounded-xl bg-ctp-blue p-5"
 		aria-label="Total saldo"
 	>
-		<div class="flex items-center gap-1.5 text-xs text-white/85">
+		<div class="flex items-center gap-1.5 text-xs text-white/85 dark:text-ctp-crust/85">
 			<span aria-hidden="true"><Wallet size={14} /></span>
 			Total Saldo
 		</div>
-		<p class="currency-display num mt-1 text-white">
+		<p class="currency-display num mt-1 text-white dark:text-ctp-crust">
 			{formatIDR(data.totals.total)}
 		</p>
 	</section>

@@ -85,7 +85,7 @@
 	class="fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden"
 >
 	<div
-		class="grid grid-cols-5 items-center rounded-full bg-[#2c2f47]/95 px-2 py-1.5 text-[#f0efff] shadow-lg backdrop-blur"
+		class="nav-pill grid grid-cols-5 items-center rounded-full px-2 py-1.5 shadow-lg backdrop-blur"
 	>
 		{#each primaryMobileItems.slice(0, 2) as item (item.href)}
 			{@const active = page.url.pathname === item.href}
@@ -95,7 +95,7 @@
 				class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 					{active
 					? 'font-semibold text-ctp-peach'
-					: 'text-white/70'}"
+					: 'nav-pill-dim'}"
 			>
 				<item.icon size={20} />
 				{item.label}
@@ -106,7 +106,7 @@
 				type="button"
 				onclick={openTransactionForm}
 				aria-label="Catat transaksi"
-				class="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-ctp-peach text-white shadow-md ring-4 ring-[#2c2f47] transition-transform duration-150 active:scale-95"
+				class="nav-pill-ring flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-ctp-peach text-white shadow-md ring-4 transition-transform duration-150 active:scale-95 dark:text-ctp-crust"
 			>
 				<Plus size={22} />
 			</button>
@@ -119,7 +119,7 @@
 				class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 					{active
 					? 'font-semibold text-ctp-peach'
-					: 'text-white/70'}"
+					: 'nav-pill-dim'}"
 			>
 				<item.icon size={20} />
 				{item.label}
@@ -133,7 +133,7 @@
 			class="flex min-h-[48px] min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-full px-2 text-[10px] transition-colors
 				{isMoreActive
 				? 'font-semibold text-ctp-peach'
-				: 'text-white/70'}"
+				: 'nav-pill-dim'}"
 		>
 			<Ellipsis size={20} />
 			Lainnya

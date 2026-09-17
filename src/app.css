@@ -103,10 +103,10 @@ html.dark {
 	.btn-primary {
 		@apply bg-ctp-peach text-white dark:text-ctp-crust;
 		border: 1px solid rgba(0, 0, 0, 0.06);
-		box-shadow: 0 2px 0 #d95305;
+		box-shadow: 0 2px 0 color-mix(in srgb, var(--color-ctp-peach) 70%, black);
 	}
 	.btn-primary:hover {
-		background-color: #f75b02;
+		background-color: color-mix(in srgb, var(--color-ctp-peach) 88%, black);
 	}
 	.btn-primary:active {
 		box-shadow: none;
@@ -133,7 +133,7 @@ html.dark {
 	}
 	.input:focus {
 		border-color: var(--color-ctp-peach);
-		box-shadow: 0 0 0 3px rgba(254, 100, 11, 0.15);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ctp-peach) 15%, transparent);
 		outline: none;
 	}
 	/* Pinned Rp prefix inside currency inputs (DESIGN.md §Inputs). */
@@ -225,13 +225,55 @@ html.dark {
 	}
 }
 
-/* Signature dark surfaces (fixed colors, dark in BOTH modes): dark
-   "Ringkasan" summary card + dark floating mobile nav per templates. */
+/* FIXED-MOCHA EXCEPTION ZONE (dark in BOTH modes): `.card-dark` summary
+   surfaces and the `.nav-pill` mobile nav use literal Mocha hex, never
+   flipping `ctp-*` tokens (tokens resolve to Latte values in light mode,
+   unreadable on a dark surface). Keep every fixed hex in this block. */
 .card-dark {
-	background-color: #2c2f47;
-	color: #f0efff;
+	background-color: #11111b;
+	color: #cdd6f4;
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: 12px;
+}
+/* Content tones on fixed-Mocha surfaces (Mocha Text / Subtext0). */
+.card-dark-strong {
+	color: #cdd6f4;
+}
+.card-dark-dim {
+	color: #a6adc8;
+}
+.card-dark-divider {
+	border-color: color-mix(in srgb, #a6adc8 20%, transparent);
+}
+.card-dark-dot {
+	background-color: #cdd6f4;
+}
+.card-dark-dot-dim {
+	background-color: color-mix(in srgb, #a6adc8 50%, transparent);
+}
+
+/* Mobile bottom nav: floating pill, fixed-Mocha in both modes. */
+.nav-pill {
+	background-color: rgb(17 17 27 / 0.95);
+	color: #cdd6f4;
+}
+.nav-pill-dim {
+	color: #a6adc8;
+}
+/* FAB ring blends into the pill behind it. */
+.nav-pill-ring {
+	--tw-ring-color: #11111b;
+}
+
+/* Warning text on a yellow tint: darkened palette yellow in light mode
+   (raw ctp-yellow fails contrast on the tint), pure token in dark mode. */
+.notice-warn,
+.chip-warn {
+	color: color-mix(in srgb, var(--color-ctp-yellow) 55%, black);
+}
+html.dark .notice-warn,
+html.dark .chip-warn {
+	color: var(--color-ctp-yellow);
 }
 
 /* Checkboxes/radios per DESIGN.md §Components: 18px box, peach fill. */
