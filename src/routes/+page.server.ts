@@ -2,10 +2,8 @@ import { fail, redirect, type Actions, type ServerLoad, type RequestEvent } from
 import { sessionCookieName } from '$lib/server/auth';
 import {
 	createTransaction,
-	getDebtDirectionTotals,
 	getKindTotals,
 	getMonthlySummary,
-	getMonthlyTotals,
 	getWalletBalances,
 	listTransactions
 } from '$lib/server/db';
@@ -17,15 +15,13 @@ export const load: ServerLoad = async ({ locals, platform, url }: RequestEvent) 
 	const monthParam = url.searchParams.get('month');
 	const month =
 		monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : new Date().toISOString().slice(0, 7);
-	const [totals, wallets, recent, summary, debtTotals, trend] = await Promise.all([
+	const [totals, wallets, recent, summary] = await Promise.all([
 		getKindTotals(db),
 		getWalletBalances(db),
 		listTransactions(db, { limit: 5 }),
-		getMonthlySummary(db, month),
-		getDebtDirectionTotals(db),
-		getMonthlyTotals(db, 6)
+		getMonthlySummary(db, month)
 	]);
-	return { totals, wallets, recent, summary, debtTotals, month, trend };
+	return { totals, wallets, recent, summary, month };
 };
 
 export const actions: Actions = {

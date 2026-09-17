@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { ArrowLeftRight, TrendingDown, TrendingUp, X } from '@lucide/svelte';
+	import { TrendingDown, TrendingUp, X } from '@lucide/svelte';
 	import ModalShell from '$lib/components/ModalShell.svelte';
 	import { notify } from '$lib/stores.svelte';
 	import { CATEGORIES, AMOUNT_PRESETS } from '$lib/constants';
@@ -13,16 +13,22 @@
 		transaction = null,
 		wallets = [] as WalletRow[],
 		open = false,
+		initialType = 'expense' as 'income' | 'expense',
 		onclose
-	}: { transaction?: TxRow | null; wallets?: WalletRow[]; open?: boolean; onclose: () => void } = $props();
+	}: {
+		transaction?: TxRow | null;
+		wallets?: WalletRow[];
+		open?: boolean;
+		initialType?: 'income' | 'expense';
+		onclose: () => void;
+	} = $props();
 
 	let submitting = $state(false);
 	let description = $state('');
 	let amount = $state<string | number | undefined>('');
-	let type = $state<TxRow['type']>('expense');
+	let type = $state<'income' | 'expense'>('expense');
 	let category = $state<string>(CATEGORIES[0]);
 	let walletId = $state('');
-	let toWalletId = $state('');
 	let date = $state(todayISO());
 	let errors = $state<Record<string, string>>({});
 
@@ -32,10 +38,12 @@
 		if (open) {
 			description = transaction?.description ?? '';
 			amount = transaction ? String(transaction.amount) : '';
-			type = transaction?.type ?? 'expense';
+			type =
+				transaction?.type === 'income' || transaction?.type === 'expense'
+					? transaction.type
+					: initialType;
 			category = transaction?.category ?? CATEGORIES[0];
 			walletId = transaction?.wallet_id ?? '';
-			toWalletId = transaction?.to_wallet_id ?? '';
 			date = transaction?.date ?? todayISO();
 			errors = {};
 		}
@@ -88,12 +96,12 @@
 
 				<div>
 					<span class="label">Tipe</span>
-					<div class="grid grid-cols-3 gap-2" role="group" aria-label="Tipe transaksi">
+					<div class="grid grid-cols-2 gap-2" role="group" aria-label="Tipe transaksi">
 						<button
 							type="button"
 							aria-pressed={type === 'expense'}
 							onclick={() => (type = 'expense')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
+							class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'expense'
 								? 'border-ctp-red bg-ctp-red/10 text-ctp-red'
 								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
@@ -104,23 +112,12 @@
 							type="button"
 							aria-pressed={type === 'income'}
 							onclick={() => (type = 'income')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
+							class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
 								{type === 'income'
 								? 'border-ctp-green bg-ctp-green/10 text-ctp-green'
 								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
 						>
 							<TrendingUp size={14} /> Pemasukan
-						</button>
-						<button
-							type="button"
-							aria-pressed={type === 'transfer'}
-							onclick={() => (type = 'transfer')}
-							class="flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1 text-sm transition-colors
-								{type === 'transfer'
-								? 'border-ctp-blue bg-ctp-blue/10 text-ctp-blue'
-								: 'border-ctp-surface0 text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:hover:bg-ctp-surface0'}"
-						>
-							<ArrowLeftRight size={14} /> Transfer
 						</button>
 					</div>
 					{#if errors.type}<p class="text-xs text-ctp-red mt-1">{errors.type}</p>{/if}
@@ -152,23 +149,6 @@
 					{#if errors.walletId}<p class="text-xs text-ctp-red mt-1">{errors.walletId}</p>{/if}
 				</div>
 
-				{#if type === 'transfer'}
-					<div>
-						<label for="tx-to-wallet" class="label">Dompet tujuan</label>
-						<WalletSelect
-							id="tx-to-wallet"
-							name="toWalletId"
-							bind:value={toWalletId}
-							required
-							invalid={!!errors.toWalletId}
-							excludeId={walletId}
-							placeholder="Pilih dompet tujuan"
-							{wallets}
-						/>
-						{#if errors.toWalletId}<p class="text-xs text-ctp-red mt-1">{errors.toWalletId}</p>{/if}
-					</div>
-				{/if}
-
 				<div>
 					<div class="flex items-center justify-between mb-1">
 						<label for="tx-amount" class="label">Jumlah (IDR)</label>
@@ -184,6 +164,7 @@
 							id="tx-amount"
 							name="amount"
 							type="number"
+							inputmode="numeric"
 							min="1"
 							step="1"
 							required

@@ -20,6 +20,7 @@
 
 	let name = $state('');
 	let kind = $state<'digital' | 'cash'>('digital');
+	let initialBalance = $state<number | string>('');
 	let errors = $state<Record<string, string>>({});
 
 	let editingId = $state<string | null>(null);
@@ -66,6 +67,7 @@
 				notify('success', 'Dompet ditambahkan');
 				name = '';
 				kind = 'digital';
+				initialBalance = '';
 				errors = {};
 			}
 		};
@@ -290,6 +292,23 @@
 					{p.name}
 				</button>
 			{/each}
+		</div>
+
+		<div>
+			<label for="wallet-initial" class="label">Saldo awal (Rp, opsional)</label>
+			<input
+				id="wallet-initial"
+				name="initialBalance"
+				type="number"
+				inputmode="numeric"
+				min="0"
+				step="1"
+				placeholder="0"
+				bind:value={initialBalance}
+				aria-invalid={!!errors.initialBalance}
+				class="input num tabular-nums {errors.initialBalance ? 'border-ctp-red' : ''}"
+			/>
+			{#if errors.initialBalance}<p class="mt-1 text-xs text-ctp-red">{errors.initialBalance}</p>{/if}
 		</div>
 
 		<div class="flex justify-end">
