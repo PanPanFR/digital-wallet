@@ -4,12 +4,10 @@
 	import {
 		Home,
 		ArrowLeftRight,
-		BarChart3,
 		Sparkles,
 		Settings,
 		LogOut,
 		Wallet,
-		HandCoins,
 		Ellipsis,
 		Plus,
 		X
@@ -21,8 +19,6 @@
 		{ href: '/', label: 'Beranda', icon: Home, group: 'primary' },
 		{ href: '/transactions', label: 'Transaksi', icon: ArrowLeftRight, group: 'primary' },
 		{ href: '/wallets', label: 'Dompet', icon: Wallet, group: 'primary' },
-		{ href: '/hutang', label: 'Hutang', icon: HandCoins, group: 'secondary', subtitle: 'Hutang & piutang' },
-		{ href: '/analytics', label: 'Analitik', icon: BarChart3, group: 'primary' },
 		{ href: '/copilot', label: 'Copilot', icon: Sparkles, group: 'secondary', subtitle: 'Tanya soal keuanganmu' },
 		{ href: '/settings', label: 'Pengaturan', icon: Settings, group: 'secondary', subtitle: 'Password & penyedia AI' }
 	];
@@ -171,19 +167,6 @@
 				</span>
 			</a>
 		{/each}
-		<a
-			href="/analytics"
-			aria-current={page.url.pathname === '/analytics' ? 'page' : undefined}
-			class="flex items-center gap-3 rounded-lg px-3 py-2.5 {page.url.pathname === '/analytics'
-				? 'bg-ctp-surface0 text-ctp-peach'
-				: 'text-ctp-subtext1 hover:bg-ctp-surface0 hover:text-ctp-text'}"
-		>
-			<BarChart3 size={20} />
-			<span class="flex flex-col">
-				<span class="text-sm font-medium">Analitik</span>
-				<span class="text-xs text-ctp-subtext1">Tren & kategori</span>
-			</span>
-		</a>
 	</nav>
 	<div class="flex items-center justify-between border-t border-ctp-surface0 pt-3">
 		<ThemeToggle />

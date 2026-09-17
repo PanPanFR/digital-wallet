@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { navigating } from '$app/state';
-	import { prefersReducedMotion } from 'svelte/motion';
 	import {
 		Plus,
 		ArrowUpRight,
@@ -8,11 +7,8 @@
 		ArrowLeftRight,
 		Wallet,
 		Smartphone,
-		Banknote,
-		HandCoins,
-		BarChart3
+		Banknote
 	} from '@lucide/svelte';
-	import { BarChart } from 'layerchart/svg';
 	import TransactionForm from '$lib/components/TransactionForm.svelte';
 	import Skeleton from '$lib/components/Skeleton.svelte';
 	import { formatIDR, formatDate } from '$lib/format';
@@ -20,32 +16,11 @@
 	let { data } = $props();
 
 	let showForm = $state(false);
+	let formPreset = $state<'income' | 'expense'>('expense');
 
-	const reduceMotion = $derived(prefersReducedMotion.current);
-	const trendSeries = [
-		{ key: 'income', label: 'Pemasukan', color: 'var(--color-ctp-green)' },
-		{ key: 'expense', label: 'Pengeluaran', color: 'var(--color-ctp-red)' }
-	];
-	const hasTrend = $derived(
-		Array.isArray(data.trend) && data.trend.some((t) => t.income > 0 || t.expense > 0)
-	);
-
-	const idrCompact = new Intl.NumberFormat('id-ID', {
-		style: 'currency',
-		currency: 'IDR',
-		notation: 'compact',
-		maximumFractionDigits: 1
-	});
-
-	function compactIDR(value: unknown): string {
-		const n = typeof value === 'number' ? value : Number(value);
-		return Number.isFinite(n) ? idrCompact.format(n) : '';
-	}
-
-	function monthShort(ym: string): string {
-		return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(
-			new Date(`${ym}-01T00:00:00`)
-		);
+	function openForm(preset: 'income' | 'expense') {
+		formPreset = preset;
+		showForm = true;
 	}
 
 	function monthLong(ym: string): string {
@@ -73,15 +48,6 @@
 	});
 
 	const monthLongLabel = $derived(monthLong(data.month));
-	const insightIncome = $derived(data.summary.income);
-	const insightExpense = $derived(data.summary.expense);
-	const insightPct = $derived(
-		insightIncome > 0
-			? Math.min(100, Math.round((insightExpense / insightIncome) * 100))
-			: insightExpense > 0
-				? 100
-				: 0
-	);
 </script>
 
 <svelte:head>
@@ -94,25 +60,17 @@
 			<h1 class="page-title">Halo</h1>
 			<p class="page-subtitle">{monthLongLabel}</p>
 		</div>
-		<div class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
-			<form method="GET" action="/" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
-				<label for="month" class="sr-only">Bulan</label>
-				<input
-					id="month"
-					name="month"
-					type="month"
-					value={data.month}
-					onchange={onMonthChange}
-					class="input min-w-0 flex-1 px-2.5 py-1.5 sm:w-auto sm:flex-none"
-				/>
-			</form>
-			<button
-				onclick={() => (showForm = true)}
-				class="btn btn-primary shrink-0 px-3 py-2"
-			>
-				<Plus size={16} /> Catat
-			</button>
-		</div>
+		<form method="GET" action="/" class="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+			<label for="month" class="sr-only">Bulan</label>
+			<input
+				id="month"
+				name="month"
+				type="month"
+				value={data.month}
+				onchange={onMonthChange}
+				class="input min-w-0 flex-1 px-2.5 py-1.5 sm:w-auto sm:flex-none"
+			/>
+		</form>
 	</div>
 
 	<section
@@ -128,58 +86,19 @@
 		</p>
 	</section>
 
-	<section class="mt-3 grid grid-cols-4 gap-2 sm:gap-3" aria-label="Aksi cepat">
+	<section class="mt-3 grid grid-cols-2 gap-2" aria-label="Catat transaksi">
 		<button
-			onclick={() => (showForm = true)}
-			class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight"
+			onclick={() => openForm('income')}
+			class="btn min-h-[44px] flex-1 bg-ctp-green/15 font-semibold text-ctp-green"
 		>
-			<span class="tile h-12 w-12 bg-ctp-peach/15 text-ctp-peach" aria-hidden="true"><Plus size={20} /></span>
-			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Catat</span>
+			<ArrowDownLeft size={18} /> Catat Pemasukan
 		</button>
-		<a href="/transactions" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
-			<span class="tile h-12 w-12 bg-ctp-blue/15 text-ctp-blue" aria-hidden="true"><ArrowLeftRight size={20} /></span>
-			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Transfer</span>
-		</a>
-		<a href="/wallets" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
-			<span class="tile h-12 w-12 bg-ctp-lavender/15 text-ctp-lavender" aria-hidden="true"><Wallet size={20} /></span>
-			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Dompet</span>
-		</a>
-		<a href="/analytics" class="flex min-w-0 flex-col items-center gap-1.5 text-center leading-tight">
-			<span class="tile h-12 w-12 bg-ctp-teal/15 text-ctp-teal" aria-hidden="true"><BarChart3 size={20} /></span>
-			<span class="text-[11px] font-medium text-ctp-text sm:text-xs">Analitik</span>
-		</a>
-	</section>
-
-	<section class="card mt-3 p-4" aria-label="Wawasan bulan ini">
-		<div class="section-header">
-			<h2 class="section-title">Wawasan {monthLongLabel}</h2>
-		</div>
-		{#if insightIncome === 0 && insightExpense === 0}
-			<p class="text-sm text-ctp-subtext0">Belum ada pemasukan maupun pengeluaran bulan ini.</p>
-		{:else}
-			<p class="text-sm text-ctp-text">
-				{#if insightIncome === 0}
-					Belum ada pemasukan bulan ini.
-				{:else}
-					Pengeluaran <strong class="num tabular-nums">{insightPct}%</strong> dari pemasukan.
-				{/if}
-			</p>
-			<div
-				class="mt-2 h-2 overflow-hidden rounded-full bg-ctp-crust"
-				role="img"
-				aria-label="Pengeluaran {insightPct}% dari pemasukan bulan ini"
-			>
-				<div
-					class="h-full rounded-full bg-ctp-peach"
-					style="width: {insightPct}%"
-				></div>
-			</div>
-			<p class="num mt-2 text-xs tabular-nums text-ctp-subtext0">
-				<span class="font-semibold text-ctp-green">+ {formatIDR(insightIncome)}</span>
-				<span aria-hidden="true"> · </span>
-				<span class="font-semibold text-ctp-red">− {formatIDR(insightExpense)}</span>
-			</p>
-		{/if}
+		<button
+			onclick={() => openForm('expense')}
+			class="btn min-h-[44px] flex-1 bg-ctp-red/15 font-semibold text-ctp-red"
+		>
+			<ArrowUpRight size={18} /> Catat Pengeluaran
+		</button>
 	</section>
 
 	<section class="mt-3 grid grid-cols-2 gap-3" aria-label="Saldo per jenis dompet">
@@ -203,80 +122,6 @@
 			</p>
 		</div>
 	</section>
-
-	<section class="card mt-3 min-w-0 p-4" aria-label="Tren 6 bulan terakhir">
-		<div class="section-header">
-			<h2 class="section-title">Tren 6 Bulan</h2>
-			<div class="flex items-center gap-3 text-xs text-ctp-subtext1">
-				<span class="flex items-center gap-1">
-					<span class="h-2.5 w-2.5 rounded-sm bg-ctp-green" aria-hidden="true"></span>
-					Pemasukan
-				</span>
-				<span class="flex items-center gap-1">
-					<span class="h-2.5 w-2.5 rounded-sm bg-ctp-red" aria-hidden="true"></span>
-					Pengeluaran
-				</span>
-			</div>
-		</div>
-		{#if hasTrend}
-			<div
-				class="h-56 w-full min-w-0"
-				role="img"
-				aria-label="Grafik batang tren pemasukan dan pengeluaran enam bulan terakhir"
-			>
-				<BarChart
-					data={data.trend}
-					x="month"
-					series={trendSeries}
-					seriesLayout="group"
-					height={224}
-					yDomain={[0, null]}
-					motion={reduceMotion ? 'none' : undefined}
-					props={{
-						xAxis: { format: (v: unknown) => monthShort(String(v)) },
-						yAxis: { format: (v: unknown) => compactIDR(v) },
-						tooltip: {
-							root: { motion: reduceMotion ? 'none' : 'spring' },
-							header: { format: (v: unknown) => monthLong(String(v)) },
-							item: { format: (v: unknown) => formatIDR(Number(v) || 0) },
-							hideTotal: true
-						}
-					}}
-				/>
-			</div>
-		{:else}
-			<p class="py-6 text-center text-sm text-ctp-subtext0">
-				Belum ada data tren enam bulan terakhir.
-			</p>
-		{/if}
-	</section>
-
-	{#if data.debtTotals.owe > 0 || data.debtTotals.owed > 0}
-		<a
-			href="/hutang"
-			aria-label="Ringkasan hutang dan piutang"
-			class="card mt-3 grid grid-cols-2 divide-x divide-ctp-surface0 overflow-hidden transition-colors duration-150 hover:bg-ctp-surface0"
-		>
-			<div class="p-4">
-				<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
-					<span class="tile h-6 w-6 bg-ctp-red/15 text-ctp-red" aria-hidden="true"><HandCoins size={14} /></span>
-					Hutang Saya
-				</div>
-				<p class="num mt-1 text-sm font-bold tabular-nums text-ctp-red">
-					− {formatIDR(data.debtTotals.owe)}
-				</p>
-			</div>
-			<div class="p-4">
-				<div class="flex items-center gap-1.5 text-xs text-ctp-subtext1">
-					<span class="tile h-6 w-6 bg-ctp-green/15 text-ctp-green" aria-hidden="true"><HandCoins size={14} /></span>
-					Piutang Saya
-				</div>
-				<p class="num mt-1 text-sm font-bold tabular-nums text-ctp-green">
-					+ {formatIDR(data.debtTotals.owed)}
-				</p>
-			</div>
-		</a>
-	{/if}
 
 	<section class="mt-6" aria-label="Daftar dompet">
 		<h2 class="section-title mb-2">Dompet</h2>
@@ -393,6 +238,7 @@
 
 <TransactionForm
 	open={showForm}
+	initialType={formPreset}
 	onclose={() => (showForm = false)}
 	wallets={data.wallets}
 />

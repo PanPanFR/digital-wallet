@@ -22,12 +22,22 @@ const AdjustSchema = z.object({
 	newBalance: z.coerce.number().int().min(0).max(999_999_999_999)
 });
 
+const InitialBalanceSchema = z.object({
+	initialBalance: z.coerce.number().int().min(0).max(999_999_999_999).default(0)
+});
+
 export const actions: Actions = {
 	create: async ({ request, platform }: RequestEvent) => {
-		const parsed = WalletSchema.safeParse(Object.fromEntries(await request.formData()));
+		const form = Object.fromEntries(await request.formData());
+		const parsed = WalletSchema.safeParse(form);
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
+		const balanceParsed = InitialBalanceSchema.safeParse(form);
+		if (!balanceParsed.success) return fail(400, { errors: fieldErrors(balanceParsed.error) });
 		const result = await createWallet(platform!.env.DB, parsed.data);
 		if (result === 'duplicate') return fail(400, { errors: DUP_ERRORS });
+		if (balanceParsed.data.initialBalance > 0) {
+			await adjustWalletBalance(platform!.env.DB, result, balanceParsed.data.initialBalance);
+		}
 		return { success: true };
 	},
 
