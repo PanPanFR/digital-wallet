@@ -328,7 +328,7 @@
       "file_type": "code",
       "norm_label": "#each()",
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L152"
+      "source_location": "L156"
     },
     {
       "id": "src_lib_components_navigation_opentransactionform",
@@ -340,7 +340,7 @@
       "file_type": "code",
       "norm_label": "opentransactionform()",
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L36"
+      "source_location": "L40"
     },
     {
       "id": "src_lib_components_walletselect_kind",
@@ -403,18 +403,6 @@
       "source_location": "L12"
     },
     {
-      "id": "src_routes_analytics_page_i",
-      "label": "i()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "transactions/+page.svelte",
-      "file_type": "code",
-      "norm_label": "i()",
-      "source_file": "src/routes/analytics/+page.svelte",
-      "source_location": "L179"
-    },
-    {
       "id": "src_routes_layout_children",
       "label": "children()",
       "_callable": true,
@@ -436,7 +424,7 @@
       "file_type": "code",
       "norm_label": "filterhref()",
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L63"
+      "source_location": "L136"
     },
     {
       "id": "src_routes_transactions_page_ischipactive",
@@ -448,7 +436,7 @@
       "file_type": "code",
       "norm_label": "ischipactive()",
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L74"
+      "source_location": "L147"
     },
     {
       "id": "src_routes_transactions_page_onmonthchange",
@@ -460,7 +448,7 @@
       "file_type": "code",
       "norm_label": "onmonthchange()",
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L59"
+      "source_location": "L132"
     },
     {
       "id": "src_routes_transactions_page_openadd",
@@ -472,7 +460,7 @@
       "file_type": "code",
       "norm_label": "openadd()",
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L38"
+      "source_location": "L111"
     },
     {
       "id": "src_routes_transactions_page_openedit",
@@ -484,7 +472,31 @@
       "file_type": "code",
       "norm_label": "openedit()",
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L43"
+      "source_location": "L116"
+    },
+    {
+      "id": "src_routes_transactions_page_toggleall",
+      "label": "toggleAll()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "transactions/+page.svelte",
+      "file_type": "code",
+      "norm_label": "toggleall()",
+      "source_file": "src/routes/transactions/+page.svelte",
+      "source_location": "L90"
+    },
+    {
+      "id": "src_routes_transactions_page_togglerow",
+      "label": "toggleRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "transactions/+page.svelte",
+      "file_type": "code",
+      "norm_label": "togglerow()",
+      "source_file": "src/routes/transactions/+page.svelte",
+      "source_location": "L83"
     },
     {
       "id": "src_routes_wallets_page_kindtoggle",
@@ -496,7 +508,7 @@
       "file_type": "code",
       "norm_label": "kindtoggle()",
       "source_file": "src/routes/wallets/+page.svelte",
-      "source_location": "L181"
+      "source_location": "L179"
     },
     {
       "id": "src_lib_server_ai_getconfigfromenv",
@@ -952,7 +964,7 @@
       "file_type": "code",
       "norm_label": "load()",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L12"
+      "source_location": "L14"
     },
     {
       "id": "src_routes_transactions_page_server_load",
@@ -1001,6 +1013,18 @@
       "norm_label": "compactidr()",
       "source_file": "src/routes/analytics/+page.svelte",
       "source_location": "L89"
+    },
+    {
+      "id": "src_routes_analytics_page_i",
+      "label": "i()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "analytics/+page.svelte",
+      "file_type": "code",
+      "norm_label": "i()",
+      "source_file": "src/routes/analytics/+page.svelte",
+      "source_location": "L179"
     },
     {
       "id": "src_routes_analytics_page_monthlong",
@@ -1597,6 +1621,17 @@
       "source_file": "$app/state"
     },
     {
+      "id": "svg",
+      "label": "layerchart/svg",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "transactions/+page.svelte",
+      "confidence": "EXTRACTED",
+      "file_type": "code",
+      "norm_label": "layerchart/svg",
+      "source_file": "layerchart/svg"
+    },
+    {
       "id": "transition",
       "label": "svelte/transition",
       "_origin": "ast",
@@ -1649,7 +1684,7 @@
       "file_type": "code",
       "norm_label": "ismoreactive",
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L29"
+      "source_location": "L33"
     },
     {
       "id": "src_lib_components_navigation_ismoreopen",
@@ -1660,7 +1695,7 @@
       "file_type": "code",
       "norm_label": "ismoreopen",
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L28"
+      "source_location": "L32"
     },
     {
       "id": "src_lib_components_navigation_secondarymobileitems",
@@ -1671,18 +1706,7 @@
       "file_type": "code",
       "norm_label": "secondarymobileitems",
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L26"
-    },
-    {
-      "id": "src_lib_components_skeleton",
-      "label": "Skeleton.svelte",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "transactions/+page.svelte",
-      "file_type": "code",
-      "norm_label": "skeleton.svelte",
-      "source_file": "src/lib/components/Skeleton.svelte",
-      "source_location": "L1"
+      "source_location": "L30"
     },
     {
       "id": "src_lib_components_themetoggle",
@@ -2034,7 +2058,7 @@
       "file_type": "code",
       "norm_label": "actions",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L27"
+      "source_location": "L31"
     },
     {
       "id": "src_routes_transactions_page_server",
@@ -2078,7 +2102,7 @@
       "file_type": "code",
       "norm_label": "actions",
       "source_file": "src/routes/wallets/+page.server.ts",
-      "source_location": "L29"
+      "source_location": "L25"
     },
     {
       "id": "src_routes_wallets_page_server_adjustschema",
@@ -2103,194 +2127,255 @@
       "source_location": "L19"
     },
     {
-      "id": "src_routes_wallets_page_server_initialbalanceschema",
-      "label": "InitialBalanceSchema",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "db.ts",
-      "file_type": "code",
-      "norm_label": "initialbalanceschema",
-      "source_file": "src/routes/wallets/+page.server.ts",
-      "source_location": "L25"
-    },
-    {
-      "id": "plan_mvp_simplify_mobile",
-      "label": "mvp-simplify-mobile.md",
+      "id": "plan_mobile_home_transactions",
+      "label": "mobile-home-transactions.md",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "page",
-      "norm_label": "mvp-simplify-mobile.md",
-      "source_file": "plan/mvp-simplify-mobile.md",
+      "norm_label": "mobile-home-transactions.md",
+      "source_file": "plan/mobile-home-transactions.md",
       "source_location": "L1"
     },
     {
-      "id": "plan_mvp_simplify_mobile_acceptance_criteria",
+      "id": "plan_mobile_home_transactions_acceptance_criteria",
       "label": "Acceptance Criteria",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "acceptance criteria",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L77"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L124"
     },
     {
-      "id": "plan_mvp_simplify_mobile_appendix_global_stitch_mcp_keyless_record_secret_never_lands_in_repo",
-      "label": "Appendix: Global Stitch MCP (keyless record \u2014 secret never lands in repo)",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "appendix: global stitch mcp (keyless record \u2014 secret never lands in repo)",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L122"
-    },
-    {
-      "id": "plan_mvp_simplify_mobile_context",
+      "id": "plan_mobile_home_transactions_context",
       "label": "Context",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "context",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L28"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L20"
     },
     {
-      "id": "plan_mvp_simplify_mobile_delegation_strategy",
+      "id": "plan_mobile_home_transactions_delegation_strategy",
       "label": "Delegation Strategy",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "delegation strategy",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L109"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L153"
     },
     {
-      "id": "plan_mvp_simplify_mobile_dependencies",
+      "id": "plan_mobile_home_transactions_dependencies",
       "label": "Dependencies",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "dependencies",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L47"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L48"
     },
     {
-      "id": "plan_mvp_simplify_mobile_files_areas_likely_affected",
+      "id": "plan_mobile_home_transactions_files_areas_likely_affected",
       "label": "Files / Areas Likely Affected",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "files / areas likely affected",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L54"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L53"
     },
     {
-      "id": "plan_mvp_simplify_mobile_git",
+      "id": "plan_mobile_home_transactions_git",
       "label": "Git",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "git",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L96"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L142"
     },
     {
-      "id": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "label": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "id": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "label": "Implementation Plan: Mobile Home + Transactions Fix",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "implementation plan: mvp simplify + mobile hierarchy fix",
-      "source_file": "plan/mvp-simplify-mobile.md",
+      "norm_label": "implementation plan: mobile home + transactions fix",
+      "source_file": "plan/mobile-home-transactions.md",
       "source_location": "L1"
     },
     {
-      "id": "plan_mvp_simplify_mobile_implementation_steps",
+      "id": "plan_mobile_home_transactions_implementation_steps",
       "label": "Implementation Steps",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "implementation steps",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L67"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L61"
     },
     {
-      "id": "plan_mvp_simplify_mobile_integration_notes",
+      "id": "plan_mobile_home_transactions_integration_notes",
       "label": "Integration Notes",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "integration notes",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L102"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L147"
     },
     {
-      "id": "plan_mvp_simplify_mobile_objective",
+      "id": "plan_mobile_home_transactions_objective",
       "label": "Objective",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "objective",
-      "source_file": "plan/mvp-simplify-mobile.md",
+      "source_file": "plan/mobile-home-transactions.md",
       "source_location": "L3"
     },
     {
-      "id": "plan_mvp_simplify_mobile_scope",
+      "id": "plan_mobile_home_transactions_scope",
       "label": "Scope",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "scope",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L13"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L7"
     },
     {
-      "id": "plan_mvp_simplify_mobile_verification_tests",
+      "id": "plan_mobile_home_transactions_step_1_baseline_builder_inline",
+      "label": "Step 1 \u2014 Baseline (builder, inline)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 1 \u2014 baseline (builder, inline)",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L63"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_2_bottom_nav_true_centered_fab_5_cell_grid",
+      "label": "Step 2 \u2014 Bottom nav: true-centered FAB (5-cell grid)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 2 \u2014 bottom nav: true-centered fab (5-cell grid)",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L69"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_3_beranda_mobile_stacking_dedup_cta",
+      "label": "Step 3 \u2014 Beranda mobile stacking + dedup CTA",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 3 \u2014 beranda mobile stacking + dedup cta",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L80"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_4_transaksi_mobile_filter_grid_row_restructure",
+      "label": "Step 4 \u2014 Transaksi mobile: filter grid + row restructure",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 4 \u2014 transaksi mobile: filter grid + row restructure",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L92"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_5_shared_css_only_if_needed_serial",
+      "label": "Step 5 \u2014 Shared CSS (only if needed; serial)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 5 \u2014 shared css (only if needed; serial)",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L108"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_6_verify_review_parallel_batch_b",
+      "label": "Step 6 \u2014 Verify + review (parallel batch B)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 6 \u2014 verify + review (parallel batch b)",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L112"
+    },
+    {
+      "id": "plan_mobile_home_transactions_step_7_finalize_builder_inline",
+      "label": "Step 7 \u2014 Finalize (builder, inline)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "step 7 \u2014 finalize (builder, inline)",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L118"
+    },
+    {
+      "id": "plan_mobile_home_transactions_verification_tests",
       "label": "Verification / Tests",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Implementation Plan: MVP Simplify + Mobile Hierarchy Fix",
+      "community_name": "Implementation Plan: Mobile Home + Transactions Fix",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "verification / tests",
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L88"
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L136"
     },
     {
-      "id": "svg",
-      "label": "layerchart/svg",
+      "id": "src_lib_components_skeleton",
+      "label": "Skeleton.svelte",
       "_origin": "ast",
       "community": 11,
       "community_name": "analytics/+page.svelte",
-      "confidence": "EXTRACTED",
       "file_type": "code",
-      "norm_label": "layerchart/svg",
-      "source_file": "layerchart/svg"
+      "norm_label": "skeleton.svelte",
+      "source_file": "src/lib/components/Skeleton.svelte",
+      "source_location": "L1"
     },
     {
       "id": "src_routes_analytics_page",
@@ -2674,6 +2759,138 @@
       "norm_label": "`wallets` (schema.sql:4-9)",
       "source_file": "docs/data-model.md",
       "source_location": "L63"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design",
+      "label": "2026-09-08-digital-wallet-design.md",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "2026-09-08-digital-wallet-design.md",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_data_model_schema_sql_baru",
+      "label": "Data Model (schema.sql baru)",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "data model (schema.sql baru)",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L37"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_deploy_via_github_satu_kali_setup",
+      "label": "Deploy via GitHub (satu kali setup)",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "deploy via github (satu kali setup)",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L96"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_design_digital_wallet_transformasi_dari_finance_tracker",
+      "label": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "design: digital wallet \u2014 transformasi dari finance tracker",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_goals",
+      "label": "Goals",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "goals",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_keputusan_desain",
+      "label": "Keputusan Desain",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "keputusan desain",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L25"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_non_goals",
+      "label": "Non-Goals",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "non-goals",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L17"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_rebrand_checklist",
+      "label": "Rebrand Checklist",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "rebrand checklist",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L86"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_risiko_catatan",
+      "label": "Risiko / Catatan",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "risiko / catatan",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L112"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_testing",
+      "label": "Testing",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "testing",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L104"
+    },
+    {
+      "id": "docs_specs_2026_09_08_digital_wallet_design_ui_routing",
+      "label": "UI / Routing",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ui / routing",
+      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
+      "source_location": "L74"
     },
     {
       "id": "docs_development_daily_workflow",
@@ -3905,138 +4122,6 @@
       "norm_label": "reference & explanation",
       "source_file": "docs/index.md",
       "source_location": "L5"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design",
-      "label": "2026-09-08-digital-wallet-design.md",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "2026-09-08-digital-wallet-design.md",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_data_model_schema_sql_baru",
-      "label": "Data Model (schema.sql baru)",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "data model (schema.sql baru)",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L37"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_deploy_via_github_satu_kali_setup",
-      "label": "Deploy via GitHub (satu kali setup)",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "deploy via github (satu kali setup)",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L96"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_design_digital_wallet_transformasi_dari_finance_tracker",
-      "label": "Design: Digital Wallet \u2014 Transformasi dari Finance Tracker",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "design: digital wallet \u2014 transformasi dari finance tracker",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_goals",
-      "label": "Goals",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "goals",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L8"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_keputusan_desain",
-      "label": "Keputusan Desain",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "keputusan desain",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L25"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_non_goals",
-      "label": "Non-Goals",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "non-goals",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L17"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_rebrand_checklist",
-      "label": "Rebrand Checklist",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "rebrand checklist",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L86"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_risiko_catatan",
-      "label": "Risiko / Catatan",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "risiko / catatan",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L112"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_testing",
-      "label": "Testing",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "testing",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L104"
-    },
-    {
-      "id": "docs_specs_2026_09_08_digital_wallet_design_ui_routing",
-      "label": "UI / Routing",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "Finance Tracker v2 (Project)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "ui / routing",
-      "source_file": "docs/specs/2026-09-08-digital-wallet-design.md",
-      "source_location": "L74"
     },
     {
       "id": "tsconfig",
@@ -5591,7 +5676,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -5603,7 +5688,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -5615,7 +5700,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -5627,7 +5712,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L22",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_page_server_load",
+      "target": "src_lib_server_db_getdebtdirectiontotals",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/routes/+page.server.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_page_server_load",
+      "target": "src_lib_server_db_getmonthlytotals",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/routes/+page.server.ts",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -6983,7 +7092,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -6995,7 +7104,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -7024,6 +7133,18 @@
     },
     {
       "source": "src_routes_page_server",
+      "target": "src_lib_server_db_getdebtdirectiontotals",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/+page.server.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_page_server",
       "target": "src_lib_server_db_getkindtotals",
       "relation": "imports",
       "_origin": "ast",
@@ -7037,6 +7158,18 @@
     {
       "source": "src_routes_page_server",
       "target": "src_lib_server_db_getmonthlysummary",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/routes/+page.server.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_page_server",
+      "target": "src_lib_server_db_getmonthlytotals",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -7958,7 +8091,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -9151,146 +9284,212 @@
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile",
-      "target": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
+      "source": "plan_mobile_home_transactions",
+      "target": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
+      "source_file": "plan/mobile-home-transactions.md",
       "source_location": "L1",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_integration_notes",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_acceptance_criteria",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L102",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_delegation_strategy",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_verification_tests",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L109",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_appendix_global_stitch_mcp_keyless_record_secret_never_lands_in_repo",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_git",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L122",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_scope",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_integration_notes",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L13",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_context",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_delegation_strategy",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L28",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_objective",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_context",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_objective",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
       "source_location": "L3",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_dependencies",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_dependencies",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L47",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_files_areas_likely_affected",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_files_areas_likely_affected",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L54",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_implementation_steps",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_implementation_steps",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L67",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_acceptance_criteria",
+      "source": "plan_mobile_home_transactions_implementation_plan_mobile_home_transactions_fix",
+      "target": "plan_mobile_home_transactions_scope",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L77",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_verification_tests",
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_5_shared_css_only_if_needed_serial",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L88",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
-      "source": "plan_mvp_simplify_mobile_implementation_plan_mvp_simplify_mobile_hierarchy_fix",
-      "target": "plan_mvp_simplify_mobile_git",
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_6_verify_review_parallel_batch_b",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "plan/mvp-simplify-mobile.md",
-      "source_location": "L96",
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_7_finalize_builder_inline",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_1_baseline_builder_inline",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_2_bottom_nav_true_centered_fab_5_cell_grid",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_3_beranda_mobile_stacking_dedup_cta",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "plan_mobile_home_transactions_implementation_steps",
+      "target": "plan_mobile_home_transactions_step_4_transaksi_mobile_filter_grid_row_restructure",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "plan/mobile-home-transactions.md",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -9378,7 +9577,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L152",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -9389,7 +9588,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L26",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -9400,7 +9599,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L28",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -9411,7 +9610,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L29",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -9422,7 +9621,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/components/Navigation.svelte",
-      "source_location": "L36",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -11050,7 +11249,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -11061,7 +11260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/+page.server.ts",
-      "source_location": "L27",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -11105,7 +11304,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L38",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -11116,7 +11315,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L43",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -11127,7 +11326,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L59",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -11138,7 +11337,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L63",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -11149,7 +11348,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/transactions/+page.svelte",
-      "source_location": "L74",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_transactions_page",
+      "target": "src_routes_transactions_page_togglerow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/transactions/+page.svelte",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "src_routes_transactions_page",
+      "target": "src_routes_transactions_page_toggleall",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/transactions/+page.svelte",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -11182,7 +11403,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/wallets/+page.svelte",
-      "source_location": "L181",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -11220,24 +11441,13 @@
     },
     {
       "source": "src_routes_wallets_page_server",
-      "target": "src_routes_wallets_page_server_initialbalanceschema",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/routes/wallets/+page.server.ts",
-      "source_location": "L25",
-      "weight": 1.0
-    },
-    {
-      "source": "src_routes_wallets_page_server",
       "target": "src_routes_wallets_page_server_actions",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/routes/wallets/+page.server.ts",
-      "source_location": "L29",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -11870,6 +12080,15 @@
     },
     {
       "source": "src_routes_page",
+      "target": "motion",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/+page.svelte"
+    },
+    {
+      "source": "src_routes_page",
       "target": "src_lib_components_skeleton",
       "relation": "imports_from",
       "_origin": "ast",
@@ -11898,6 +12117,15 @@
     {
       "source": "src_routes_page",
       "target": "state",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/routes/+page.svelte"
+    },
+    {
+      "source": "src_routes_page",
+      "target": "svg",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12656,5 +12884,5 @@
       "source_file": "src/app.html"
     }
   ],
-  "built_at_commit": "72e762bc63e2b0abc2a44d2983048d1aaa83a35b"
+  "built_at_commit": "d4ad9df0eb3d813376a9208db20992c8997e26cc"
 }
