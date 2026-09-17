@@ -132,10 +132,10 @@
 		<div class="card-dark p-5">
 			<div class="mb-4 flex items-center justify-between gap-2">
 				<h2 class="text-base font-bold">Ringkasan</h2>
-				<span class="text-xs text-white/70">{monthLabel}</span>
+				<span class="text-xs card-dark-dim">{monthLabel}</span>
 			</div>
 			{#if data.categoryTotals.length === 0}
-				<p class="py-6 text-center text-sm text-white/70">
+				<p class="py-6 text-center text-sm card-dark-dim">
 					Tidak ada data untuk {monthLabel}.
 				</p>
 			{:else}
@@ -169,8 +169,8 @@
 								class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
 								aria-hidden="true"
 							>
-								<span class="text-[11px] leading-none text-white/70">Pengeluaran</span>
-								<span class="num mt-1 text-sm leading-tight font-bold text-white">
+								<span class="text-[11px] leading-none card-dark-dim">Pengeluaran</span>
+								<span class="num mt-1 text-sm leading-tight font-bold card-dark-strong">
 									{compactIDR(sumByType.expense)}
 								</span>
 							</div>
@@ -184,9 +184,9 @@
 										style="background-color: {CHART_PALETTE[i % CHART_PALETTE.length]}"
 										aria-hidden="true"
 									></span>
-									<span class="truncate text-white/85">{cat.category}</span>
-									<span class="num ml-auto shrink-0 tabular-nums text-white/70">{pct}%</span>
-									<span class="num shrink-0 font-semibold tabular-nums text-white">
+									<span class="truncate card-dark-strong">{cat.category}</span>
+									<span class="num ml-auto shrink-0 tabular-nums card-dark-dim">{pct}%</span>
+									<span class="num shrink-0 font-semibold tabular-nums card-dark-strong">
 										{formatIDR(cat.total)}
 									</span>
 								</li>
@@ -194,38 +194,38 @@
 						</ul>
 					</div>
 				{:else}
-					<p class="py-2 text-center text-sm text-white/70">
+					<p class="py-2 text-center text-sm card-dark-dim">
 						Belum ada pengeluaran bulan ini.
 					</p>
 				{/if}
-				<dl class="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm">
+				<dl class="mt-4 space-y-2 border-t card-dark-divider pt-4 text-sm">
 					<div class="flex items-center justify-between gap-2">
-						<dt class="flex items-center gap-2 text-white/70">
+						<dt class="flex items-center gap-2 card-dark-dim">
 							<span class="h-2.5 w-2.5 shrink-0 rounded-full bg-ctp-green" aria-hidden="true"></span>
 							Total Pemasukan
 						</dt>
-						<dd class="num font-bold tabular-nums text-white">+ {formatIDR(sumByType.income)}</dd>
+						<dd class="num font-bold tabular-nums card-dark-strong">+ {formatIDR(sumByType.income)}</dd>
 					</div>
 					<div class="flex items-center justify-between gap-2">
-						<dt class="flex items-center gap-2 text-white/70">
+						<dt class="flex items-center gap-2 card-dark-dim">
 							<span class="h-2.5 w-2.5 shrink-0 rounded-full bg-ctp-red" aria-hidden="true"></span>
 							Total Pengeluaran
 						</dt>
-						<dd class="num font-bold tabular-nums text-white">− {formatIDR(sumByType.expense)}</dd>
+						<dd class="num font-bold tabular-nums card-dark-strong">− {formatIDR(sumByType.expense)}</dd>
 					</div>
 					<div class="flex items-center justify-between gap-2">
-						<dt class="flex items-center gap-2 text-white/70">
-							<span class="h-2.5 w-2.5 shrink-0 rounded-full bg-white" aria-hidden="true"></span>
+						<dt class="flex items-center gap-2 card-dark-dim">
+							<span class="h-2.5 w-2.5 shrink-0 rounded-full card-dark-dot" aria-hidden="true"></span>
 							Selisih
 						</dt>
-						<dd class="num font-bold tabular-nums text-white">{signedIDR(diff)}</dd>
+						<dd class="num font-bold tabular-nums card-dark-strong">{signedIDR(diff)}</dd>
 					</div>
 					<div class="flex items-center justify-between gap-2">
-						<dt class="flex items-center gap-2 text-white/70">
-							<span class="h-2.5 w-2.5 shrink-0 rounded-full bg-white/40" aria-hidden="true"></span>
+						<dt class="flex items-center gap-2 card-dark-dim">
+							<span class="h-2.5 w-2.5 shrink-0 rounded-full card-dark-dot-dim" aria-hidden="true"></span>
 							Kategori aktif
 						</dt>
-						<dd class="num font-bold tabular-nums text-white/70">{catCount}</dd>
+						<dd class="num font-bold tabular-nums card-dark-dim">{catCount}</dd>
 					</div>
 				</dl>
 			{/if}

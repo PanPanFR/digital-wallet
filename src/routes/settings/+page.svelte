@@ -454,7 +454,7 @@
 			<a class="btn btn-outline" href="/api/backup/export?format=json">Unduh Backup (JSON)</a>
 			<a class="btn btn-outline" href="/api/backup/export?format=csv">Unduh Transaksi (CSV)</a>
 		</div>
-		<p class="flex items-start gap-2 rounded-lg border border-ctp-yellow/30 bg-ctp-yellow/15 px-3 py-2 text-sm text-[#9a6b0f]">
+		<p class="notice-warn flex items-start gap-2 rounded-lg border border-ctp-yellow/30 bg-ctp-yellow/15 px-3 py-2 text-sm">
 			<TriangleAlert size={16} class="mt-0.5 shrink-0" aria-hidden="true" />
 			<span>File backup berisi API key — simpan baik-baik.</span>
 		</p>

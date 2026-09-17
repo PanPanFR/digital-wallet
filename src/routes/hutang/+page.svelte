@@ -323,7 +323,7 @@
 											<CircleCheck size={12} aria-hidden="true" /> Lunas
 										</span>
 									{:else}
-										<span class="chip bg-ctp-yellow/20 font-semibold text-[#9a6b0f] ring-1 ring-inset ring-ctp-yellow/40">
+										<span class="chip chip-warn bg-ctp-yellow/20 font-semibold ring-1 ring-inset ring-ctp-yellow/40">
 											<Clock size={12} aria-hidden="true" /> Belum
 										</span>
 									{/if}
