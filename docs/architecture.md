@@ -1,122 +1,66 @@
 # Architecture
 
-What you'll get from this doc: how a request flows through the app, how the SvelteKit build maps onto Cloudflare Workers, how the code is layered, and which design decisions shaped it (with links to the full specs). For the storage layer in detail see [data-model.md](data-model.md); for running/deploying see [development.md](development.md) and [deployment.md](deployment.md).
+What you'll get from this doc: how a request flows through the app, how the Vite+React build maps onto Cloudflare Workers, how the code is layered, and which design decisions shaped it (with links to the full specs). For the storage layer in detail see [data-model.md](data-model.md); for running/deploying see [development.md](development.md) and [deployment.md](deployment.md).
 
 ## Runtime shape
 
-Everything ships as **one Cloudflare Worker** plus its static-asset bucket, produced by `@sveltejs/adapter-cloudflare`:
+Everything ships as **one Cloudflare Worker** with static asset serving:
 
-- Server code (load functions, form actions, API routes, hooks) compiles to `.svelte-kit/cloudflare/_worker.js` — the Worker entry point (`wrangler.jsonc` → `main`).
-- Client chunks, `static/` files (manifest, icons, `sw.js`) are served through the `ASSETS` binding; the adapter's default `serve` fallback sends unmatched requests to the Worker.
-- `compatibility_flags: ["nodejs_compat"]` lets server code use `process.env` — secrets/vars from bindings are surfaced there (that is how `src/lib/server/auth.ts` and `ai.ts` read `SESSION_SECRET` / `AI_BASE_URL` / `AI_MODEL`; `src/routes/api/ai/report/+server.ts` reads `GOOGLE_API_KEY` from `platform.env` instead).
-- Pages render server-side (SSR); there is no separate API server and no client-side data fetching except the one copilot JSON endpoint (`/api/ai/report`).
+- Backend code is a [Hono](https://hono.dev/) app in `worker/index.ts` — the Worker entry point (`wrangler.jsonc` → `main: worker/index.ts`).
+- Frontend is a Vite + React 19 Single Page Application in `web/`, built to `dist/`.
+- Wrangler static assets configuration (`assets: { directory: "./dist", not_found_handling: "single-page-application" }`) serves the client chunks, icons, and SPA fallback.
+- `compatibility_flags: ["nodejs_compat"]` lets worker code use Node compatibility where needed.
+- Hono handles all `/api/*` requests with session cookie middleware; static assets and SPA routes are handled directly by Cloudflare Worker Assets.
 
 ```mermaid
 flowchart LR
-    B[Browser] -->|HTML form POST / navigation| H[Worker: hooks.server.ts]
-    B -->|POST /api/ai/report JSON| H
-    H -->|session valid| R[Route +page.server.ts / +server.ts]
-    H -->|invalid, page| L[303 redirect /login]
-    H -->|invalid, /api/*| J[401 JSON]
+    B[Browser] -->|/api/* requests| H[Worker: Hono API worker/index.ts]
+    H -->|session valid| R[Hono Route worker/routes/*]
+    H -->|unauthenticated /api/*| J[401 JSON]
     R --> D[(D1: digital-wallet-db)]
     R -->|copilot only| A[OpenAI-compatible chat API]
-    B -->|static assets| S[ASSETS binding]
+    B -->|static assets / SPA fallback| S[Worker Assets: ./dist]
 ```
 
 ## Request flow & auth
 
-The single guard is `src/hooks.server.ts`:
+The auth guard runs in Hono middleware in `worker/index.ts` and `worker/auth.ts`:
 
-1. Read the `dw_session` cookie → `verifySessionToken()` (HMAC-SHA256 over a base64 `{exp, iat}` payload keyed by `SESSION_SECRET`; 7-day expiry). Result lands in `locals.session`.
-2. Unauthenticated: `/api/*` gets a JSON 401 (never a redirect); anything except `/login` 303s to `/login`. Authenticated users hitting `/login` bounce to `/`.
-3. Each route's `load` also re-checks `locals.session` and redirects (defense in depth).
+1. Read the `dw_session` cookie → `verifySessionToken()` (HMAC-SHA256 over a base64 `{exp, iat}` payload keyed by `SESSION_SECRET`; 7-day expiry).
+2. Unauthenticated: `/api/*` gets a JSON 401 (never a redirect). Public routes (`/api/auth/status`, `/api/auth/login`, `/api/auth/setup`) bypass authentication.
+3. Client-side: `web/src/api/client.ts` catches 401 responses and automatically redirects the SPA to `/login`.
 
-Login itself (see `docs/specs/2026-09-03-svelte-rewrite-design.md` § Auth Flow for the original design):
+Login flow:
 
-- First run: `/login` detects no `master_password_hash` in `app_settings` and shows **setup** mode; submitting sets the password (PBKDF2-SHA256, 100k iterations, stored as `saltHex:hashHex`).
-- After that: **login** mode verifies the password. Failed attempts go through the D1-backed rate limiter (`hitRateLimit('login', 15min, 5)` in `src/routes/login/+page.server.ts`) — it survives Worker isolate restarts, unlike an in-memory counter. It deliberately **fails open** if the DB write errors.
-- Success issues the cookie via `src/lib/server/session.ts` (`httpOnly`, `sameSite=lax`, `secure` unless dev).
-- CSRF: mutations use SvelteKit form actions (built-in origin checks); the copilot JSON endpoint compares `Origin` to the request origin manually (`src/routes/api/ai/report/+server.ts`).
+- First run: `/api/auth/status` indicates `setupRequired: true` when no `master_password_hash` exists in `app_settings`. `/login` renders **setup** mode; submitting sets the master password (PBKDF2-SHA256, 100k iterations, stored as `saltHex:hashHex`).
+- After setup: **login** mode verifies the password against the stored hash. Failed attempts go through the D1-backed rate limiter (`hitRateLimit('login', 15min, 5)`) — surviving Worker isolate restarts. It deliberately **fails open** if the DB write errors.
+- Success issues the cookie via `worker/session.ts` (`httpOnly`, `sameSite=lax`, `secure` unless dev).
 
 ## Data access
 
-All SQL lives in `src/lib/server/db.ts`; every function takes `D1Database` as its first argument — route files pass `platform!.env.DB`. This keeps the module testable with a fake-Db object (`src/lib/server/db.test.ts`) and keeps D1 out of client code.
+All SQL lives in `worker/db.ts`; every function takes `D1Database` as its first argument. This keeps the module testable with a fake-Db object (`worker/db.test.ts`) and keeps D1 out of client code.
 
 Two load-bearing rules:
 
-- **Balances are computed, never stored.** Per-wallet, per-kind, and combined totals all derive from a `SUM(CASE …)` over `transactions` that signs income/expense and, for `transfer`, keys off which wallet the row touches (`BALANCE_CASE`/`BALANCE_SQL`, `getKindTotals`). This was the central decision of the digital-wallet transformation — a stored balance column is a sync bug waiting to happen. Source: `docs/specs/2026-09-08-digital-wallet-design.md`.
-- **zod validation is server-side, one source of truth.** `src/lib/server/validation.ts` (`TxSchema`, `WalletSchema`, `DebtSchema`, `DebtPaymentSchema`, `fieldErrors`) guards every money path; the same schemas run in form actions and API endpoints.
+- **Balances are computed, never stored.** Per-wallet, per-kind, and combined totals all derive from a `SUM(CASE …)` over `transactions` that signs income/expense and, for `transfer`, keys off which wallet the row touches (`BALANCE_CASE`/`BALANCE_SQL`, `getKindTotals`). A stored balance column is a sync bug waiting to happen.
+- **zod validation is server-side, one source of truth.** `shared/validation.ts` (`TxSchema`, `WalletSchema`, `DebtSchema`, `DebtPaymentSchema`, `fieldErrors`) guards every money path; the same schemas validate API requests and forms.
 
 ## AI copilot
 
-`/copilot` is an Indonesian chatbox: free-form questions answered from a per-request JSON snapshot of the user's finances (wallet balances, this/last-month summaries, category totals, 6-month trend, open debts, 10 recent transactions) built by `src/routes/api/ai/report/+server.ts` and sent to `chatAnswer()` in `src/lib/server/ai.ts`. The call goes to an OpenAI-compatible `/chat/completions` endpoint; the AI is strictly read-only (server-side chat history is not stored — the client replays the last ≤8 turns). The earlier free-text **parse** flow (`/api/ai/parse`, preview → confirm → bulk save) was removed with the chatbox rework.
+`/copilot` is an Indonesian chatbox: free-form questions answered from a per-request JSON snapshot of the user's finances (wallet balances, this/last-month summaries, category totals, 6-month trend, open debts, 10 recent transactions) built by `worker/routes/ai.ts` and sent to `chatAnswer()` in `worker/ai.ts`. The call goes to an OpenAI-compatible `/chat/completions` endpoint; the AI is strictly read-only (server-side chat history is not stored — the client replays the last ≤8 turns).
 
-Provider config resolves in precedence order (shared by the report endpoint, `resolveProviderConfig` in `src/lib/server/aiProviders.ts`):
+Provider config resolves in precedence order (`worker/aiProviders.ts`):
 
 1. per-request body override (`providerId`/`model`, model honored only if it is one of that provider's models),
-2. a user-stored provider in `app_settings` (`ai_providers` JSON array + `ai_active_provider`), managed via CRUD form actions on `/settings`; keys are stored plaintext (single-user tradeoff) and stripped by `toSummary()` before anything ships to the client,
+2. a user-stored provider in `app_settings` (`ai_providers` JSON array + `ai_active_provider`), managed via CRUD on `/settings`; keys are stored plaintext (single-user tradeoff) and stripped by `toSummary()` before anything ships to the client,
 3. env fallback `GOOGLE_API_KEY` / `AI_BASE_URL` (default `https://9router.panpan.my.id/v1`) / `AI_MODEL` (default `gemini-2.5-flash`).
 
 With neither a stored provider nor `GOOGLE_API_KEY`, `/api/ai/report` returns 503 ("Fitur AI belum dikonfigurasi") and the copilot degrades gracefully.
 
-The 8 fixed transaction categories in `src/lib/constants.ts` drive the form/category filter; there is no AI parse prompt to keep them in sync with anymore.
-
 ## Frontend layering
 
-- Routes are file-based; each page pairs `+page.server.ts` (load + actions) with `+page.svelte` (Svelte 5 runes, `$props`/`$state`/`$derived`). Mutations never hand-roll `fetch` — form actions + `invalidateAll()` refresh the data.
-- Shared components in `src/lib/components/`: `TransactionForm` (create/edit modal), `ConfirmModal` (deletes), `ModalShell` (accessible dialogs with `center` modal and `sheet` bottom drawer variants, reduced-motion aware), `Toast`, `Skeleton`, `Navigation` (desktop sidebar + 5-slot mobile bottom navigation with "Lainnya" sheet menu), `ThemeToggle`, `WalletSelect` (grouped by kind).
-- Charts: rendered via LayerChart (`layerchart/svg` — `BarChart`, `PieChart`) on `/` (6-month monthly trend) and `/analytics` (category distribution and monthly trends). Themed via unlayered `.lc-root-container` CSS variable overrides in `src/app.css` without importing external library CSS.
-- Client state is minimal: toast list in `src/lib/stores.svelte.ts`; modal focus-trap/ESC in `src/lib/modalAccessibility.ts`.
-- Formatting/locale helpers centralized in `src/lib/format.ts` (IDR currency, WIB dates). UI strings are Indonesian throughout; identifiers and comments are English.
-
-## Styling & theme
-
-Tailwind CSS v4 via `@tailwindcss/vite` (no config file; `src/app.css` imports `tailwindcss` and defines a class-based `dark` variant). Before first paint, an inline script in `src/app.html` reads `localStorage['ft-theme']` and sets `class="dark|light"` on `<html>`, defaulting to the system preference. `ThemeToggle.svelte` flips the class and persists the choice. Safe-area inset bottom padding (`pb-[env(safe-area-inset-bottom)]`) ensures mobile bars stay above system navigation indicators.
-
-## PWA status: manifest yes, service worker no
-
-The app links `static/manifest.json` (name, colors, standalone display) but **runs without a service worker on purpose**. A cache-first SW cached SSR HTML and `__data.json` responses and never invalidated them — deleted transactions reappeared after navigation (fixed in commit `a501625c`). `static/sw.js` is now a self-cleanup stub: on activate it purges all caches, unregisters itself, and reloads clients; it is no longer registered by app code and is slated for deletion after 2027-01-01. Data lives in D1 and always requires network.
-
-App icon is `static/icon.svg` only.
-
-## Repository layout
-
-```
-├── src/
-│   ├── hooks.server.ts        # session guard: cookie → locals.session, 401/redirect rules
-│   ├── app.html               # theme init script, manifest link, SvelteKit shell
-│   ├── app.css                # Tailwind v4 entry + class-based dark variant
-│   ├── app.d.ts               # Platform/Locals types (D1, ASSETS, env var names)
-│   ├── lib/
-│   │   ├── server/            # db.ts, auth.ts, session.ts, ai.ts, aiProviders.ts, validation.ts (+ *.test.ts)
-│   │   ├── components/        # TransactionForm, ConfirmModal, Toast, Skeleton, Navigation, ThemeToggle, WalletSelect, ModalShell
-│   │   ├── constants.ts       # CATEGORIES, AMOUNT_PRESETS
-│   │   ├── format.ts          # IDR currency + WIB date formatting
-│   │   ├── stores.svelte.ts   # toast state (runes)
-│   │   └── modalAccessibility.ts
-│   └── routes/
-│       ├── +page.svelte|.server.ts        # dashboard: totals, balances, 6-month trend, recent, quick-add, logout action
-│       ├── login/ wallets/ transactions/ hutang/ analytics/ copilot/ settings/
-│       └── api/ai/report/+server.ts       # copilot chatbox JSON endpoint
-│       └── api/backup/export/+server.ts   # JSON backup + CSV transaction downloads
-├── static/                    # manifest.json, icon.svg, sw.js (cleanup stub only)
-├── schema.sql                 # full D1 schema, idempotent (see data-model.md)
-├── migrations/                # one-off structural migrations (NNN-*.sql), applied manually
-├── wrangler.jsonc             # worker name, D1 + ASSETS bindings, nodejs_compat
-├── svelte.config.js / vite.config.ts / vitest.config.ts / tsconfig.json
-└── docs/ + plan/              # this documentation; plan/ holds approved-but-unmerged work
-```
-
-## Decisions not re-documented here
-
-Full rationale lives in the specs — summaries above, details in:
-
-- `docs/specs/2026-09-03-svelte-rewrite-design.md` — framework/hosting/styling/PWA choices of the rewrite.
-- `docs/specs/2026-09-08-digital-wallet-design.md` — wallet model, clean-start D1 (no data migration), kind CHECK constraint, seed wallets, rebrand checklist, Workers Builds over manual deploys.
-
-Visual layer (template-driven Catppuccin, `template-design/catppuccin_latte_fintech/DESIGN.md` as brief, implemented by `plan/ui-catppuccin-operate.md`): design tokens and component utilities live in `src/app.css`:
-- Roles: peach `#fe640b` primary actions, blue `#1e66f5` transfers/links, green `#40a02b` income, red `#d20f39` expense, base `#eff1f5` canvas / mantle `#e6e9ef` cards / crust `#dce0e8` wells, text `#4c4f69`, muted overlay `#8c8fa1`, border surface0 `#ccd0da` (Mocha mirrors structure in dark mode). No gradients; solid fills only.
-- Type: Plus Jakarta Sans with `currency-display` (28px/22px mobile) + `tnum`/`cv05`/`ss01` tabular IDR (`Rp ` regular space, `+ Rp`/`− Rp` signs) via `.num` and `formatIDR`.
-- Shape & depth: cards 12px, controls 8px, icons circular (`.tile`); Layer 0 canvas → Layer 1 cards (border + soft shadow light, hairline ring dark) → Layer 2 modals; inputs 44px white (dark surface0) with peach border + `rgba(254,100,11,.15)` focus glow and pinned `Rp` prefix.
-- Components: `.btn` (primary peach + `#f75b02` hover + bevel, bold 14px+ white labels), `.input`, `.chip`/`.chip-active` (solid peach active), dark-pill segmented control, tinted circular txn icons (green/red/blue), `.card-dark` fixed `#2c2f47` summary card (dark both modes), LayerChart donut ≥4 distinct hues with matching legend swatches.
-- Navigation: desktop sidebar (structure kept, peach active) + dark floating mobile pill (`#2c2f47/95`) with orange Catat FAB opening the form via `open-transaction-form` event, "Lainnya" bottom sheet (`ModalShell variant="sheet"`) and safe-area inset padding `pb-[env(safe-area-inset-bottom)]`.
+- Pure React SPA in `web/src/` powered by Vite, React Router 7, and TanStack Query 5.
+- Shared components in `web/src/components/`: `TransactionForm` (create/edit modal), `ConfirmModal` (deletes), `ModalShell` (accessible dialogs with `center` modal and `sheet` bottom drawer variants), `Toast`, `Skeleton`, `Navigation` (desktop sidebar + 5-slot mobile floating pill with "Lainnya" sheet menu), `ThemeToggle`, `WalletSelect` (grouped by kind).
+- Charts: rendered via Recharts (`web/src/components/charts/`) on `/analytics` (category distribution, comparison bars, wallet spend breakdown, and 6-month monthly trend). Themed via unlayered `.chart-root` CSS variable overrides in `web/src/index.css` mapped to Catppuccin palette tokens.
+- Styling: Tailwind CSS 4 (`@tailwindcss/vite`), Catppuccin Latte (light) & Mocha (dark). Fixed Mocha surfaces for dark summary cards and mobile bottom nav.
+- Formatting/locale helpers centralized in `shared/format.ts` (IDR currency, WIB dates). UI strings are Indonesian throughout; identifiers and comments are English.

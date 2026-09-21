@@ -295,6 +295,92 @@ describe('Worker Hono API Contract', () => {
 		});
 	});
 
+	describe('/api/analytics', () => {
+		it('returns composite analytics payload', async () => {
+			const db = makeDb((sql) => {
+				if (sql.includes('type, COALESCE(SUM(amount)')) return [{ type: 'expense', total: 75000 }];
+				if (sql.includes('category, type, COALESCE(SUM(amount)')) return [{ category: 'Makan', type: 'expense', total: 50000 }];
+				if (sql.includes('w.id, w.name, COALESCE(SUM(amount)')) return [{ id: 'w1', name: 'GoPay', total: 50000 }];
+				if (sql.includes('strftime(')) return [{ month: '2026-01', income: 100000, expense: 75000 }];
+				return [];
+			});
+
+			const res = await app.request('/api/analytics?month=2026-01', {
+				method: 'GET',
+				headers: { Cookie: validCookie }
+			}, {
+				DB: db,
+				SESSION_SECRET: TEST_SECRET,
+				ASSETS: {} as any
+			});
+			expect(res.status).toBe(200);
+			const json = await res.json() as Record<string, unknown>;
+			expect(json.month).toBe('2026-01');
+			expect(json).toHaveProperty('summary');
+			expect(json).toHaveProperty('categoryTotals');
+			expect(json).toHaveProperty('walletTotals');
+			expect(json).toHaveProperty('trend');
+		});
+	});
+
+	describe('/api/settings/providers', () => {
+		it('returns provider list and activeProviderId', async () => {
+			const db = makeDb((sql, boundArgs) => {
+				if (boundArgs.includes('ai_providers')) {
+					return {
+						value: JSON.stringify([
+							{
+								id: 'p1',
+								name: 'TestAI',
+								baseUrl: 'https://api.test.com/v1',
+								apiKey: 'secretkey',
+								model: 'model-a',
+								models: ['model-a']
+							}
+						])
+					};
+				}
+				if (boundArgs.includes('ai_active_provider')) {
+					return { value: 'p1' };
+				}
+				return null;
+			});
+
+			const res = await app.request('/api/settings/providers', {
+				method: 'GET',
+				headers: { Cookie: validCookie }
+			}, {
+				DB: db,
+				SESSION_SECRET: TEST_SECRET,
+				ASSETS: {} as any
+			});
+			expect(res.status).toBe(200);
+			const json = await res.json() as { providers: any[]; activeProviderId: string };
+			expect(json.providers).toHaveLength(1);
+			expect(json.providers[0].name).toBe('TestAI');
+			expect(json.providers[0].apiKey).toBeUndefined(); // stripped by toSummary
+			expect(json.activeProviderId).toBe('p1');
+		});
+	});
+
+	describe('/api/backup/import', () => {
+		it('returns 400 when format is invalid', async () => {
+			const res = await app.request('/api/backup/import', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Cookie: validCookie
+				},
+				body: JSON.stringify({ invalid: true })
+			}, {
+				DB: makeDb(),
+				SESSION_SECRET: TEST_SECRET,
+				ASSETS: {} as any
+			});
+			expect(res.status).toBe(400);
+		});
+	});
+
 	describe('/api/backup/export & export.csv', () => {
 		it('returns JSON backup on /export', async () => {
 			const db = makeDb(() => []);
