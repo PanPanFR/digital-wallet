@@ -1,0 +1,767 @@
+import { describe, it, expect } from 'vitest';
+import type { BackupData } from '../shared/validation';
+import {
+	getKindTotals,
+	getWalletBalances,
+	deleteWallet,
+	listWallets,
+	createWallet,
+	updateWallet,
+	adjustWalletBalance,
+	listTransactions,
+	getMonthlySummary,
+	getCategoryTotals,
+	getMonthlyTotals,
+	getWalletTotals,
+	listDebts,
+	listOpenDebts,
+	createDebt,
+	addDebtPayment,
+	deleteDebt,
+	getDebtDirectionTotals,
+	deleteTransactions,
+	deleteDebts,
+	exportAllData,
+	importBackupData
+} from './db';
+
+function fakeDb(rows: unknown[]) {
+	const result = {
+		all: async () => ({ results: rows }),
+		first: async () => rows[0] ?? null,
+		run: async () => ({ meta: { changes: 1 } })
+	};
+	return {
+		prepare: () => ({ ...result, bind: () => result })
+	} as unknown as D1Database;
+}
+
+/** Fake D1 that records every prepared SQL + binds so tests can assert query shape. */
+function recordingDb(rows: unknown[] = []) {
+	const calls: { sql: string; binds: unknown[] }[] = [];
+	const db = {
+		prepare: (sql: string) => {
+			const entry = { sql, binds: [] as unknown[] };
+			calls.push(entry);
+			const result = {
+				all: async () => ({ results: rows }),
+				first: async () => rows[0] ?? null,
+				run: async () => ({ meta: { changes: 1 } })
+			};
+			return { ...result, bind: (...b: unknown[]) => ((entry.binds = b), result) };
+		}
+	};
+	return { db: db as unknown as D1Database, calls };
+}
+
+describe('getKindTotals', () => {
+	it('sums digital/cash and computes combined total', async () => {
+		const t = await getKindTotals(
+			fakeDb([
+				{ kind: 'digital', balance: 150000 },
+				{ kind: 'cash', balance: 50000 }
+			])
+		);
+		expect(t).toEqual({ digital: 150000, cash: 50000, total: 200000 });
+	});
+	it('zero-fills missing kinds', async () => {
+		const t = await getKindTotals(fakeDb([{ kind: 'cash', balance: 10000 }]));
+		expect(t).toEqual({ digital: 0, cash: 10000, total: 10000 });
+	});
+});
+
+describe('getWalletBalances', () => {
+	it('maps rows with numeric balance', async () => {
+		const w = await getWalletBalances(
+			fakeDb([{ id: 'a', name: 'GoPay', kind: 'digital', created_at: 'x', balance: '25000' }])
+		);
+		expect(w[0].balance).toBe(25000);
+	});
+});
+
+describe('deleteWallet', () => {
+	it('refuses when wallet has transactions', async () => {
+		const calls: string[] = [];
+		const db = {
+			prepare: (sql: string) => {
+				calls.push(sql);
+				return {
+					bind: () => ({
+						first: async () => (calls[0].includes('COUNT') ? { n: 3 } : null),
+						run: async () => ({ meta: { changes: 0 } })
+					})
+				};
+			}
+		} as unknown as D1Database;
+		expect(await deleteWallet(db, 'x')).toBe('has-transactions');
+	});
+
+	it('deletes when unused', async () => {
+		const db = {
+			prepare: () => ({
+				bind: () => ({
+					first: async () => ({ n: 0 }),
+					run: async () => ({ meta: { changes: 1 } })
+				})
+			})
+		} as unknown as D1Database;
+		expect(await deleteWallet(db, 'x')).toBe('deleted');
+	});
+});
+
+describe('listWallets', () => {
+	it('returns rows', async () => {
+		const w = await listWallets(fakeDb([{ id: 'a', name: 'Tunai', kind: 'cash', created_at: 'x' }]));
+		expect(w).toHaveLength(1);
+		expect(w[0].name).toBe('Tunai');
+	});
+});
+
+describe('updateWallet', () => {
+	it('returns true on change', async () => {
+		expect(await updateWallet(fakeDb([]), 'x', { name: 'Baru' })).toBe(true);
+	});
+	it('returns false when nothing to update', async () => {
+		expect(await updateWallet(fakeDb([]), 'x', {})).toBe(false);
+	});
+});
+
+describe('duplicate wallet name guard', () => {
+	it('createWallet compares case/whitespace-insensitively via SQL', async () => {
+		const { db, calls } = recordingDb([{ n: 1 }]);
+		const res = await createWallet(db, { name: ' gopay ', kind: 'digital' });
+		expect(res).toBe('duplicate');
+		expect(calls).toHaveLength(1); // no INSERT attempted
+		expect(calls[0].sql).toContain('lower(trim(name)) = lower(trim(?))');
+		expect(calls[0].binds).toEqual([' gopay ']);
+	});
+	it('createWallet inserts when name is free', async () => {
+		const { db, calls } = recordingDb([{ n: 0 }]);
+		const id = await createWallet(db, { name: 'GoPay', kind: 'digital' });
+		expect(typeof id).toBe('string');
+		expect(calls[1].sql).toContain('INSERT INTO wallets');
+	});
+	it('updateWallet rejects a colliding rename', async () => {
+		const { db, calls } = recordingDb([{ n: 1 }]);
+		const res = await updateWallet(db, 'w1', { name: 'GoPay' });
+		expect(res).toBe('duplicate');
+		expect(calls).toHaveLength(1); // no UPDATE attempted
+	});
+	it('updateWallet allows self-update (excludes own id)', async () => {
+		const { db, calls } = recordingDb([{ n: 0 }]);
+		const res = await updateWallet(db, 'w1', { name: 'GoPay' });
+		expect(res).toBe(true);
+		expect(calls[0].binds).toEqual(['GoPay', 'w1']);
+	});
+});
+
+describe('adjustWalletBalance', () => {
+	const wallet = {
+		id: 'w1',
+		name: 'GoPay',
+		kind: 'digital',
+		created_at: 'x',
+		balance: 100000
+	};
+	it('creates an expense tx when lowering the balance', async () => {
+		const { db, calls } = recordingDb([wallet]);
+		const res = await adjustWalletBalance(db, 'w1', 40000);
+		expect(res).toBe('adjusted');
+		const insert = calls.find((c) => c.sql.includes('INSERT INTO transactions'))!;
+		expect(insert.binds).toEqual(
+			expect.arrayContaining(['w1', 'Penyesuaian saldo', 60000, 'Lainnya', 'expense'])
+		);
+	});
+	it('creates an income tx when raising the balance', async () => {
+		const { db, calls } = recordingDb([{ ...wallet, balance: 40000 }]);
+		const res = await adjustWalletBalance(db, 'w1', 100000);
+		expect(res).toBe('adjusted');
+		const insert = calls.find((c) => c.sql.includes('INSERT INTO transactions'))!;
+		expect(insert.binds).toEqual(
+			expect.arrayContaining(['w1', 'Penyesuaian saldo', 60000, 'Lainnya', 'income'])
+		);
+	});
+	it('no-change when target equals current balance, no tx created', async () => {
+		const { db, calls } = recordingDb([wallet]);
+		const res = await adjustWalletBalance(db, 'w1', 100000);
+		expect(res).toBe('no-change');
+		expect(calls.some((c) => c.sql.includes('INSERT INTO transactions'))).toBe(false);
+	});
+	it('not-found for a missing wallet', async () => {
+		const { db } = recordingDb([]);
+		expect(await adjustWalletBalance(db, 'nope', 100000)).toBe('not-found');
+	});
+});
+
+describe('listTransactions filters', () => {
+	it('adds search + category predicates and binds them', async () => {
+		const { db, calls } = recordingDb();
+		await listTransactions(db, { search: 'kopi', category: 'Makanan', month: '2026-09' });
+		const sql = calls[0].sql;
+		expect(sql).toContain('t.description LIKE ?');
+		expect(sql).toContain('t.category = ?');
+		expect(sql).toContain('t.date LIKE ?');
+		// month bind on date column, search wrapped in %, category exact
+		expect(calls[0].binds).toEqual(['2026-09%', '%kopi%', 'Makanan', 100, 0]);
+	});
+	it('joins destination wallet name for transfer rows', async () => {
+		const { db, calls } = recordingDb();
+		await listTransactions(db, {});
+		expect(calls[0].sql).toContain('dest_wallet_name');
+		expect(calls[0].sql).toContain('LEFT JOIN wallets w2');
+	});
+	it('filters by wallet kind on the joined wallet', async () => {
+		const { db, calls } = recordingDb();
+		await listTransactions(db, { kind: 'cash' });
+		expect(calls[0].sql).toContain('w.kind = ?');
+		expect(calls[0].binds).toEqual(['cash', 100, 0]);
+	});
+});
+
+describe('deleteWallet transfer guard', () => {
+	it('usage check counts to_wallet_id too', async () => {
+		const { db, calls } = recordingDb();
+		// first() returns a row with n>0 so it short-circuits to has-transactions
+		const dbWithUsage = {
+			prepare: (sql: string) => {
+				calls.push({ sql, binds: [] });
+				return {
+					bind: () => ({
+						first: async () => ({ n: 1 }),
+						run: async () => ({ meta: { changes: 0 } })
+					})
+				};
+			}
+		} as unknown as D1Database;
+		expect(await deleteWallet(dbWithUsage, 'x')).toBe('has-transactions');
+		expect(calls[0].sql).toContain('to_wallet_id');
+	});
+});
+
+describe('getWalletTotals', () => {
+	it('maps rows to numeric totals per wallet', async () => {
+		const rows = [
+			{ id: 'a', name: 'GoPay', kind: 'digital', total: '30000' },
+			{ id: 'b', name: 'Tunai', kind: 'cash', total: 0 }
+		];
+		const t = await getWalletTotals(fakeDb(rows), '2026-09');
+		expect(t).toEqual([
+			{ id: 'a', name: 'GoPay', kind: 'digital', total: 30000 },
+			{ id: 'b', name: 'Tunai', kind: 'cash', total: 0 }
+		]);
+	});
+	it('filters by month on date column and excludes transfers', async () => {
+		const { db, calls } = recordingDb();
+		await getWalletTotals(db, '2026-09');
+		expect(calls[0].sql).toContain('t.date LIKE ?');
+		expect(calls[0].binds).toEqual(['2026-09%']);
+	});
+});
+
+/** Fake D1 that records batched statements (sql + binds) for money-path assertions. */
+function batchDb(rows: unknown[] = [], changes = 1) {
+	const batched: { sql: string; binds: unknown[] }[] = [];
+	const db = {
+		prepare: (sql: string) => {
+			const entry: { sql: string; binds: unknown[] } = { sql, binds: [] };
+			const result = {
+				all: async () => ({ results: rows }),
+				first: async () => rows[0] ?? null,
+				run: async () => ({ meta: { changes: 1 } })
+			};
+			return {
+				bind: (...b: unknown[]) => ((entry.binds = b), { ...result, ...entry }),
+				...result
+			};
+		},
+		batch: async (stmts: { sql: string; binds: unknown[] }[]) => {
+			batched.push(...stmts);
+			return stmts.map(() => ({ meta: { changes } }));
+		}
+	};
+	return { db: db as unknown as D1Database, batched };
+}
+
+describe('listDebts', () => {
+	it('maps rows and computes numeric remaining', async () => {
+		const rows = [
+			{
+				id: 'd1',
+				person: 'Budi',
+				direction: 'owe',
+				amount: '500000',
+				paid: '200000',
+				remaining: '300000',
+				wallet_id: null,
+				wallet_name: null,
+				date: '2026-09-01',
+				created_at: 'x',
+				updated_at: 'x'
+			}
+		];
+		const r = await listDebts(fakeDb(rows));
+		expect(r[0].amount).toBe(500000);
+		expect(r[0].paid).toBe(200000);
+		expect(r[0].remaining).toBe(300000);
+	});
+});
+
+describe('listOpenDebts', () => {
+	it('filters to amount > paid', async () => {
+		const { db, calls } = recordingDb();
+		await listOpenDebts(db);
+		expect(calls[0].sql).toContain('d.amount > d.paid');
+	});
+});
+
+describe('addDebtPayment', () => {
+	const oweDebt = {
+		id: 'd1',
+		person: 'Budi',
+		direction: 'owe',
+		amount: 500000,
+		paid: 300000,
+		remaining: 200000,
+		wallet_id: null,
+		wallet_name: null,
+		date: '2026-09-01',
+		created_at: 'x',
+		updated_at: 'x'
+	};
+	const owedDebt = {
+		id: 'd2',
+		person: 'Ani',
+		direction: 'owed',
+		amount: 500000,
+		paid: 300000,
+		remaining: 200000,
+		wallet_id: null,
+		wallet_name: null,
+		date: '2026-09-01',
+		created_at: 'x',
+		updated_at: 'x'
+	};
+
+	it('rejects overpay and does not batch', async () => {
+		const { db, batched } = batchDb([oweDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd1',
+			amount: 250000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toBe('overpay');
+		expect(batched).toHaveLength(0);
+	});
+
+	it('owe payment: expense tx, desc "Bayar utang ke", 3 batched stmts', async () => {
+		const { db, batched } = batchDb([oweDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd1',
+			amount: 200000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toEqual({ id: 'd1' });
+		expect(batched).toHaveLength(3);
+		expect(batched[0].sql).toContain('INSERT INTO debt_payments');
+		expect(batched[1].sql).toContain('INSERT INTO transactions');
+		expect(batched[1].binds).toEqual(
+			expect.arrayContaining(['w1', 'Bayar utang ke Budi', 200000, 'Lainnya', 'expense'])
+		);
+		expect(batched[2].sql).toContain('UPDATE debts SET paid = paid + ?');
+	});
+
+	it('owed payment: income tx, desc "Terima bayaran dari"', async () => {
+		const { db, batched } = batchDb([owedDebt]);
+		const res = await addDebtPayment(db, {
+			debtId: 'd2',
+			amount: 200000,
+			walletId: 'w1',
+			date: '2026-09-08'
+		});
+		expect(res).toEqual({ id: 'd2' });
+		expect(batched[1].binds).toEqual(
+			expect.arrayContaining(['w1', 'Terima bayaran dari Ani', 200000, 'Lainnya', 'income'])
+		);
+	});
+});
+
+describe('deleteDebt', () => {
+	it('cascades payments then debt in one batch and returns deleted', async () => {
+		const { db, batched } = batchDb([], 1);
+		expect(await deleteDebt(db, 'x')).toBe('deleted');
+		expect(batched.map((b) => b.sql)).toEqual([
+			'DELETE FROM debt_payments WHERE debt_id = ?',
+			'DELETE FROM debts WHERE id = ?'
+		]);
+		expect(batched[0].binds).toEqual(['x']);
+		expect(batched[1].binds).toEqual(['x']);
+	});
+	it('returns not-found when the debt delete changes nothing', async () => {
+		const { db } = batchDb([], 0);
+		expect(await deleteDebt(db, 'x')).toBe('not-found');
+	});
+});
+
+describe('createDebt', () => {
+	const base = {
+		person: 'Budi',
+		direction: 'owe' as const,
+		amount: 100000,
+		date: '2026-09-08',
+		walletId: 'w1'
+	};
+
+	it('without reduceBalance runs a single insert, no batch', async () => {
+		const { db, batched } = batchDb();
+		const id = await createDebt(db, { ...base, walletId: null, reduceBalance: false });
+		expect(typeof id).toBe('string');
+		expect(batched).toHaveLength(0);
+	});
+
+	it('reduceBalance: 3 batched stmts (debt + payment + tx), paid set full', async () => {
+		const { db, batched } = batchDb();
+		const id = await createDebt(db, { ...base, walletId: 'w1', reduceBalance: true });
+		expect(typeof id).toBe('string');
+		expect(batched).toHaveLength(3);
+		expect(batched[0].sql).toContain('INSERT INTO debts');
+		expect(batched[0].binds).toEqual(
+			expect.arrayContaining([id, 'Budi', 'owe', 100000, 100000, 'w1', '2026-09-08'])
+		);
+		expect(batched[1].sql).toContain('INSERT INTO debt_payments');
+		expect(batched[2].sql).toContain('INSERT INTO transactions');
+		expect(batched[2].binds).toEqual(
+			expect.arrayContaining(['w1', 'Pinjam dari Budi', 100000, 'Lainnya', 'expense'])
+		);
+	});
+});
+
+describe('getDebtDirectionTotals', () => {
+	it('sums remaining per direction from open debts', async () => {
+		const rows = [
+			{ id: 'd1', person: 'B', direction: 'owe', amount: 100000, paid: 40000, remaining: 60000, wallet_id: null, wallet_name: null, date: '2026-09-01', created_at: 'x', updated_at: 'x' },
+			{ id: 'd2', person: 'A', direction: 'owed', amount: 200000, paid: 50000, remaining: 150000, wallet_id: null, wallet_name: null, date: '2026-09-01', created_at: 'x', updated_at: 'x' }
+		];
+		const t = await getDebtDirectionTotals(fakeDb(rows));
+		expect(t).toEqual({ owe: 60000, owed: 150000 });
+	});
+});
+
+/** Fake D1 with a live row store so bulk DELETEs actually mutate rows. Mirrors
+ *  fakeDb: all/first/run exposed on the prepared statement AND the bound one. */
+function storeDb<T extends { id: string }>(rows: T[]) {
+	const live = [...rows];
+	const stmt = (sql: string, binds: unknown[]) => ({
+		all: async () => ({ results: [...live] }),
+		first: async () => live[0] ?? null,
+		run: async () => {
+			const before = live.length;
+			if (sql.startsWith('DELETE')) {
+				const ids = new Set(binds as string[]);
+				live.splice(0, live.length, ...live.filter((r) => !ids.has(r.id)));
+			}
+			return { meta: { changes: before - live.length } };
+		}
+	});
+	const db = {
+		prepare: (sql: string) => ({ ...stmt(sql, []), bind: (...b: unknown[]) => stmt(sql, b) })
+	};
+	return { db: db as unknown as D1Database, live };
+}
+
+describe('deleteTransactions', () => {
+	it('deletes only the given ids and returns the deleted count', async () => {
+		const { db, live } = storeDb([{ id: 't1' }, { id: 't2' }, { id: 't3' }]);
+		expect(await deleteTransactions(db, ['t1', 't3'])).toBe(2);
+		expect(live.map((r) => r.id)).toEqual(['t2']);
+	});
+	it('empty ids is a no-op', async () => {
+		const { db, live } = storeDb([{ id: 't1' }]);
+		expect(await deleteTransactions(db, [])).toBe(0);
+		expect(live).toHaveLength(1);
+	});
+});
+
+describe('deleteDebts', () => {
+	it('cascades payments and debts in one batch and returns the deleted count', async () => {
+		const { db, batched } = batchDb([], 2);
+		expect(await deleteDebts(db, ['d1', 'd2'])).toEqual({ deleted: 2 });
+		expect(batched[0].sql).toBe('DELETE FROM debt_payments WHERE debt_id IN (?,?)');
+		expect(batched[0].binds).toEqual(['d1', 'd2']);
+		expect(batched[1].sql).toBe('DELETE FROM debts WHERE id IN (?,?)');
+		expect(batched[1].binds).toEqual(['d1', 'd2']);
+	});
+	it('empty ids is a no-op', async () => {
+		const { db, batched } = batchDb();
+		expect(await deleteDebts(db, [])).toEqual({ deleted: 0 });
+		expect(batched).toHaveLength(0);
+	});
+});
+
+/**
+ * Fake D1 routing per-table rows for backup export/import. Records every
+ * prepared SQL + binds (calls) and every db.batch call separately (batches).
+ * Mirrors fakeDb: all/first/run on both the prepared and the bound statement.
+ */
+function backupDb(
+	tables: Record<string, Record<string, unknown>[]>,
+	settings: Record<string, string> = {}
+) {
+	const calls: { sql: string; binds: unknown[] }[] = [];
+	const batches: { sql: string; binds: unknown[] }[][] = [];
+	const tableFor = (sql: string) => {
+		if (sql.includes('FROM debt_payments')) return tables.debt_payments ?? [];
+		if (sql.includes('FROM transactions')) return tables.transactions ?? [];
+		if (sql.includes('FROM debts')) return tables.debts ?? [];
+		if (sql.includes('FROM wallets')) return tables.wallets ?? [];
+		return [];
+	};
+	const db = {
+		prepare: (sql: string) => {
+			const entry: { sql: string; binds: unknown[] } = { sql, binds: [] };
+			calls.push(entry);
+			const stmt = {
+				all: async () => ({ results: tableFor(sql) }),
+				first: async () => {
+					if (sql.includes('FROM app_settings')) {
+						const v = settings[String(entry.binds[0])];
+						return v === undefined ? null : { value: v };
+					}
+					return tableFor(sql)[0] ?? null;
+				},
+				run: async () => ({ meta: { changes: 1 } })
+			};
+			return {
+				...stmt,
+				bind: (...b: unknown[]) => ((entry.binds = b), { ...stmt, sql, binds: b })
+			};
+		},
+		batch: async (stmts: { sql: string; binds: unknown[] }[]) => {
+			batches.push([...stmts]);
+			return stmts.map(() => ({ meta: { changes: 1 } }));
+		}
+	};
+	return { db: db as unknown as D1Database, calls, batches };
+}
+
+const backupTables = {
+	wallets: [{ id: 'w1', name: 'Tunai', kind: 'cash', created_at: '2026-09-01T00:00:00.000Z' }],
+	transactions: [
+		{
+			id: 't1',
+			wallet_id: 'w1',
+			to_wallet_id: null,
+			description: 'Nasi',
+			amount: 25000,
+			category: 'Makanan',
+			type: 'expense',
+			date: '2026-09-13',
+			created_at: 'x',
+			updated_at: 'x'
+		}
+	],
+	debts: [
+		{
+			id: 'd1',
+			person: 'Budi',
+			direction: 'owe',
+			amount: 100000,
+			paid: 0,
+			wallet_id: null,
+			date: '2026-09-13',
+			created_at: 'x',
+			updated_at: 'x'
+		}
+	],
+	debt_payments: [
+		{ id: 'p1', debt_id: 'd1', amount: 50000, wallet_id: 'w1', date: '2026-09-13', created_at: 'x' }
+	]
+};
+
+const backupSettings = {
+	ai_providers: JSON.stringify([
+		{ id: 'pr1', name: 'X', baseUrl: 'https://x/v1', apiKey: 'k', model: 'm', models: ['m'] }
+	]),
+	ai_active_provider: 'pr1'
+};
+
+describe('exportAllData', () => {
+	it('returns the versioned envelope with raw rows and providers', async () => {
+		const { db } = backupDb(backupTables, backupSettings);
+		const out = await exportAllData(db);
+		expect(out.version).toBe(1);
+		expect(out.exportedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+		expect(out.wallets).toEqual(backupTables.wallets);
+		expect(out.transactions).toEqual(backupTables.transactions);
+		expect(out.debts).toEqual(backupTables.debts);
+		expect(out.debt_payments).toEqual(backupTables.debt_payments);
+		expect(out.ai_providers).toHaveLength(1);
+		expect(out.ai_providers[0].id).toBe('pr1');
+		expect(out.ai_active_provider).toBe('pr1');
+	});
+	it('uses unbounded deterministic selects and never touches secrets/infra state', async () => {
+		const { db, calls } = backupDb(backupTables, backupSettings);
+		await exportAllData(db);
+		const sql = calls.map((c) => c.sql).join('\n');
+		expect(sql).not.toContain('LIMIT');
+		expect(sql).not.toContain('master_password_hash');
+		expect(sql).not.toContain('rate_limits');
+		for (const t of ['wallets', 'transactions', 'debts', 'debt_payments']) {
+			const sel = calls.find((c) => c.sql.includes(`FROM ${t}`));
+			expect(sel?.sql).toContain('ORDER BY created_at, id');
+		}
+	});
+	it('coerces numeric strings to numbers', async () => {
+		const { db } = backupDb(
+			{
+				wallets: [],
+				transactions: [],
+				debts: [
+					{
+						id: 'd1',
+						person: 'Budi',
+						direction: 'owe',
+						amount: '100000',
+						paid: '20000',
+						wallet_id: null,
+						date: '2026-09-13',
+						created_at: 'x',
+						updated_at: 'x'
+					}
+				],
+				debt_payments: []
+			},
+			{}
+		);
+		const out = await exportAllData(db);
+		expect(out.debts[0].amount).toBe(100000);
+		expect(out.debts[0].paid).toBe(20000);
+		expect(out.ai_providers).toEqual([]);
+		expect(out.ai_active_provider).toBe('');
+	});
+});
+
+function backupFile(): BackupData {
+	return {
+		version: 1,
+		exportedAt: '2026-09-13T00:00:00.000Z',
+		wallets: backupTables.wallets as unknown as BackupData['wallets'],
+		transactions: backupTables.transactions as unknown as BackupData['transactions'],
+		debts: backupTables.debts as unknown as BackupData['debts'],
+		debt_payments: backupTables.debt_payments as unknown as BackupData['debt_payments'],
+		ai_providers: JSON.parse(backupSettings.ai_providers) as BackupData['ai_providers'],
+		ai_active_provider: 'pr1'
+	};
+}
+
+describe('importBackupData', () => {
+	it('empty DB: inserts everything, parents before children, no paid bump for fresh debts', async () => {
+		const { db, batches, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted).toEqual({ wallets: 1, transactions: 1, debts: 1, debt_payments: 1, providers: 1 });
+		expect(res.skipped).toEqual({ wallets: 0, transactions: 0, debts: 0, debt_payments: 0, providers: 0 });
+		const flat = batches.flat();
+		expect(batches).toHaveLength(1);
+		expect(flat.map((s) => s.sql)).toEqual([
+			expect.stringContaining('INSERT OR IGNORE INTO wallets'),
+			expect.stringContaining('INSERT OR IGNORE INTO transactions'),
+			expect.stringContaining('INSERT OR IGNORE INTO debts'),
+			expect.stringContaining('INSERT OR IGNORE INTO debt_payments')
+		]);
+		expect(flat.some((s) => s.sql.includes('UPDATE debts'))).toBe(false);
+		const settingsWrites = calls.filter((c) => c.sql.includes('INSERT INTO app_settings'));
+		expect(settingsWrites.map((c) => c.binds[0]).sort()).toEqual(['ai_active_provider', 'ai_providers']);
+	});
+	it('full overlap: idempotent, zero writes', async () => {
+		const { db, batches, calls } = backupDb(backupTables, backupSettings);
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted).toEqual({ wallets: 0, transactions: 0, debts: 0, debt_payments: 0, providers: 0 });
+		expect(res.skipped).toEqual({ wallets: 1, transactions: 1, debts: 1, debt_payments: 1, providers: 1 });
+		expect(batches).toHaveLength(0);
+		expect(calls.filter((c) => c.sql.includes('INSERT INTO app_settings'))).toHaveLength(0);
+	});
+	it('pre-existing debt + new payment: payment inserted and paid incremented', async () => {
+		const { db, batches } = backupDb({ ...backupTables, debt_payments: [] }, {});
+		const res = await importBackupData(db, backupFile());
+		expect(res.inserted.debts).toBe(0);
+		expect(res.skipped.debts).toBe(1);
+		expect(res.inserted.debt_payments).toBe(1);
+		const flat = batches.flat();
+		expect(flat.map((s) => s.sql)).toContainEqual(expect.stringContaining('INSERT OR IGNORE INTO debt_payments'));
+		const bump = flat.find((s) => s.sql.includes('UPDATE debts SET paid = paid + ?'));
+		expect(bump?.binds).toEqual([50000, 'd1']);
+	});
+	it('payment pointing at a missing debt aborts with zero writes', async () => {
+		const { db, batches, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const data = { ...backupFile(), debts: [] };
+		await expect(importBackupData(db, data)).rejects.toThrow('Data tidak konsisten');
+		expect(batches).toHaveLength(0);
+		expect(calls.filter((c) => c.sql.includes('INSERT INTO app_settings'))).toHaveLength(0);
+	});
+	it('chunks batches at 50 statements', async () => {
+		const many = Array.from({ length: 60 }, (_, i) => ({
+			id: `w${i}`,
+			name: `W${i}`,
+			kind: 'cash',
+			created_at: 'x'
+		}));
+		const data: BackupData = {
+			...backupFile(),
+			wallets: many as unknown as BackupData['wallets'],
+			transactions: [],
+			debts: [],
+			debt_payments: [],
+			ai_providers: [],
+			ai_active_provider: ''
+		};
+		const { db, batches } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{}
+		);
+		const res = await importBackupData(db, data);
+		expect(res.inserted.wallets).toBe(60);
+		expect(batches).toHaveLength(2);
+		expect(batches[0]).toHaveLength(50);
+		expect(batches[1]).toHaveLength(10);
+	});
+	it('providers merge: existing rows win, active kept when already set', async () => {
+		const stored = [
+			{ id: 'pr0', name: 'Stored', baseUrl: 'https://s/v1', apiKey: 's', model: 'm', models: ['m'] }
+		];
+		const incoming = [
+			{ id: 'pr0', name: 'Changed', baseUrl: 'https://s/v1', apiKey: 'x', model: 'm', models: ['m'] },
+			{ id: 'pr1', name: 'New', baseUrl: 'https://n/v1', apiKey: 'n', model: 'm', models: ['m'] }
+		];
+		const { db, calls } = backupDb(
+			{ wallets: [], transactions: [], debts: [], debt_payments: [] },
+			{ ai_providers: JSON.stringify(stored), ai_active_provider: 'pr0' }
+		);
+		const data: BackupData = {
+			...backupFile(),
+			wallets: [],
+			transactions: [],
+			debts: [],
+			debt_payments: [],
+			ai_providers: incoming,
+			ai_active_provider: 'pr1'
+		};
+		const res = await importBackupData(db, data);
+		expect(res.inserted.providers).toBe(1);
+		expect(res.skipped.providers).toBe(1);
+		const write = calls.find(
+			(c) => c.sql.includes('INSERT INTO app_settings') && c.binds[0] === 'ai_providers'
+		);
+		expect(JSON.parse(String(write?.binds[1]))).toEqual([...stored, incoming[1]]);
+		const activeWrites = calls.filter(
+			(c) => c.sql.includes('INSERT INTO app_settings') && c.binds[0] === 'ai_active_provider'
+		);
+		expect(activeWrites).toHaveLength(0);
+	});
+});
