@@ -1,16 +1,16 @@
 # Graph Report - digital-wallet  (2026-09-21)
 
 ## Corpus Check
-- 105 files · ~59,960 words
+- 116 files · ~67,253 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 712 nodes · 1057 edges · 66 communities (54 shown, 12 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.87)
+- 746 nodes · 1252 edges · 64 communities (53 shown, 11 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `60c8f702`
+- Built from commit: `c2e312f2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -29,18 +29,17 @@
 - analytics/+page.svelte
 - Architecture
 - Data Model
-- index.ts
+- settings.ts
 - Development
 - settings/+page.server.ts
 - shared/validation.ts
 - AGENTS.md
 - devDependencies
-- client.ts
+- Debts.tsx
 - worker/db.test.ts
 - worker/db.ts
-- routes/ai.ts
+- index.ts
 - Implementation Plan: React Core Features
-- Implementation Plan: React Foundation + Hono API
 - Implementation Plan: React Secondary Features + Cutover
 - wallets
 - worker/ai.ts
@@ -59,7 +58,6 @@
 - stores.svelte.ts
 - login/+page.server.ts
 - csv.ts
-- shared/constants.ts
 - hooks.server.ts
 - lib/constants.ts
 - report/+server.ts
@@ -70,15 +68,15 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `compilerOptions` - 17 edges
-2. `Implementation Plan: MVP Simplify + Mobile Hierarchy Fix` - 13 edges
-3. `Env` - 12 edges
-4. `Implementation Plan: React Core Features` - 12 edges
-5. `Implementation Plan: React Foundation + Hono API` - 12 edges
+2. `fieldErrors()` - 14 edges
+3. `Implementation Plan: MVP Simplify + Mobile Hierarchy Fix` - 13 edges
+4. `Env` - 12 edges
+5. `Implementation Plan: React Core Features` - 12 edges
 6. `Implementation Plan: React Secondary Features + Cutover` - 12 edges
-7. `Finance Tracker v2 (Project)` - 11 edges
-8. `Architecture` - 10 edges
-9. `Design: Digital Wallet — Transformasi dari Finance Tracker` - 10 edges
-10. `getProviders()` - 9 edges
+7. `todayISO()` - 11 edges
+8. `useToast()` - 11 edges
+9. `Debts()` - 11 edges
+10. `Finance Tracker v2 (Project)` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `App HTML Shell` --shares_data_with--> `App Icon (Rp on sky-blue)`  [INFERRED]
@@ -89,7 +87,7 @@
   README.md → docs/specs/2026-09-03-svelte-rewrite-design.md
 - `App Icon (Rp on sky-blue)` --conceptually_related_to--> `Finance Tracker v2 (Project)`  [INFERRED]
   static/icon.svg → README.md
-- `Finance Tracker v2 (Project)` --references--> `Next.js Finance Tracker (predecessor)`  [INFERRED]
+- `Environment Bindings (DB, ASSETS, secrets)` --shares_data_with--> `Stack Decisions`  [INFERRED]
   README.md → docs/specs/2026-09-03-svelte-rewrite-design.md
 
 ## Import Cycles
@@ -99,7 +97,7 @@
 - **PWA Shell Flow (registration -> hand-rolled sw -> offline shell)** — src_app_html_shell, src_app_sw_registration_script, docs_specs_2026_09_03_svelte_rewrite_design_hand_rolled_service_worker [INFERRED 0.85]
 - **Theme Persistence Flow (init script -> localStorage ft-theme -> CSS class)** — src_app_html_shell, src_app_theme_init_script, docs_specs_2026_09_03_svelte_rewrite_design_theme_toggle [INFERRED 0.85]
 
-## Communities (66 total, 12 thin omitted)
+## Communities (64 total, 11 thin omitted)
 
 ### Community 0 - "transactions/+page.svelte"
 Cohesion: 0.08
@@ -157,17 +155,17 @@ Nodes (10): AI copilot, Architecture, Data access, Decisions not re-documented h
 Cohesion: 0.20
 Nodes (10): `app_settings` (schema.sql:55-59), Computed balances (no stored balance anywhere), `created_at` format gotcha, Data Model, `debts` and `debt_payments` (schema.sql:31-53), ER overview, Migration history (`migrations/`), `rate_limits` (schema.sql:61-65) (+2 more)
 
-### Community 17 - "index.ts"
+### Community 17 - "settings.ts"
 Cohesion: 0.11
-Nodes (35): AiProvider, getActiveProviderId(), getProviders(), isValidProvider(), parseProviders(), ProviderApiSchema, ProviderFormSchema, resolveProviderConfig() (+27 more)
+Nodes (33): AiProvider, AiProviderSummary, getActiveProviderId(), getProviders(), isValidProvider(), parseProviders(), ProviderApiSchema, ProviderFormSchema (+25 more)
 
 ### Community 18 - "Development"
 Cohesion: 0.25
 Nodes (8): Daily workflow, Development, Environment variables & bindings, First-time setup, Prerequisites, Tests, Troubleshooting, Where local D1 state lives
 
 ### Community 21 - "shared/validation.ts"
-Cohesion: 0.10
-Nodes (24): dateTime, idr, todayISO(), AdjustBalanceSchema, BackupAiProviderSchema, backupAmount, backupDate, BackupDebtPaymentSchema (+16 more)
+Cohesion: 0.13
+Nodes (19): AdjustBalanceSchema, BackupAiProviderSchema, backupAmount, backupDate, BackupDebtPaymentSchema, BackupDebtSchema, backupId, BackupSchema (+11 more)
 
 ### Community 22 - "AGENTS.md"
 Cohesion: 0.25
@@ -177,29 +175,25 @@ Nodes (6): Commands, Deploy & env, Non-negotiable design rules, Schema changes, 
 Cohesion: 0.09
 Nodes (23): @cloudflare/workers-types, devDependencies, @cloudflare/workers-types, tailwindcss, @tailwindcss/vite, @types/node, @types/react, @types/react-dom (+15 more)
 
-### Community 25 - "client.ts"
-Cohesion: 0.13
-Nodes (12): api(), ApiError, apiFetch, del(), get(), patch(), post(), App() (+4 more)
+### Community 25 - "Debts.tsx"
+Cohesion: 0.08
+Nodes (53): AMOUNT_PRESETS, CATEGORIES, dateTime, formatDate(), formatIDR(), idr, todayISO(), DebtApiSchema (+45 more)
 
 ### Community 26 - "worker/db.test.ts"
-Cohesion: 0.12
-Nodes (14): addDebtPayment(), createDebt(), deleteDebt(), deleteDebts(), getDebt(), getDebtDirectionTotals(), getKindTotals(), listDebts() (+6 more)
+Cohesion: 0.13
+Nodes (14): addDebtPayment(), createDebt(), deleteDebt(), deleteDebts(), getDebt(), getDebtDirectionTotals(), listDebts(), listOpenDebts() (+6 more)
 
 ### Community 27 - "worker/db.ts"
-Cohesion: 0.17
-Nodes (19): AnalyticsData, ApiError, AuthStatus, DashboardData, BackupData, AiProviderSummary, BackupCounts, CategoryTotal (+11 more)
+Cohesion: 0.15
+Nodes (21): AnalyticsData, ApiError, AuthStatus, DashboardData, BackupData, TransactionFormProps, DebtsResponse, TxResponse (+13 more)
 
-### Community 28 - "routes/ai.ts"
+### Community 28 - "index.ts"
 Cohesion: 0.16
-Nodes (14): ChatSchema, getCategoryTotals(), getMonthlySummary(), getMonthlyTotals(), getWalletBalances(), getWalletTotals(), listOpenDebts(), Env (+6 more)
+Nodes (16): ChatSchema, getCategoryTotals(), getKindTotals(), getMonthlySummary(), getMonthlyTotals(), getWalletTotals(), Env, app (+8 more)
 
 ### Community 29 - "Implementation Plan: React Core Features"
 Cohesion: 0.15
 Nodes (12): Acceptance Criteria, Context, Delegation Strategy, Dependencies, Files / Areas Likely Affected, Git (branch: feature/react-core-features), Implementation Plan: React Core Features, Implementation Steps (+4 more)
-
-### Community 30 - "Implementation Plan: React Foundation + Hono API"
-Cohesion: 0.15
-Nodes (12): Acceptance Criteria, Context, Delegation Strategy, Dependencies, Files / Areas Likely Affected, Git (branch: feature/react-foundation-api), Implementation Plan: React Foundation + Hono API, Implementation Steps (+4 more)
 
 ### Community 31 - "Implementation Plan: React Secondary Features + Cutover"
 Cohesion: 0.15
@@ -218,8 +212,8 @@ Cohesion: 0.22
 Nodes (9): Custom CSS Bars (no chart lib), D1 Database (unchanged), Form Actions + Load Functions Pattern, Hand-rolled Minimal Service Worker, Stack Decisions, Cloudflare Workers over Pages, Environment Bindings (DB, ASSETS, secrets), App HTML Shell (+1 more)
 
 ### Community 35 - "transactions.ts"
-Cohesion: 0.22
-Nodes (8): TxUpdateSchema, adjustWalletBalance(), createTransaction(), deleteTransaction(), deleteTransactions(), updateTransaction(), BulkDeleteSchema, transactionRoutes
+Cohesion: 0.29
+Nodes (6): TxUpdateSchema, deleteTransaction(), deleteTransactions(), updateTransaction(), BulkDeleteSchema, transactionRoutes
 
 ### Community 36 - "backup.ts"
 Cohesion: 0.31
@@ -230,8 +224,8 @@ Cohesion: 0.64
 Nodes (3): Finance Tracker v2 (Project), App Icon (Rp on sky-blue), Rupiah Currency Symbol
 
 ### Community 38 - "wallets.ts"
-Cohesion: 0.29
-Nodes (7): createWallet(), deleteWallet(), updateWallet(), walletNameExists(), AdjustSchema, InitialBalanceSchema, walletsRoute
+Cohesion: 0.22
+Nodes (10): adjustWalletBalance(), createTransaction(), createWallet(), deleteWallet(), getWalletBalances(), updateWallet(), walletNameExists(), AdjustSchema (+2 more)
 
 ### Community 39 - "Deployment"
 Cohesion: 0.29
@@ -262,24 +256,24 @@ Cohesion: 0.67
 Nodes (3): notify(), removeToast(), toasts
 
 ## Knowledge Gaps
-- **278 isolated node(s):** `name`, `private`, `version`, `type`, `dev` (+273 more)
+- **275 isolated node(s):** `name`, `private`, `version`, `type`, `dev` (+270 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
+- **Why does `fieldErrors()` connect `Debts.tsx` to `transactions.ts`, `backup.ts`, `wallets.ts`, `settings.ts`, `shared/validation.ts`, `worker/db.test.ts`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `Finance Tracker v2 (Project)` connect `Finance Tracker v2 (Project)` to `SvelteKit Rewrite Design`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Why does `devDependencies` connect `devDependencies` to `dependencies`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+- **Why does `chatAnswer()` connect `worker/ai.ts` to `index.ts`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **What connects `name`, `private`, `version` to the rest of the system?**
-  _278 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _275 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `transactions/+page.svelte` be split into smaller, more focused modules?**
   _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
 - **Should `server/db.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05200341005967604 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.0625 - nodes in this community are weakly interconnected._
-- **Should `compilerOptions` be split into smaller, more focused modules?**
-  _Cohesion score 0.05714285714285714 - nodes in this community are weakly interconnected._
