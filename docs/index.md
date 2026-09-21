@@ -1,12 +1,12 @@
 # Documentation Index
 
-Digital Wallet — single-user finance tracker on SvelteKit 2 + Cloudflare Workers + D1. Start with the [README](../README.md) for what the app is and how to run it; this is the map of the rest.
+Digital Wallet — single-user finance tracker on Vite + React 19 + Hono + Cloudflare Workers + D1. Start with the [README](../README.md) for what the app is and how to run it; this is the map of the rest.
 
 ## Reference & explanation
 
 | Doc | What you'll accomplish |
 |---|---|
-| [architecture.md](architecture.md) | Understand how a request flows (hooks → load/actions → D1), the runtime shape on Workers, layering, and the key design decisions with their trade-offs |
+| [architecture.md](architecture.md) | Understand how a request flows (Worker Hono API → D1), the runtime shape on Workers, layering, and the key design decisions with their trade-offs |
 | [data-model.md](data-model.md) | Look up every table, column, constraint, index, and the computed-balance queries; learn the `created_at` format gotcha before writing any date query |
 | [development.md](development.md) | Set up a working local environment from scratch (Node, wrangler auth, local D1, `.dev.vars`), run dev/tests/checks, and fix common wrangler/dev failures |
 | [deployment.md](deployment.md) | Ship a change: Workers Builds auto-deploy, manual `wrangler deploy`, applying the D1 schema remotely, managing secrets, rolling back |
@@ -20,6 +20,6 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-None — `plan/` is empty. See merged list above.
+- `plan/react-secondary-cutover.md` (active in branch `feature/react-secondary-cutover`).
 
-Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore, catppuccin-foundation, ui-catppuccin-operate) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
+Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore, catppuccin-foundation, ui-catppuccin-operate, react-foundation-api, react-core-features) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
