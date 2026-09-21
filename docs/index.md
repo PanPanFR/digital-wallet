@@ -20,6 +20,6 @@ These record *why* the app was built the way it was; where they contradict curre
 
 ## Approved plans (not yet in `main`)
 
-- `plan/react-secondary-cutover.md` (active in branch `feature/react-secondary-cutover`).
+None — `plan/` is empty.
 
-Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore, catppuccin-foundation, ui-catppuccin-operate, react-foundation-api, react-core-features) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
+Merged plans (ux-data-model, ux-mobile-settings, debts, ai-chatbox, ai-provider-settings, wallet-fixes, bulk-select, ui-cleanups, ui-redesign, debt-delete-with-payments, mobile-bottom-nav-sheet, ui-visual-overhaul, backup-restore, catppuccin-foundation, ui-catppuccin-operate, react-foundation-api, react-core-features, react-secondary-cutover) are documented as current in the reference docs above. Plan files are removed from `plan/` once executed.
