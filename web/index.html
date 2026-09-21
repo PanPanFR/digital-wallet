@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta id="theme-color" name="theme-color" content="#11111b" />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+		<title>Digital Wallet</title>
+		<script>
+			(function () {
+				try {
+					var t = localStorage.getItem('ft-theme');
+					if (t !== 'light' && t !== 'dark') {
+						t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+					}
+					var el = document.documentElement;
+					el.classList.remove('light', 'dark');
+					el.classList.add(t);
+					var meta = document.querySelector('meta[name="theme-color"]');
+					if (meta) meta.setAttribute('content', t === 'light' ? '#eff1f5' : '#11111b');
+				} catch (e) {}
+			})();
+		</script>
+	</head>
+	<body class="bg-ctp-base text-ctp-text antialiased dark:bg-ctp-crust min-h-screen">
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
+</html>

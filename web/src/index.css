@@ -1,0 +1,306 @@
+@import '@fontsource-variable/plus-jakarta-sans';
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+	/* Catppuccin Latte (light, default) — source: catppuccin.com/palette */
+	--color-ctp-rosewater: #dc8a78;
+	--color-ctp-flamingo: #dd7878;
+	--color-ctp-pink: #ea76cb;
+	--color-ctp-mauve: #8839ef;
+	--color-ctp-red: #d20f39;
+	--color-ctp-maroon: #e64553;
+	--color-ctp-peach: #fe640b;
+	--color-ctp-yellow: #df8e1d;
+	--color-ctp-green: #40a02b;
+	--color-ctp-teal: #179299;
+	--color-ctp-sky: #04a5e5;
+	--color-ctp-sapphire: #209fb5;
+	--color-ctp-blue: #1e66f5;
+	--color-ctp-lavender: #7287fd;
+	--color-ctp-text: #4c4f69;
+	--color-ctp-subtext1: #5c5f77;
+	--color-ctp-subtext0: #6c6f85;
+	--color-ctp-overlay2: #7c7f93;
+	--color-ctp-overlay1: #8c8fa1;
+	--color-ctp-overlay0: #9ca0b0;
+	--color-ctp-surface2: #acb0be;
+	--color-ctp-surface1: #bcc0cc;
+	--color-ctp-surface0: #ccd0da;
+	--color-ctp-base: #eff1f5;
+	--color-ctp-mantle: #e6e9ef;
+	--color-ctp-crust: #dce0e8;
+}
+
+/* Catppuccin Mocha (dark) — overrides Latte defaults when html.dark is set */
+html.dark {
+	--color-ctp-rosewater: #f5e0dc;
+	--color-ctp-flamingo: #f2cdcd;
+	--color-ctp-pink: #f5c2e7;
+	--color-ctp-mauve: #cba6f7;
+	--color-ctp-red: #f38ba8;
+	--color-ctp-maroon: #eba0ac;
+	--color-ctp-peach: #fab387;
+	--color-ctp-yellow: #f9e2af;
+	--color-ctp-green: #a6e3a1;
+	--color-ctp-teal: #94e2d5;
+	--color-ctp-sky: #89dceb;
+	--color-ctp-sapphire: #74c7ec;
+	--color-ctp-blue: #89b4fa;
+	--color-ctp-lavender: #b4befe;
+	--color-ctp-text: #cdd6f4;
+	--color-ctp-subtext1: #bac2de;
+	--color-ctp-subtext0: #a6adc8;
+	--color-ctp-overlay2: #9399b2;
+	--color-ctp-overlay1: #7f849c;
+	--color-ctp-overlay0: #6c7086;
+	--color-ctp-surface2: #585b70;
+	--color-ctp-surface1: #45475a;
+	--color-ctp-surface0: #313244;
+	--color-ctp-base: #1e1e2e;
+	--color-ctp-mantle: #181825;
+	--color-ctp-crust: #11111b;
+}
+
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--color-ctp-peach);
+		outline-offset: 2px;
+	}
+
+	::selection {
+		background-color: color-mix(in srgb, var(--color-ctp-peach) 30%, transparent);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::before,
+		::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+}
+
+@layer components {
+	/* Depth with solid fills only: light mode = border + tinted soft shadow;
+	   dark mode = layered border (hairline ring) since shadows die on Crust. */
+	.card {
+		@apply rounded-xl border border-ctp-surface0 bg-ctp-mantle shadow-sm shadow-black/5 dark:border-ctp-surface0 dark:bg-ctp-base dark:shadow-none dark:ring-1 dark:ring-ctp-surface1;
+	}
+	.btn,
+	.btn-primary,
+	.btn-outline,
+	.btn-danger,
+	.btn-ghost {
+		@apply inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ctp-peach;
+	}
+	.btn-primary {
+		@apply bg-ctp-peach text-white dark:text-ctp-crust;
+		border: 1px solid rgba(0, 0, 0, 0.06);
+		box-shadow: 0 2px 0 color-mix(in srgb, var(--color-ctp-peach) 70%, black);
+	}
+	.btn-primary:hover {
+		background-color: color-mix(in srgb, var(--color-ctp-peach) 88%, black);
+	}
+	.btn-primary:active {
+		box-shadow: none;
+		transform: translateY(1px);
+	}
+	.btn-outline {
+		@apply border border-ctp-surface0 bg-ctp-base text-ctp-subtext1 hover:bg-ctp-surface0 dark:border-ctp-surface1 dark:bg-transparent dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
+	}
+	.btn-danger {
+		@apply bg-ctp-red text-white hover:bg-ctp-maroon dark:text-ctp-crust;
+	}
+	.btn-ghost {
+		@apply text-ctp-subtext1 hover:bg-ctp-surface0 dark:text-ctp-subtext1 dark:hover:bg-ctp-surface0;
+	}
+	.input {
+		@apply w-full rounded-lg px-3 py-2 text-sm text-ctp-text placeholder:text-ctp-subtext0 dark:text-ctp-text dark:placeholder:text-ctp-subtext0;
+		background-color: #ffffff;
+		border: 1.5px solid var(--color-ctp-surface0);
+		min-height: 44px;
+	}
+	html.dark .input {
+		background-color: var(--color-ctp-surface0);
+		border-color: var(--color-ctp-surface1);
+	}
+	.input:focus {
+		border-color: var(--color-ctp-peach);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ctp-peach) 15%, transparent);
+		outline: none;
+	}
+	/* Pinned Rp prefix inside currency inputs (DESIGN.md §Inputs). */
+	.input-prefix {
+		@apply pointer-events-none absolute left-3 text-sm text-ctp-subtext0;
+	}
+	.chip {
+		@apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
+		min-height: 32px;
+		background-color: var(--color-ctp-crust);
+		color: var(--color-ctp-text);
+	}
+	.chip-active {
+		@apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold;
+		min-height: 32px;
+		background-color: var(--color-ctp-peach);
+		color: #ffffff;
+	}
+	html.dark .chip-active {
+		color: var(--color-ctp-crust);
+	}
+	.label {
+		@apply mb-1 block text-sm font-medium text-ctp-text;
+	}
+
+	/* Page rhythm: header block at the top of every route. */
+	.page-header {
+		@apply mb-4 flex items-center justify-between gap-3;
+	}
+	.page-title {
+		@apply text-xl font-semibold text-ctp-text;
+	}
+	.page-subtitle {
+		@apply text-xs text-ctp-subtext0;
+	}
+
+	/* Section rhythm: heading row inside a page section. */
+	.section-header {
+		@apply mb-2 flex items-center justify-between gap-3;
+	}
+	.section-title {
+		@apply font-semibold text-ctp-text;
+	}
+
+	/* Grouped list surface (mirrors .card + row dividers; @apply cannot reference
+	   custom classes) and its interactive row. Motion is 150ms, matching
+	   Toast/nav transitions, and collapses under the global reduced-motion rule. */
+	.list {
+		@apply divide-y divide-ctp-surface0 rounded-xl border border-ctp-surface0 bg-ctp-mantle shadow-sm shadow-black/5 dark:divide-ctp-surface0 dark:border-ctp-surface0 dark:bg-ctp-base dark:shadow-none dark:ring-1 dark:ring-ctp-surface1;
+	}
+	.list-row {
+		@apply flex w-full items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ctp-surface0 active:bg-ctp-surface1;
+	}
+
+	/* Icon tile: circular 40px standard per DESIGN.md §Shapes (template
+	   circular txn icons); compose smaller sizes with utilities
+	   (e.g. class="tile h-6 w-6 bg-ctp-sky/15 text-ctp-sky"). */
+	.tile {
+		@apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full;
+	}
+}
+
+/* Tabular IDR per DESIGN.md §Typography: tnum + cv05 + ss01 in Plus Jakarta Sans.
+   Pair with `Rp ` (regular space) from formatIDR; signs render `+ Rp`/`− Rp`. */
+.num {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings:
+		'tnum' on,
+		'cv05' on,
+		'ss01' on;
+}
+
+/* Display scale for hero balances (28px desktop / 22px mobile, 700). */
+.currency-display {
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 36px;
+	letter-spacing: -0.01em;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings:
+		'tnum' on,
+		'cv05' on,
+		'ss01' on;
+}
+@media (max-width: 768px) {
+	.currency-display {
+		font-size: 22px;
+		line-height: 28px;
+	}
+}
+
+/* FIXED-MOCHA EXCEPTION ZONE (dark in BOTH modes): `.card-dark` summary
+   surfaces and the `.nav-pill` mobile nav use literal Mocha hex, never
+   flipping `ctp-*` tokens (tokens resolve to Latte values in light mode,
+   unreadable on a dark surface). Keep every fixed hex in this block. */
+.card-dark {
+	background-color: #11111b;
+	color: #cdd6f4;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+}
+/* Content tones on fixed-Mocha surfaces (Mocha Text / Subtext0). */
+.card-dark-strong {
+	color: #cdd6f4;
+}
+.card-dark-dim {
+	color: #a6adc8;
+}
+.card-dark-divider {
+	border-color: color-mix(in srgb, #a6adc8 20%, transparent);
+}
+.card-dark-dot {
+	background-color: #cdd6f4;
+}
+.card-dark-dot-dim {
+	background-color: color-mix(in srgb, #a6adc8 50%, transparent);
+}
+
+/* Mobile bottom nav: floating pill, fixed-Mocha in both modes. */
+.nav-pill {
+	background-color: rgb(17 17 27 / 0.95);
+	color: #cdd6f4;
+}
+.nav-pill-dim {
+	color: #a6adc8;
+}
+/* FAB ring blends into the pill behind it. */
+.nav-pill-ring {
+	--tw-ring-color: #11111b;
+}
+
+/* Warning text on a yellow tint: darkened palette yellow in light mode
+   (raw ctp-yellow fails contrast on the tint), pure token in dark mode. */
+.notice-warn,
+.chip-warn {
+	color: color-mix(in srgb, var(--color-ctp-yellow) 55%, black);
+}
+html.dark .notice-warn,
+html.dark .chip-warn {
+	color: var(--color-ctp-yellow);
+}
+
+/* Checkboxes/radios per DESIGN.md §Components: 18px box, peach fill. */
+input[type='checkbox'],
+input[type='radio'] {
+	accent-color: var(--color-ctp-peach);
+}
+
+/* Recharts theming: map library CSS vars onto Catppuccin (replaces the old
+   LayerChart `.lc-root-container` block). Unlayered so it wins over any
+   library defaults. */
+.chart-root {
+	--chart-1: var(--color-ctp-blue);
+	--chart-2: var(--color-ctp-peach);
+	--chart-3: var(--color-ctp-yellow);
+	--chart-4: var(--color-ctp-lavender);
+	--chart-5: var(--color-ctp-teal);
+	--chart-6: var(--color-ctp-pink);
+	--chart-7: var(--color-ctp-maroon);
+	--chart-8: var(--color-ctp-red);
+	--chart-grid: var(--color-ctp-surface0);
+	--chart-axis: var(--color-ctp-subtext0);
+	--chart-tooltip-bg: var(--color-ctp-mantle);
+	--chart-tooltip-text: var(--color-ctp-text);
+}
+html.dark .chart-root {
+	--chart-grid: var(--color-ctp-surface1);
+	--chart-axis: var(--color-ctp-subtext0);
+	--chart-tooltip-bg: var(--color-ctp-base);
+}
