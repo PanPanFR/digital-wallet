@@ -14,7 +14,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const Wallets = lazy(() => import('./pages/Wallets'));
 const Debts = lazy(() => import('./pages/Debts'));
-const Analytics = lazy(() => import('./pages/Analytics'));
 const Copilot = lazy(() => import('./pages/Copilot'));
 const Settings = lazy(() => import('./pages/Settings'));
 
@@ -87,7 +86,6 @@ export default function App() {
 								<Route path="/wallets" element={<Wallets />} />
 								<Route path="/debts" element={<Debts />} />
 								<Route path="/hutang" element={<Navigate to="/debts" replace />} />
-								<Route path="/analytics" element={<Analytics />} />
 								<Route path="/copilot" element={<Copilot />} />
 								<Route path="/settings" element={<Settings />} />
 							</Route>

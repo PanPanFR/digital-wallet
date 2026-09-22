@@ -263,70 +263,80 @@ export default function Transactions() {
 					e.preventDefault();
 					updateParam('q', inputQ.trim());
 				}}
-				className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
+				className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto] sm:items-end"
 			>
-				<label htmlFor="tx-filter-month" className="text-sm text-ctp-subtext1">Bulan</label>
-				<input
-					id="tx-filter-month"
-					name="month"
-					type="month"
-					value={month}
-					onChange={(e) => updateParam('month', e.target.value)}
-					className="input w-full sm:w-auto"
-				/>
+				<div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+					<label htmlFor="tx-filter-month" className="label">Bulan</label>
+					<input
+						id="tx-filter-month"
+						name="month"
+						type="month"
+						value={month}
+						onChange={(e) => updateParam('month', e.target.value)}
+						className="input w-full"
+					/>
+				</div>
 
-				<label htmlFor="tx-filter-wallet" className="text-sm text-ctp-subtext1">Dompet</label>
-				<WalletSelect
-					id="tx-filter-wallet"
-					value={wallet === 'digital' || wallet === 'cash' ? '' : wallet}
-					onChange={(e) => updateParam('wallet', e.target.value)}
-					placeholder="Semua dompet"
-					placeholderDisabled={false}
-					className="w-full sm:w-auto"
-					wallets={wallets}
-				/>
+				<div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+					<label htmlFor="tx-filter-wallet" className="label">Dompet</label>
+					<WalletSelect
+						id="tx-filter-wallet"
+						value={wallet === 'digital' || wallet === 'cash' ? '' : wallet}
+						onChange={(e) => updateParam('wallet', e.target.value)}
+						placeholder="Semua dompet"
+						placeholderDisabled={false}
+						className="w-full"
+						wallets={wallets}
+					/>
+				</div>
 
-				<input
-					type="search"
-					name="q"
-					placeholder="Cari deskripsi…"
-					value={inputQ}
-					onChange={(e) => setInputQ(e.target.value)}
-					aria-label="Cari deskripsi"
-					className="input w-full sm:w-auto"
-				/>
+				<div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+					<label htmlFor="tx-filter-q" className="label">Cari</label>
+					<input
+						id="tx-filter-q"
+						type="search"
+						name="q"
+						placeholder="Cari deskripsi…"
+						value={inputQ}
+						onChange={(e) => setInputQ(e.target.value)}
+						aria-label="Cari deskripsi"
+						className="input w-full"
+					/>
+				</div>
 
-				<select
-					name="category"
-					aria-label="Kategori"
-					value={category}
-					onChange={(e) => updateParam('category', e.target.value)}
-					className="input w-full sm:w-auto"
-				>
-					<option value="">Semua kategori</option>
-					{CATEGORIES.map((c) => (
-						<option key={c} value={c}>
-							{c}
-						</option>
-					))}
-				</select>
-
-				<button
-					type="submit"
-					className="btn btn-outline col-span-2 px-3 py-2 sm:col-span-1 sm:py-1.5"
-				>
-					Terapkan
-				</button>
-
-				{(month || wallet || q || category) && (
-					<button
-						type="button"
-						onClick={resetFilters}
-						className="col-span-2 text-sm text-ctp-peach hover:underline sm:col-span-1 text-left"
+				<div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+					<label htmlFor="tx-filter-category" className="label">Kategori</label>
+					<select
+						id="tx-filter-category"
+						name="category"
+						aria-label="Kategori"
+						value={category}
+						onChange={(e) => updateParam('category', e.target.value)}
+						className="input w-full"
 					>
-						Reset
+						<option value="">Semua kategori</option>
+						{CATEGORIES.map((c) => (
+							<option key={c} value={c}>
+								{c}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="col-span-2 flex flex-wrap items-center gap-3 sm:col-span-1 sm:justify-end">
+					<button type="submit" className="btn btn-outline px-4 py-2 cursor-pointer">
+						Terapkan
 					</button>
-				)}
+					{(month || wallet || q || category) && (
+						<button
+							type="button"
+							onClick={resetFilters}
+							className="text-sm text-ctp-peach hover:underline cursor-pointer"
+						>
+							Reset
+						</button>
+					)}
+				</div>
 			</form>
 
 			{/* Loading State */}

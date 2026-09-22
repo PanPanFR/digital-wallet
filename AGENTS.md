@@ -42,5 +42,4 @@ Edit `schema.sql` (idempotent). **Structural** changes (new column, changed CHEC
 
 - Work happens per-plan on `feature/<plan-slug>` branches; approved-but-unmerged plans live in `plan/` and are tracked in `docs/index.md`. Do not document plan behavior as current until merged.
 - Styling & UI: Tailwind 4, **no config file** (via `@tailwindcss/vite`); class-based dark mode; theme init script in `web/index.html`. Component utilities in `web/src/index.css` (`.card`, `.btn*`, `.input`, `.chip`, `.label`, `.page-header`, `.page-title`, `.page-subtitle`, `.section-header`, `.section-title`, `.list`, `.list-row`, `.tile`). No gradients (solid fills only; light mode uses border + soft shadow, dark mode uses hairline ring). Mobile layout uses safe-area padding (`pb-[env(safe-area-inset-bottom)]`). Modals and bottom sheets use `ModalShell` (`variant="center" | "sheet"`).
-- Charts: Recharts (`web/src/components/charts/`), themed via `.chart-root` CSS vars in `web/src/index.css`.
 - `graphify-out/` exists — for codebase questions run `graphify query` before grep/read; after code changes run `graphify update .`.

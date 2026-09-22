@@ -337,34 +337,6 @@ describe('Worker Hono API Contract', () => {
 		});
 	});
 
-	describe('/api/analytics', () => {
-		it('returns composite analytics payload', async () => {
-			const db = makeDb((sql) => {
-				if (sql.includes('type, COALESCE(SUM(amount)')) return [{ type: 'expense', total: 75000 }];
-				if (sql.includes('category, type, COALESCE(SUM(amount)')) return [{ category: 'Makan', type: 'expense', total: 50000 }];
-				if (sql.includes('w.id, w.name, COALESCE(SUM(amount)')) return [{ id: 'w1', name: 'GoPay', total: 50000 }];
-				if (sql.includes('strftime(')) return [{ month: '2026-01', income: 100000, expense: 75000 }];
-				return [];
-			});
-
-			const res = await app.request('/api/analytics?month=2026-01', {
-				method: 'GET',
-				headers: { Cookie: validCookie }
-			}, {
-				DB: db,
-				SESSION_SECRET: TEST_SECRET,
-				ASSETS: {} as any
-			});
-			expect(res.status).toBe(200);
-			const json = await res.json() as Record<string, unknown>;
-			expect(json.month).toBe('2026-01');
-			expect(json).toHaveProperty('summary');
-			expect(json).toHaveProperty('categoryTotals');
-			expect(json).toHaveProperty('walletTotals');
-			expect(json).toHaveProperty('trend');
-		});
-	});
-
 	describe('/api/settings/providers', () => {
 		it('returns provider list and activeProviderId', async () => {
 			const db = makeDb((sql, boundArgs) => {

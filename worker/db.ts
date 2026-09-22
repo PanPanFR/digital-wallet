@@ -62,12 +62,6 @@ export interface MonthlyTotal {
 	expense: number;
 }
 
-export interface WalletTotal {
-	id: string;
-	name: string;
-	kind: 'digital' | 'cash';
-	total: number;
-}
 
 /** List wallets, grouped by kind then name. */
 export async function listWallets(db: D1Database): Promise<WalletRow[]> {
@@ -427,23 +421,6 @@ export async function getMonthlyTotals(db: D1Database, months: number): Promise<
 }
 
 /** Expense totals per wallet for a month (YYYY-MM). Transfers excluded (not spending). */
-export async function getWalletTotals(db: D1Database, month: string): Promise<WalletTotal[]> {
-	const { results } = await db
-		.prepare(
-			`SELECT w.id, w.name, w.kind,
-			        COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS total
-			 FROM wallets w LEFT JOIN transactions t ON t.wallet_id = w.id AND t.date LIKE ?
-			 GROUP BY w.id ORDER BY total DESC`
-		)
-		.bind(`${month}%`)
-		.all<WalletTotal>();
-	return (results ?? []).map((r) => ({
-		id: r.id,
-		name: r.name,
-		kind: r.kind,
-		total: Number(r.total) || 0
-	}));
-}
 
 /** Get an app setting by key. */
 export async function getSetting(db: D1Database, key: string): Promise<string | null> {

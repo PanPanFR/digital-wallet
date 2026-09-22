@@ -8,7 +8,6 @@ export type {
 	MonthlySummary,
 	CategoryTotal,
 	MonthlyTotal,
-	WalletTotal,
 	DebtRow,
 	DebtPaymentRow,
 	BackupCounts,
@@ -27,13 +26,6 @@ export interface DashboardData {
 	month: string;
 }
 
-export interface AnalyticsData {
-	month: string;
-	summary: import('../worker/db').MonthlySummary;
-	categoryTotals: import('../worker/db').CategoryTotal[];
-	walletTotals: import('../worker/db').WalletTotal[];
-	trend: import('../worker/db').MonthlyTotal[];
-}
 
 export interface AuthStatus {
 	setupRequired: boolean;

@@ -1,4 +1,4 @@
-/** Indonesian formatting helpers shared by transactions, dashboard, analytics. */
+/** Indonesian formatting helpers shared by transactions, dashboard. */
 const idr = new Intl.NumberFormat('id-ID', {
 	style: 'currency',
 	currency: 'IDR',

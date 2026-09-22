@@ -12,7 +12,6 @@ import {
 	getMonthlySummary,
 	getCategoryTotals,
 	getMonthlyTotals,
-	getWalletTotals,
 	listDebts,
 	listOpenDebts,
 	createDebt,
@@ -235,26 +234,6 @@ describe('deleteWallet transfer guard', () => {
 		} as unknown as D1Database;
 		expect(await deleteWallet(dbWithUsage, 'x')).toBe('has-transactions');
 		expect(calls[0].sql).toContain('to_wallet_id');
-	});
-});
-
-describe('getWalletTotals', () => {
-	it('maps rows to numeric totals per wallet', async () => {
-		const rows = [
-			{ id: 'a', name: 'GoPay', kind: 'digital', total: '30000' },
-			{ id: 'b', name: 'Tunai', kind: 'cash', total: 0 }
-		];
-		const t = await getWalletTotals(fakeDb(rows), '2026-09');
-		expect(t).toEqual([
-			{ id: 'a', name: 'GoPay', kind: 'digital', total: 30000 },
-			{ id: 'b', name: 'Tunai', kind: 'cash', total: 0 }
-		]);
-	});
-	it('filters by month on date column and excludes transfers', async () => {
-		const { db, calls } = recordingDb();
-		await getWalletTotals(db, '2026-09');
-		expect(calls[0].sql).toContain('t.date LIKE ?');
-		expect(calls[0].binds).toEqual(['2026-09%']);
 	});
 });
 

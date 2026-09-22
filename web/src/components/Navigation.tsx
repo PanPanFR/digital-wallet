@@ -5,7 +5,6 @@ import {
 	ArrowLeftRight,
 	Wallet,
 	HandCoins,
-	BarChart3,
 	Sparkles,
 	Settings,
 	LogOut,
@@ -30,7 +29,6 @@ const items: NavItem[] = [
 	{ href: '/transactions', label: 'Transaksi', icon: ArrowLeftRight, group: 'primary' },
 	{ href: '/wallets', label: 'Dompet', icon: Wallet, group: 'primary' },
 	{ href: '/debts', label: 'Hutang', icon: HandCoins, group: 'secondary', subtitle: 'Catatan hutang & piutang' },
-	{ href: '/analytics', label: 'Analitik', icon: BarChart3, group: 'secondary', subtitle: 'Statistik & tren keuangan' },
 	{ href: '/copilot', label: 'Copilot', icon: Sparkles, group: 'secondary', subtitle: 'Tanya soal keuanganmu' },
 	{ href: '/settings', label: 'Pengaturan', icon: Settings, group: 'secondary', subtitle: 'Password & penyedia AI' }
 ];

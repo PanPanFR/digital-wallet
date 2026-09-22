@@ -61,6 +61,5 @@ With neither a stored provider nor `GOOGLE_API_KEY`, `/api/ai/report` returns 50
 
 - Pure React SPA in `web/src/` powered by Vite, React Router 7, and TanStack Query 5.
 - Shared components in `web/src/components/`: `TransactionForm` (create/edit modal), `ConfirmModal` (deletes), `ModalShell` (accessible dialogs with `center` modal and `sheet` bottom drawer variants), `Toast`, `Skeleton`, `Navigation` (desktop sidebar + 5-slot mobile floating pill with "Lainnya" sheet menu), `ThemeToggle`, `WalletSelect` (grouped by kind).
-- Charts: rendered via Recharts (`web/src/components/charts/`) on `/analytics` (category distribution, comparison bars, wallet spend breakdown, and 6-month monthly trend). Themed via unlayered `.chart-root` CSS variable overrides in `web/src/index.css` mapped to Catppuccin palette tokens.
 - Styling: Tailwind CSS 4 (`@tailwindcss/vite`), Catppuccin Latte (light) & Mocha (dark). Fixed Mocha surfaces for dark summary cards and mobile bottom nav.
 - Formatting/locale helpers centralized in `shared/format.ts` (IDR currency, WIB dates). UI strings are Indonesian throughout; identifiers and comments are English.

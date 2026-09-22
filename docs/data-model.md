@@ -162,9 +162,8 @@ Every balance in the app derives from transactions — single source of truth:
 | Monthly income/expense/net | `getMonthlySummary`, `db.ts:374-392` | `SUM(amount)` `GROUP BY type` for `date LIKE 'YYYY-MM%'`, transfers excluded |
 | Category totals for a month | `getCategoryTotals`, `db.ts:395-411` | `GROUP BY category, type ORDER BY total DESC`, transfers excluded |
 | 6-month trend | `getMonthlyTotals`, `db.ts:418-452` | Last N months by `date`, zero-filled, oldest first |
-| Per-wallet expenses for a month | `getWalletTotals`, `db.ts:455-471` | Analytics page; transfers excluded (not spending) |
 
-Dashboard, wallets page, analytics, and the AI chat context all reuse these — there is no second implementation to drift. Debt *remaining* is likewise computed (`amount − paid`, in `DEBT_SELECT`), never stored.
+Dashboard, wallets page, and the AI chat context all reuse these — there is no second implementation to drift. Debt *remaining* is likewise computed (`amount − paid`, in `DEBT_SELECT`), never stored.
 
 ## Migration history (`migrations/`)
 

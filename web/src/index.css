@@ -282,25 +282,3 @@ input[type='radio'] {
 	accent-color: var(--color-ctp-peach);
 }
 
-/* Recharts theming: map library CSS vars onto Catppuccin (replaces the old
-   LayerChart `.lc-root-container` block). Unlayered so it wins over any
-   library defaults. */
-.chart-root {
-	--chart-1: var(--color-ctp-blue);
-	--chart-2: var(--color-ctp-peach);
-	--chart-3: var(--color-ctp-yellow);
-	--chart-4: var(--color-ctp-lavender);
-	--chart-5: var(--color-ctp-teal);
-	--chart-6: var(--color-ctp-pink);
-	--chart-7: var(--color-ctp-maroon);
-	--chart-8: var(--color-ctp-red);
-	--chart-grid: var(--color-ctp-surface0);
-	--chart-axis: var(--color-ctp-subtext0);
-	--chart-tooltip-bg: var(--color-ctp-mantle);
-	--chart-tooltip-text: var(--color-ctp-text);
-}
-html.dark .chart-root {
-	--chart-grid: var(--color-ctp-surface1);
-	--chart-axis: var(--color-ctp-subtext0);
-	--chart-tooltip-bg: var(--color-ctp-base);
-}
