@@ -15,7 +15,6 @@ Digital Wallet — single-user finance tracker on Vite + React 19 + Hono + Cloud
 
 These record *why* the app was built the way it was; where they contradict current code, the code and [architecture.md](architecture.md) win.
 
-- [specs/2026-09-03-svelte-rewrite-design.md](specs/2026-09-03-svelte-rewrite-design.md) — the Next.js → SvelteKit rewrite: stack, auth flow, form-actions pattern, PWA approach (the service-worker parts were later reverted, see architecture.md).
 - [specs/2026-09-08-digital-wallet-design.md](specs/2026-09-08-digital-wallet-design.md) — the finance-tracker → digital-wallet transformation: wallet data model, computed balances, rebrand, deploy-via-GitHub decision.
 
 ## Approved plans (not yet in `main`)

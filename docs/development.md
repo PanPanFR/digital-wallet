@@ -37,29 +37,28 @@ GOOGLE_API_KEY=optional-key-enables-copilot
 
 ## Environment variables & bindings
 
-Read via `platform.env` (SvelteKit) or `process.env` (server code with `nodejs_compat`). **Never put real secret values in the repo** — `.dev.vars` is for local dev only; production gets Worker secrets.
+Read via `c.env` (Cloudflare Worker binding) or `process.env` (bridged in `worker/index.ts`). **Never put real secret values in the repo** — `.dev.vars` is for local dev only; production gets Worker secrets.
 
 | Name | Kind | Secret? | Purpose | Where read |
 |---|---|---|---|---|
-| `DB` | D1 binding | no | App database (`digital-wallet-db`) | every route via `platform.env.DB` → `lib/server/db.ts` |
-| `ASSETS` | Assets binding | no | Static files + app shell | adapter-generated (worker entry) |
-| `SESSION_SECRET` | secret | **yes** | HMAC-SHA256 key for session tokens. **No fallback** — `getSessionSecret()` throws if unset, so the app cannot boot without it | `src/lib/server/auth.ts:21-30` |
-| `GOOGLE_API_KEY` | secret | **yes** | Bearer token for the env-fallback AI config (name kept for old-app compatibility). Only consulted when no provider is stored in `/settings`. Optional: with neither, `/api/ai/report` returns 503 and the copilot shows "AI belum dikonfigurasi" | `src/routes/api/ai/report/+server.ts:40` |
-| `AI_BASE_URL` | plain var | no | Chat-completions base URL for the env fallback. Default `https://9router.panpan.my.id/v1` (`ai.ts:13`) | `src/lib/server/ai.ts:25` |
-| `AI_MODEL` | plain var | no | Model name for the env fallback. Default `gemini-2.5-flash` (`ai.ts:14`) | `src/lib/server/ai.ts:27` |
+| `DB` | D1 binding | no | App database (`digital-wallet-db`) | every route via `c.env.DB` → `worker/db.ts` |
+| `ASSETS` | Assets binding | no | Static files + SPA fallback | `worker/index.ts` (Wrangler assets) |
+| `SESSION_SECRET` | secret | **yes** | HMAC-SHA256 key for session tokens. **No fallback** — `getSessionSecret()` throws if unset, so the app cannot boot without it | `worker/auth.ts` |
+| `GOOGLE_API_KEY` | secret | **yes** | Bearer token for the env-fallback AI config (name kept for old-app compatibility). Only consulted when no provider is stored in `/settings`. Optional: with neither, `/api/ai/report` returns 503 and the copilot shows "AI belum dikonfigurasi" | `worker/routes/ai.ts` |
+| `AI_BASE_URL` | plain var | no | Chat-completions base URL for the env fallback. Default `https://9router.panpan.my.id/v1` (`ai.ts`) | `worker/ai.ts` |
+| `AI_MODEL` | plain var | no | Model name for the env fallback. Default `gemini-2.5-flash` (`ai.ts`) | `worker/ai.ts` |
 
 Note on local vs prod secrets: local dev reads `.dev.vars`; `wrangler secret put` only affects the deployed Worker. Keeping both in sync is manual.
 
 ## Daily workflow
 
 ```bash
-npm run dev       # http://localhost:5173 — Vite HMR; adapter-cloudflare emulates the Worker
-                  # platform (local D1 + .dev.vars) via Miniflare
-npm run preview   # http://127.0.0.1:8787 — `wrangler dev` on the built output: real Workers
-                  # runtime, same local D1. Use this before shipping anything runtime-sensitive.
-npm run test      # vitest run
-npm run check     # svelte-kit sync + svelte-check (typescript strict; see tsconfig.json)
-npm run build     # production output in .svelte-kit/cloudflare
+npm run dev          # http://localhost:5173 — Vite SPA dev server with HMR; proxies /api to 8787
+npm run dev:worker   # http://127.0.0.1:8787 — wrangler dev serving Worker API + local D1
+npm run preview      # http://127.0.0.1:8787 — wrangler dev on built output in dist/ (real Worker runtime)
+npm run test         # vitest run
+npm run check        # tsc --noEmit (TypeScript strict check)
+npm run build        # production output in dist/
 ```
 
 First visit to a fresh local DB shows `/login` in **setup mode** — pick any master password (≥8 chars). Setup state is just `app_settings.master_password_hash` being empty; nuke `.wrangler/state/` to reset everything.
@@ -76,23 +75,26 @@ npx wrangler d1 execute digital-wallet-db --local --command "SELECT * FROM walle
 
 ## Tests
 
-`npm run test` → vitest, node environment, `src/**/*.test.ts` (config: `vitest.config.ts`). Current suites, all server-side logic, no live D1 — `db.test.ts` uses a fake-Db pattern capturing prepared SQL:
+`npm run test` → vitest, node environment, `worker/**/*.test.ts`, `shared/**/*.test.ts` (config: `vitest.config.ts`). Current suites, all server-side logic, no live D1 — `db.test.ts` uses a fake-Db pattern capturing prepared SQL:
 
 | File | Covers |
 |---|---|
-| `src/lib/server/auth.test.ts` | password hash/verify round-trip, token create/verify, expiry |
-| `src/lib/server/db.test.ts` | wallet CRUD (duplicate-name guard, balance adjustment), transaction filters/bulk delete, debt CRUD + payment batching/overpay guard + cascade delete with payments (keeping wallet transactions), backup export selects + merge import (partitioning, chunking, paid-invariant, provider union), computed balances (empty wallet = 0, per-kind subtotals) |
-| `src/lib/server/validation.test.ts` | `TxSchema`/`WalletSchema`/debt schemas — money-path rules; `BackupSchema` envelope accept/reject matrix |
-| `src/lib/server/ai.test.ts` | `chatAnswer`: request shape, history/context injection, OpenAI/Gemini response unwrapping, friendly 429/5xx errors |
-| `src/lib/server/aiProviders.test.ts` | provider JSON round-trip, defensive corrupt-JSON parse, config precedence, `toSummary` key stripping |
+| `worker/auth.test.ts` | password hash/verify round-trip, token create/verify, expiry |
+| `worker/db.test.ts` | wallet CRUD (duplicate-name guard, balance adjustment), transaction filters/bulk delete, debt CRUD + payment batching/overpay guard + cascade delete with payments (keeping wallet transactions), backup export selects + merge import (partitioning, chunking, paid-invariant, provider union), computed balances (empty wallet = 0, per-kind subtotals) |
+| `worker/validation.test.ts` | `TxSchema`/`WalletSchema`/debt schemas — money-path rules; `BackupSchema` envelope accept/reject matrix |
+| `worker/api.test.ts` | Worker Hono API route contract, auth guards, JSON serialization |
+| `worker/ai.test.ts` | `chatAnswer`: request shape, history/context injection, OpenAI/Gemini response unwrapping, friendly 429/5xx errors |
+| `worker/aiProviders.test.ts` | provider JSON round-trip, defensive corrupt-JSON parse, config precedence, `toSummary` key stripping |
+| `worker/csv.test.ts` | CSV serialization and escaping |
+| `shared/format.test.ts` | currency and date formatting |
 
-Route/UI behavior is verified manually (`docs/specs/2026-09-03-svelte-rewrite-design.md` § Testing). When changing SQL in `db.ts`, extend the fake-Db assertions first — that's where drift gets caught.
+Route/UI behavior is verified manually. When changing SQL in `db.ts`, extend the fake-Db assertions first — that's where drift gets caught.
 
 ## Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
-| `npm run build` fails `EPERM ... .svelte-kit\cloudflare` (Windows) | A running `wrangler dev`/`workerd` locks the output dir. Kill those processes, then build. |
+| `npm run build` fails `EPERM ... dist` (Windows) | A running `wrangler dev`/`workerd` locks the output dir. Kill those processes, then build. |
 | Dev server throws "SESSION_SECRET is not configured" | Missing `.dev.vars` or missing key in it. Copy the snippet above. Note the Vite dev server may need a restart after creating the file. |
 | Pages render but every query fails / empty app | Local D1 not initialized: run the `--local --file=schema.sql` command from setup. Seeded wallets ("Tunai", "Dompet Digital") are your tell that it ran. |
 | Copilot says "Fitur AI belum dikonfigurasi" (503) | No provider stored in `/settings` **and** no `GOOGLE_API_KEY` in `.dev.vars` (local) or Worker secrets (prod). Expected degradation, not a crash. |

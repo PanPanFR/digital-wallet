@@ -1,6 +1,5 @@
 node_modules
 .worktrees/
-.svelte-kit
 .wrangler
 .dev.vars
 dist

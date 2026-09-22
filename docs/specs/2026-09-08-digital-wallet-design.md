@@ -1,8 +1,7 @@
 # Design: Digital Wallet — Transformasi dari Finance Tracker
 
 Date: 2026-09-08
-Status: Draft (menunggu review user)
-Supersedes: docs/specs/2026-09-03-svelte-rewrite-design.md (konsep produk; stack keputusan tetap berlaku)
+Status: Diterapkan
 Repo baru: https://github.com/PanPanFR/digital-wallet.git
 
 ## Goals
@@ -32,7 +31,7 @@ Repo baru: https://github.com/PanPanFR/digital-wallet.git
 | Wallet awal | **Seed 2 default** via schema: "Tunai" (cash) + "Dompet Digital" (digital) | App langsung bisa dipakai; user tetap bisa CRUD |
 | Jenis wallet | Enum CHECK `('digital','cash')` | Dua jenis saja sesuai kebutuhan; DB constraint > validasi app |
 | Deploy | **Cloudflare Workers Builds** (connect repo GitHub di dashboard CF) | Auto-deploy tiap push; user minta "dari github aja" |
-| Stack | Tidak berubah (SvelteKit + adapter-cloudflare + Tailwind v4 + zod + vitest) | Keputusan 2026-09-03 masih valid |
+| Stack | Vite + React 19 + Hono + Cloudflare Worker + Tailwind v4 + zod + vitest | Stack aplikasi saat ini |
 
 ## Data Model (schema.sql baru)
 

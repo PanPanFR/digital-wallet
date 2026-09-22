@@ -57,11 +57,12 @@ Open http://localhost:5173 — the first visit asks you to set a master password
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Vite dev server; adapter-cloudflare emulates the Worker platform (local D1, `.dev.vars`) via Miniflare |
-| `npm run build` | Production build to `.svelte-kit/cloudflare` |
-| `npm run preview` | `wrangler dev` on http://127.0.0.1:8787 — real Worker runtime + local D1, serving the build output |
-| `npm run test` | `vitest run` — unit tests under `src/**/*.test.ts` (auth, db, AI, validation) |
-| `npm run check` | `svelte-kit sync` + `svelte-check` (types, including `.svelte` files) |
+| `npm run dev` | Vite dev server (web SPA with HMR on port 5173, proxies `/api` to 8787) |
+| `npm run dev:worker` | `wrangler dev` — runs Worker API + local D1 on http://127.0.0.1:8787 |
+| `npm run build` | Production Vite build to `dist/` |
+| `npm run preview` | `wrangler dev` on http://127.0.0.1:8787 — real Worker runtime + local D1, serving `dist/` |
+| `npm run test` | `vitest run` — unit tests under `worker/**/*.test.ts` and `shared/**/*.test.ts` |
+| `npm run check` | `tsc --noEmit` (TypeScript strict check) |
 | `npm run deploy` | `npm run build && wrangler deploy` — manual deploy (fallback; Workers Builds is primary) |
 
 ## Documentation

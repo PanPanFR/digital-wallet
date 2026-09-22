@@ -1,4 +1,4 @@
-/** Cloudflare Worker bindings. D1 binding `DB` is unchanged from SvelteKit. */
+/** Cloudflare Worker bindings. */
 export interface Env {
 	DB: D1Database;
 	ASSETS: Fetcher;

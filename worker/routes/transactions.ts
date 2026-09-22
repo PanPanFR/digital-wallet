@@ -14,7 +14,15 @@ export const transactionRoutes = new Hono<{ Bindings: Env }>();
 
 transactionRoutes.get('/', async (c) => {
 	const month = c.req.query('month') || undefined;
-	const walletId = c.req.query('walletId') || c.req.query('wallet') || undefined;
+	const walletParam = c.req.query('walletId') || c.req.query('wallet') || undefined;
+	const kindParam = c.req.query('kind');
+	const kind =
+		kindParam === 'digital' || kindParam === 'cash'
+			? kindParam
+			: walletParam === 'digital' || walletParam === 'cash'
+				? walletParam
+				: undefined;
+	const walletId = kind ? undefined : walletParam;
 	const search = c.req.query('search') || c.req.query('q') || undefined;
 	const category = c.req.query('category') || undefined;
 	const limitParam = parseInt(c.req.query('limit') ?? '', 10);
@@ -27,6 +35,7 @@ transactionRoutes.get('/', async (c) => {
 		offset,
 		month,
 		walletId,
+		kind,
 		search,
 		category
 	});

@@ -9,7 +9,7 @@ Primary path is **Cloudflare Workers Builds** — Cloudflare pulls the GitHub re
 ```
 push to main (github.com/PanPanFR/digital-wallet)
   → Cloudflare Workers Builds
-      build command: npm run build   (output .svelte-kit/cloudflare, read from wrangler.jsonc)
+      build command: npm run build   (output dist/, read from wrangler.jsonc)
   → Worker "digital-wallet" + static assets published
 ```
 

@@ -1,18 +1,11 @@
 import { Hono } from 'hono';
 import { exportAllData, importBackupData, listTransactions } from '../db';
+import { CSV_COLUMNS, toCsvField } from '../csv';
 import { BackupSchema, fieldErrors } from '../../shared/validation';
 import type { Env } from '../env';
 
 export const backupRoutes = new Hono<{ Bindings: Env }>();
 export const backupRoute = backupRoutes;
-
-const CSV_COLUMNS = ['date', 'description', 'category', 'type', 'amount', 'wallet_id', 'to_wallet_id'] as const;
-
-/** Quote a CSV field when it contains a comma, quote, or newline. */
-export function toCsvField(v: string | number | null): string {
-	const s = v === null ? '' : String(v);
-	return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 // JSON export handler
 async function handleJsonExport(c: any) {
@@ -37,10 +30,21 @@ async function handleCsvExport(c: any) {
 	const limitRaw = parseInt(c.req.query('limit') ?? '', 10);
 	const limit = Number.isNaN(limitRaw) ? 5000 : Math.min(Math.max(limitRaw, 1), 5000);
 
+	const walletParam = c.req.query('walletId') || c.req.query('wallet') || undefined;
+	const kindParam = c.req.query('kind');
+	const kind =
+		kindParam === 'digital' || kindParam === 'cash'
+			? kindParam
+			: walletParam === 'digital' || walletParam === 'cash'
+				? walletParam
+				: undefined;
+	const walletId = kind ? undefined : walletParam;
+
 	const rows = await listTransactions(c.env.DB, {
 		limit,
 		month,
-		walletId: c.req.query('walletId') || undefined,
+		walletId,
+		kind,
 		search: c.req.query('search') || c.req.query('q') || undefined,
 		category: c.req.query('category') || undefined
 	});

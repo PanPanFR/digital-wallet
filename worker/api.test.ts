@@ -220,6 +220,48 @@ describe('Worker Hono API Contract', () => {
 		});
 	});
 
+	describe('/api/transactions', () => {
+		it('returns transactions list and handles kind filter correctly', async () => {
+			let capturedSql = '';
+			const db = makeDb((sql) => {
+				capturedSql = sql;
+				if (sql.includes('FROM transactions t')) {
+					return [{ id: 't1', description: 'Makan', amount: 25000, wallet_kind: 'digital' }];
+				}
+				return [];
+			});
+			const res = await app.request('/api/transactions?wallet=digital', {
+				method: 'GET',
+				headers: { Cookie: validCookie }
+			}, {
+				DB: db,
+				SESSION_SECRET: TEST_SECRET,
+				ASSETS: {} as any
+			});
+			expect(res.status).toBe(200);
+			const data = (await res.json()) as any;
+			expect(data.transactions).toHaveLength(1);
+			expect(capturedSql).toContain('w.kind = ?');
+		});
+
+		it('validates transaction creation payload', async () => {
+			const db = makeDb(() => []);
+			const res = await app.request('/api/transactions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Cookie: validCookie
+				},
+				body: JSON.stringify({ amount: -100 })
+			}, {
+				DB: db,
+				SESSION_SECRET: TEST_SECRET,
+				ASSETS: {} as any
+			});
+			expect(res.status).toBe(400);
+		});
+	});
+
 	describe('/api/debts guards', () => {
 		it('returns 409 overpay when payment exceeds remaining debt', async () => {
 			const db = makeDb((sql) => {

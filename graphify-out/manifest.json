@@ -42,15 +42,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1789970888.5345907,
-    "seen": 1789970985.3050194,
-    "ast_hash": "8318a3ca5118339804a03b2647bde8ad",
-    "semantic_hash": ""
-  },
-  "docs/specs/2026-09-03-svelte-rewrite-design.md": {
-    "mtime": 1789703024.743307,
-    "seen": 1789968199.580552,
-    "ast_hash": "f6da7db877bae6d4f0cdf7585d4f713a",
+    "mtime": 1789998257.4081342,
+    "seen": 1789998432.827463,
+    "ast_hash": "7bd661ed5a780d4640f1758b35a7789f",
     "semantic_hash": ""
   },
   "static/icon.svg": {
@@ -60,9 +54,9 @@
     "semantic_hash": ""
   },
   "docs/specs/2026-09-08-digital-wallet-design.md": {
-    "mtime": 1789703024.743307,
-    "seen": 1789968199.580552,
-    "ast_hash": "8f15b88279c68551c1380f1f2c09a800",
+    "mtime": 1789999058.2829118,
+    "seen": 1789999110.7085023,
+    "ast_hash": "9a192d65f7ec655414cb676bf278eb76",
     "semantic_hash": ""
   },
   "migrations/001-tx-date-transfer.sql": {
@@ -90,33 +84,27 @@
     "semantic_hash": ""
   },
   "docs/deployment.md": {
-    "mtime": 1789703024.736889,
-    "seen": 1789968199.580552,
-    "ast_hash": "27b7bf9dfbc74c2cc9387343251c903f",
+    "mtime": 1789998269.9275513,
+    "seen": 1789998432.827463,
+    "ast_hash": "025a440c3cbae0614ca38c190f81bdfd",
     "semantic_hash": ""
   },
   "docs/development.md": {
-    "mtime": 1789703024.736889,
-    "seen": 1789968199.580552,
-    "ast_hash": "d03b3dc2ddb57190da878aa12b0dfc9a",
+    "mtime": 1789999002.8319697,
+    "seen": 1789999110.7085023,
+    "ast_hash": "ae91060f626069aabe1edb2abe30995c",
     "semantic_hash": ""
   },
   "docs/index.md": {
-    "mtime": 1789970946.6656933,
-    "seen": 1789970985.3050194,
-    "ast_hash": "340e3a3646b537923561d190a614e3f3",
+    "mtime": 1789999030.5038834,
+    "seen": 1789999110.7085023,
+    "ast_hash": "b5d9e0bff1fd2213f9be9c38ef114520",
     "semantic_hash": ""
   },
   "AGENTS.md": {
     "mtime": 1789970888.5345907,
     "seen": 1789970985.3050194,
     "ast_hash": "d2c0d8f36393c5548c7256a223ea25cc",
-    "semantic_hash": ""
-  },
-  "plan/mvp-simplify-mobile.md": {
-    "mtime": 1789968882.2015254,
-    "seen": 1789969204.0501294,
-    "ast_hash": "d87d1d4aa2d6dd350704fb87b941106d",
     "semantic_hash": ""
   },
   "shared/constants.ts": {
@@ -156,9 +144,9 @@
     "semantic_hash": ""
   },
   "web/src/app.tsx": {
-    "mtime": 1789970888.5773807,
-    "seen": 1789970985.3050194,
-    "ast_hash": "1ba6d1bc80bd83ec446d77587886548e",
+    "mtime": 1789998141.7860596,
+    "seen": 1789998432.827463,
+    "ast_hash": "18b1e053080c3508e04e73dfb08b66d4",
     "semantic_hash": ""
   },
   "web/src/main.tsx": {
@@ -198,9 +186,9 @@
     "semantic_hash": ""
   },
   "worker/api.test.ts": {
-    "mtime": 1789970888.5948842,
-    "seen": 1789970985.3050194,
-    "ast_hash": "0ebff5b52bd2bda7edf14705bcf406b0",
+    "mtime": 1789998167.679592,
+    "seen": 1789998432.827463,
+    "ast_hash": "0a94a7df83a128d97fb60527b566e498",
     "semantic_hash": ""
   },
   "worker/auth.test.ts": {
@@ -246,9 +234,9 @@
     "semantic_hash": ""
   },
   "worker/env.ts": {
-    "mtime": 1789969789.21779,
-    "seen": 1789970396.9063132,
-    "ast_hash": "3bfb5594d9d86b1943160f5dcdd90d99",
+    "mtime": 1789998978.1468503,
+    "seen": 1789999110.7085023,
+    "ast_hash": "dd0e448f1fa5e2989e92d8cbb4e72b14",
     "semantic_hash": ""
   },
   "worker/index.ts": {
@@ -276,9 +264,9 @@
     "semantic_hash": ""
   },
   "worker/routes/backup.ts": {
-    "mtime": 1789969789.2225108,
-    "seen": 1789970396.9063132,
-    "ast_hash": "20bd6732e7792759498a188d336e54d9",
+    "mtime": 1789998152.8026135,
+    "seen": 1789998432.827463,
+    "ast_hash": "cfdbf325046ddb73f612916729e15d02",
     "semantic_hash": ""
   },
   "worker/routes/dashboard.ts": {
@@ -300,9 +288,9 @@
     "semantic_hash": ""
   },
   "worker/routes/transactions.ts": {
-    "mtime": 1789969789.22654,
-    "seen": 1789970396.9063132,
-    "ast_hash": "27e4f06d82776a2a61602f4d51e5689b",
+    "mtime": 1789998134.8201141,
+    "seen": 1789998432.827463,
+    "ast_hash": "5899cbb1c67465a8bea4ca4db17447bd",
     "semantic_hash": ""
   },
   "worker/routes/wallets.ts": {

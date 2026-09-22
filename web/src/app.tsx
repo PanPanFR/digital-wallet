@@ -30,9 +30,9 @@ function AppLayout() {
 	const location = useLocation();
 	const [showGlobalForm, setShowGlobalForm] = useState(false);
 
-	const { data: wallets } = useQuery<WalletRow[]>({
+	const { data: walletsData } = useQuery<{ wallets: WalletRow[] }>({
 		queryKey: queryKeys.wallets(),
-		queryFn: () => get<WalletRow[]>('/api/wallets')
+		queryFn: () => get<{ wallets: WalletRow[] }>('/api/wallets')
 	});
 
 	// Quick-add FAB listener for secondary routes that don't have their own modal
@@ -55,7 +55,7 @@ function AppLayout() {
 			{showGlobalForm && (
 				<TransactionForm
 					open={showGlobalForm}
-					wallets={wallets ?? []}
+					wallets={walletsData?.wallets ?? []}
 					initialType="expense"
 					onClose={() => setShowGlobalForm(false)}
 				/>
